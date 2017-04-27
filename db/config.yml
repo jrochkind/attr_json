@@ -1,0 +1,9 @@
+default: &default
+  adapter: postgresql
+  database: json_attribute_project
+
+development:
+  <<: *default
+
+test:
+  <<: *default
