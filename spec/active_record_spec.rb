@@ -20,7 +20,7 @@ RSpec.describe JsonAttribute::Record do
     [:decimal, BigDecimal.new("10.01"), "10.0100"],
     [:boolean, true, "t"],
     [:date, Date.parse("2017-04-28"), "2017-04-28"],
-    [:datetime, DateTime.parse("2017-04-04 04:45:00").utc, "2017-04-04T04:45:00Z"],
+    [:datetime, DateTime.parse("2017-04-04 04:45:00").to_time, "2017-04-04T04:45:00Z"],
     [:float, 45.45, "45.45"]
   ].each do |type, cast_value, uncast_value|
     describe "for primitive type #{type}" do
