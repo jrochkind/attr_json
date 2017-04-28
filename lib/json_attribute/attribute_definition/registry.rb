@@ -57,8 +57,8 @@ module JsonAttribute
       protected
 
       def add!(definition)
-        if @name_to_definition.has_key?(definition.name.to_sym)
-          raise ArgumentError "Can't add, conflict with existing attribute name `#{definition.name.to_sym}`: #{defintion}"
+        if @name_to_definition.has_key?(definition.name)
+          raise ArgumentError, "Can't add, conflict with existing attribute name `#{definition.name.to_sym}`: #{@name_to_definition[definition.name].original_args}"
         end
         @name_to_definition[definition.name.to_sym] = definition
         store_key_index!(definition)
@@ -66,7 +66,7 @@ module JsonAttribute
 
       def store_key_index!(definition)
         if @store_key_to_definition.has_key?(definition.store_key.to_s)
-          raise ArgumentError "Can't add, conflict with existing store_key `#{definition.store_key.to_s}`: #{defintion}"
+          raise ArgumentError, "Can't add, conflict with existing store_key `#{definition.store_key.to_s}`: #{@name_to_definition[definition.name].original_args}"
         end
 
         @store_key_to_definition[definition.store_key.to_s] = definition

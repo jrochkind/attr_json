@@ -71,6 +71,20 @@ RSpec.describe JsonAttribute::Record do
     expect(instance.int_array).to eq([1])
   end
 
+  # TODO: Should it LET you redefine instead, and spec for that? Have to pay
+  # attention to store keys too if we let people replace attributes.
+  it "raises on re-using attribute name" do
+    expect {
+      Class.new(ActiveRecord::Base) do
+        include JsonAttribute::Record
+
+        self.table_name = "products"
+        json_attribute :value, :string
+        json_attribute :value, :integer
+      end
+    }.to raise_error(ArgumentError, /Can't add, conflict with existing attribute name `value`/)
+  end
+
   context "defaults" do
     let(:klass) do
       Class.new(ActiveRecord::Base) do
