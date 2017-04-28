@@ -37,16 +37,25 @@ module JsonAttribute
 
 
     class_methods do
+
+      def default_json_container_attribute
+        @default_json_container_attribute ||= AttributeDefinition::DEFAULT_CONTAINER_ATTRIBUTE
+      end
+      def default_json_container_attribute=(v)
+        @default_json_container_attribute = v.to_s
+      end
+
       # Type can be a symbol that will be looked up in `ActiveModel::Type.lookup`,
       # or anything that's an ActiveSupport::Type-like thing (usually
       # subclassing ActiveSupport::Type::Value)
       #
       # TODO, doc or
       def json_attribute(name, type,
-                         container_attribute: AttributeDefinition::DEFAULT_CONTAINER_ATTRIBUTE,
+                         container_attribute: self.default_json_container_attribute,
                          **options)
 
-        # TODO arg check container_attribute make sure it exists.
+        # TODO arg check container_attribute make sure it exists. Hard cause
+        # schema isn't loaded yet when class def is loaded. Maybe not.
 
         # Want to lazily add an attribute cover to the json container attribute,
         # only if it hasn't already been done. WARNING we are using internal

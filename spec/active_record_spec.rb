@@ -198,6 +198,32 @@ RSpec.describe JsonAttribute::Record do
       expect(instance.json_attributes).to be_blank
     end
 
+    describe "change default container attribute" do
+      let(:klass) do
+        Class.new(ActiveRecord::Base) do
+          include JsonAttribute::Record
+          self.table_name = "products"
+
+          self.default_json_container_attribute = :other_attributes
+
+          json_attribute :value, :string
+        end
+      end
+      it "saves in right place" do
+        instance.value = "X"
+        expect(instance.value).to eq("X")
+        expect(instance.other_attributes).to eq("value" => "X")
+        expect(instance.json_attributes).to be_blank
+
+        instance.save!
+        instance.reload
+
+        expect(instance.value).to eq("X")
+        expect(instance.other_attributes).to eq("value" => "X")
+        expect(instance.json_attributes).to be_blank
+      end
+    end
+
     describe "with store key" do
       let(:klass) do
         Class.new(ActiveRecord::Base) do
