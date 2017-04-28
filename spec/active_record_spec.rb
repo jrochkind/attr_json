@@ -144,6 +144,18 @@ RSpec.describe JsonAttribute::Record do
       expect(instance.json_attributes).to eq("_store_key" => "set value")
     end
 
+    it "raises on conflicting store key" do
+      expect {
+        Class.new(ActiveRecord::Base) do
+          include JsonAttribute::Record
+
+          self.table_name = "products"
+          json_attribute :value, :string
+          json_attribute :other_thing, :string, store_key: "value"
+        end
+      }.to raise_error(ArgumentError, /Can't add, store key `value` conflicts with existing attribute/)
+    end
+
     context "inheritance" do
       let(:subklass) do
         Class.new(klass) do

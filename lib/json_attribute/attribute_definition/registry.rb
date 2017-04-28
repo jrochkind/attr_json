@@ -18,7 +18,7 @@ module JsonAttribute
     #     self.some_registry_attribute = self.some_registry_attribute.with(
     #        attr_definition_1, attr_definition_2
     #     )
-    #     # => Returns a NEW AttributeDefintion object
+    #     # => Returns a NEW AttributeDefinition object
     #
     class Registry
       def initialize(hash = {})
@@ -66,7 +66,8 @@ module JsonAttribute
 
       def store_key_index!(definition)
         if @store_key_to_definition.has_key?(definition.store_key.to_s)
-          raise ArgumentError, "Can't add, conflict with existing store_key `#{definition.store_key.to_s}`: #{@name_to_definition[definition.name].original_args}"
+          existing = @store_key_to_definition[definition.store_key.to_s]
+          raise ArgumentError, "Can't add, store key `#{definition.store_key}` conflicts with existing attribute: #{existing.original_args}"
         end
 
         @store_key_to_definition[definition.store_key.to_s] = definition
