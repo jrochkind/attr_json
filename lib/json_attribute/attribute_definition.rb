@@ -18,7 +18,7 @@
       #TODO arg checking for name and type. type has to be an ActiveModel::Type?
       @name = name
 
-      @container_attribute = options[:container_attribute]
+      @container_attribute = options[:container_attribute] && options[:container_attribute].to_s
 
       @store_key = options[:store_key]
 
@@ -74,14 +74,6 @@
       else
         @default
       end
-    end
-
-    # for now we just do this as a static utilty method, with no caching.
-    # there are reasons it's hard to do this well-designed otherwise.
-    def self.as_store_key_lookup(attribute_registry)
-      attribute_registry.transform_keys do |k|
-        attribute_registry[k].try(:has_custom_store_key?) ? attribute_registry[k].store_key.to_s : nil
-      end.tap { |transformed| transformed.delete(nil) }
     end
   end
 end

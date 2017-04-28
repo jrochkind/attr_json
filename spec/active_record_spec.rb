@@ -173,4 +173,99 @@ RSpec.describe JsonAttribute::Record do
       end
     end
   end
+
+  context "specified container_attribute" do
+    let(:klass) do
+      Class.new(ActiveRecord::Base) do
+        include JsonAttribute::Record
+        self.table_name = "products"
+
+        json_attribute :value, :string, container_attribute: :other_attributes
+      end
+    end
+
+    it "saves in appropriate place" do
+      instance.value = "X"
+      expect(instance.value).to eq("X")
+      expect(instance.other_attributes).to eq("value" => "X")
+      expect(instance.json_attributes).to be_blank
+
+      instance.save!
+      instance.reload
+
+      expect(instance.value).to eq("X")
+      expect(instance.other_attributes).to eq("value" => "X")
+      expect(instance.json_attributes).to be_blank
+    end
+
+    describe "with store key" do
+      let(:klass) do
+        Class.new(ActiveRecord::Base) do
+          include JsonAttribute::Record
+          self.table_name = "products"
+
+          json_attribute :value, :string, store_key: "_store_key", container_attribute: :other_attributes
+        end
+      end
+
+      it "saves with store_key" do
+        instance.value = "X"
+        expect(instance.value).to eq("X")
+        expect(instance.other_attributes).to eq("_store_key" => "X")
+        expect(instance.json_attributes).to be_blank
+
+        instance.save!
+        instance.reload
+
+        expect(instance.value).to eq("X")
+        expect(instance.other_attributes).to eq("_store_key" => "X")
+        expect(instance.json_attributes).to be_blank
+      end
+
+      describe "multiple containers with same store key" do
+        let(:klass) do
+          Class.new(ActiveRecord::Base) do
+            include JsonAttribute::Record
+            self.table_name = "products"
+
+            json_attribute :value, :string, store_key: "_store_key", container_attribute: :json_attributes
+            json_attribute :other_value, :string, store_key: "_store_key", container_attribute: :other_attributes
+          end
+        end
+        it "is all good" do
+          instance.value = "value"
+          instance.other_value = "other_value"
+
+          expect(instance.value).to eq("value")
+          expect(instance.json_attributes).to eq("_store_key" => "value")
+          expect(instance.other_value).to eq("other_value")
+          expect(instance.other_attributes).to eq("_store_key" => "other_value")
+
+          instance.save!
+          instance.reload
+
+          expect(instance.value).to eq("value")
+          expect(instance.json_attributes).to eq("_store_key" => "value")
+          expect(instance.other_value).to eq("other_value")
+          expect(instance.other_attributes).to eq("_store_key" => "other_value")
+        end
+      end
+    end
+
+    # describe "with bad attribute" do
+    #   it "raises on decleration" do
+    #     expect {
+    #       Class.new(ActiveRecord::Base) do
+    #         include JsonAttribute::Record
+    #         self.table_name = "products"
+
+    #         json_attribute :value, :string, container_attribute: :no_such_attribute
+    #       end
+    #     }.to raise_error(ArgumentError, /adfadf/)
+    #   end
+    # end
+
+  end
+
+
 end

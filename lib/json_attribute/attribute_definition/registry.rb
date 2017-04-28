@@ -36,8 +36,9 @@ module JsonAttribute
       end
 
       # Can return nil if none found.
-      def store_key_lookup(store_key)
-        @store_key_to_definition[store_key.to_sym]
+      def store_key_lookup(container_attribute, store_key)
+        @store_key_to_definition[container_attribute.to_s] &&
+          @store_key_to_definition[container_attribute.to_s][store_key.to_s]
       end
 
       def definitions
@@ -65,12 +66,14 @@ module JsonAttribute
       end
 
       def store_key_index!(definition)
-        if @store_key_to_definition.has_key?(definition.store_key.to_s)
-          existing = @store_key_to_definition[definition.store_key.to_s]
+        container_hash = (@store_key_to_definition[definition.container_attribute.to_s] ||= {})
+
+        if container_hash.has_key?(definition.store_key.to_s)
+          existing = container_hash[definition.store_key.to_s]
           raise ArgumentError, "Can't add, store key `#{definition.store_key}` conflicts with existing attribute: #{existing.original_args}"
         end
 
-        @store_key_to_definition[definition.store_key.to_s] = definition
+        container_hash[definition.store_key.to_s] = definition
       end
     end
   end
