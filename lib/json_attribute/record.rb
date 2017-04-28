@@ -1,4 +1,5 @@
 require 'json_attribute/attribute_definition'
+require 'json_attribute/attribute_definition/registry'
 require 'json_attribute/record/container_attribute_type'
 
 module JsonAttribute
@@ -21,7 +22,7 @@ module JsonAttribute
       end
 
       class_attribute :json_attributes_registry, instance_accessor: false
-      self.json_attributes_registry = {}
+      self.json_attributes_registry = JsonAttribute::AttributeDefinition::Registry.new
 
       scope(:json_attributes_where, lambda do |attributes|
         attributes = attributes.collect do |key, value|
@@ -44,8 +45,8 @@ module JsonAttribute
       def json_attribute(name, type,
                          container_attribute: AttributeDefinition::DEFAULT_CONTAINER_ATTRIBUTE,
                          **options)
-        self.json_attributes_registry = json_attributes_registry.merge(
-          name.to_sym => AttributeDefinition.new(name.to_sym, type, options.merge(container_attribute: container_attribute))
+        self.json_attributes_registry = json_attributes_registry.with(
+          AttributeDefinition.new(name.to_sym, type, options.merge(container_attribute: container_attribute))
         )
 
         _json_attributes_module.module_eval do

@@ -10,7 +10,7 @@ module JsonAttribute
       end
       def cast(v)
         h = super || {}
-        model.json_attributes_registry.values.each do |attr_def|
+        model.json_attributes_registry.definitions.each do |attr_def|
           if h.has_key?(attr_def.store_key)
             h[attr_def.store_key] = attr_def.cast(h[attr_def.store_key])
           elsif attr_def.has_default?
@@ -25,14 +25,13 @@ module JsonAttribute
         end
 
         super(v.collect do |key, value|
-          # TODO inefficient, cache somehow? We need a Registry class.
-          attr_def = model.json_attributes_registry.values.find { |d| d.store_key == key }
+          attr_def = model.json_attributes_registry.store_key_lookup(key)
           [key, attr_def ? attr_def.serialize(value) : value]
         end.to_h)
       end
       def deserialize(v)
         h = super || {}
-        model.json_attributes_registry.values.each do |attr_def|
+        model.json_attributes_registry.definitions.each do |attr_def|
           if h.has_key?(attr_def.store_key)
             h[attr_def.store_key] = attr_def.deserialize(h[attr_def.store_key])
           elsif attr_def.has_default?
