@@ -17,16 +17,32 @@
 #
 # See http://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
 
+require 'json_attribute'
+
+
 class StaticProduct < ActiveRecord::Base
   self.table_name = "products"
   belongs_to :product_category
 end
 
 class Product < StaticProduct
+  include JsonAttribute::ActiveRecordModel
+
+  attribute :json_attributes, JsonAttribute::ActiveRecordModel::ContainerAttributeType.new(self)
+
+  json_attribute :title, :string
+  json_attribute :rank, :integer
+  json_attribute :made_at, :datetime
+  json_attribute :time, :time
+  json_attribute :date, :date
+  json_attribute :dec, :decimal
+
   #jsonb_accessor :options, title: :string, rank: :integer, made_at: :datetime
 end
 
 class ProductCategory < ActiveRecord::Base
+  include JsonAttribute::ActiveRecordModel
+
   #jsonb_accessor :options, title: :string
   has_many :products
 end
@@ -114,4 +130,9 @@ RSpec.configure do |config|
   # test failures related to randomization by passing the same `--seed` value
   # as the one that triggered the failure.
   Kernel.srand config.seed
+
+  config.before :suite do
+    dbconfig = YAML.load(File.open("db/config.yml"))
+    ActiveRecord::Base.establish_connection(dbconfig["test"])
+  end
 end
