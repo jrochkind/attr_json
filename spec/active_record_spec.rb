@@ -14,23 +14,47 @@ RSpec.describe JsonAttribute::Record do
   end
   let(:instance) { klass.new }
 
-  it "supports types" do
-    instance.str = 12
-    expect(instance.str).to eq("12")
-    expect(instance.json_attributes).to include("str" => "12")
-    instance.save!
-    instance.reload
-    expect(instance.str).to eq("12")
-    expect(instance.json_attributes).to include("str" => "12")
+  [
+    [:integer, 12, "12"],
+    [:string, "12", 12],
+    [:decimal, BigDecimal.new("10.01"), "10.0100"],
+    [:boolean, true, "t"],
+    [:date, Date.parse("2017-04-28"), "2017-04-28"],
+    [:datetime, DateTime.parse("2017-04-04 04:45:00").utc, "2017-04-04T04:45:00Z"],
+    [:float, 45.45, "45.45"]
+  ].each do |type, cast_value, uncast_value|
+    describe "for primitive type #{type}" do
+      let(:klass) do
+        Class.new(ActiveRecord::Base) do
+          include JsonAttribute::Record
 
+          self.table_name = "products"
+          json_attribute :value, type
+        end
+      end
+      it "properly saves good #{type}" do
+        instance.value = cast_value
+        expect(instance.value).to eq(cast_value)
+        expect(instance.json_attributes["value"]).to eq(cast_value)
 
-    instance.int = "12"
-    expect(instance.int).to eq(12)
-    expect(instance.json_attributes).to include("int" => 12)
-    instance.save!
-    instance.reload
-    expect(instance.int).to eq(12)
-    expect(instance.json_attributes).to include("int" => 12)
+        instance.save!
+        instance.reload
+
+        expect(instance.value).to eq(cast_value)
+        expect(instance.json_attributes["value"]).to eq(cast_value)
+      end
+      it "casts to #{type}" do
+        instance.value = uncast_value
+        expect(instance.value).to eq(cast_value)
+        expect(instance.json_attributes["value"]).to eq(cast_value)
+
+        instance.save!
+        instance.reload
+
+        expect(instance.value).to eq(cast_value)
+        expect(instance.json_attributes["value"]).to eq(cast_value)
+      end
+    end
   end
 
   it "supports arrays" do
