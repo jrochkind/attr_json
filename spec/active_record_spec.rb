@@ -1,11 +1,11 @@
 require 'spec_helper'
 
-RSpec.describe JsonAttribute::ActiveRecordModel do
+RSpec.describe JsonAttribute::Record do
   let(:klass) do
     Class.new(ActiveRecord::Base) do
-      include JsonAttribute::ActiveRecordModel
+      include JsonAttribute::Record
       # TODO this gotta be automatic
-      attribute :json_attributes, JsonAttribute::ActiveRecordModel::ContainerAttributeType.new(self)
+      attribute :json_attributes, JsonAttribute::Record::ContainerAttributeType.new(self)
 
       self.table_name = "products"
       json_attribute :str, :string
@@ -52,9 +52,9 @@ RSpec.describe JsonAttribute::ActiveRecordModel do
   context "defaults" do
     let(:klass) do
       Class.new(ActiveRecord::Base) do
-        include JsonAttribute::ActiveRecordModel
+        include JsonAttribute::Record
         # TODO this gotta be automatic
-        attribute :json_attributes, JsonAttribute::ActiveRecordModel::ContainerAttributeType.new(self)
+        attribute :json_attributes, JsonAttribute::Record::ContainerAttributeType.new(self)
 
         self.table_name = "products"
         json_attribute :str_with_default, :string, default: "DEFAULT_VALUE"

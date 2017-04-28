@@ -17,7 +17,10 @@
 #
 # See http://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
 
+require 'byebug'
+
 require 'json_attribute'
+
 
 
 class StaticProduct < ActiveRecord::Base
@@ -26,9 +29,9 @@ class StaticProduct < ActiveRecord::Base
 end
 
 class Product < StaticProduct
-  include JsonAttribute::ActiveRecordModel
+  include JsonAttribute::Record
 
-  attribute :json_attributes, JsonAttribute::ActiveRecordModel::ContainerAttributeType.new(self)
+  attribute :json_attributes, JsonAttribute::Record::ContainerAttributeType.new(self)
 
   json_attribute :title, :string
   json_attribute :rank, :integer
@@ -36,12 +39,13 @@ class Product < StaticProduct
   json_attribute :time, :time
   json_attribute :date, :date
   json_attribute :dec, :decimal
+  json_attribute :int_array, :integer, array: true
 
   #jsonb_accessor :options, title: :string, rank: :integer, made_at: :datetime
 end
 
 class ProductCategory < ActiveRecord::Base
-  include JsonAttribute::ActiveRecordModel
+  include JsonAttribute::Record
 
   #jsonb_accessor :options, title: :string
   has_many :products

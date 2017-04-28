@@ -2,8 +2,8 @@
 
  module JsonAttribute
 
-  # Represents a `json_attribute` definition, on either a JsonAttribute::ActiveRecordModel
-  # or JsonAttribute::ActiveModelModel.
+  # Represents a `json_attribute` definition, on either a JsonAttribute::Record
+  # or JsonAttribute::Model.
   class AttributeDefinition
     DEFAULT_CONTAINER_ATTRIBUTE = :json_attributes
     NO_DEFAULT_PROVIDED = Object.new.freeze
