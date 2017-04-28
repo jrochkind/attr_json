@@ -45,6 +45,16 @@ module JsonAttribute
       def json_attribute(name, type,
                          container_attribute: AttributeDefinition::DEFAULT_CONTAINER_ATTRIBUTE,
                          **options)
+
+        # Want to lazily add an attribute cover to the json container attribute,
+        # only if it hasn't already been done. WARNING we are using internal
+        # Rails API here, but only way to do this lazily, which I thought was
+        # worth it.
+        unless attributes_to_define_after_schema_loads[container_attribute.to_s] &&
+               attributes_to_define_after_schema_loads[container_attribute.to_s].first.is_a?(JsonAttribute::Record::ContainerAttributeType)
+            attribute container_attribute.to_sym, JsonAttribute::Record::ContainerAttributeType.new(self)
+        end
+
         self.json_attributes_registry = json_attributes_registry.with(
           AttributeDefinition.new(name.to_sym, type, options.merge(container_attribute: container_attribute))
         )

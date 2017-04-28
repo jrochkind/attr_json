@@ -4,8 +4,6 @@ RSpec.describe JsonAttribute::Record do
   let(:klass) do
     Class.new(ActiveRecord::Base) do
       include JsonAttribute::Record
-      # TODO this gotta be automatic
-      attribute :json_attributes, JsonAttribute::Record::ContainerAttributeType.new(self)
 
       self.table_name = "products"
       json_attribute :str, :string
@@ -53,8 +51,6 @@ RSpec.describe JsonAttribute::Record do
     let(:klass) do
       Class.new(ActiveRecord::Base) do
         include JsonAttribute::Record
-        # TODO this gotta be automatic
-        attribute :json_attributes, JsonAttribute::Record::ContainerAttributeType.new(self)
 
         self.table_name = "products"
         json_attribute :str_with_default, :string, default: "DEFAULT_VALUE"

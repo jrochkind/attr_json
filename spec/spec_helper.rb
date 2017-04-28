@@ -31,8 +31,6 @@ end
 class Product < StaticProduct
   include JsonAttribute::Record
 
-  attribute :json_attributes, JsonAttribute::Record::ContainerAttributeType.new(self)
-
   json_attribute :title, :string
   json_attribute :rank, :integer
   json_attribute :made_at, :datetime
