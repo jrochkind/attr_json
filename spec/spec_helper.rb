@@ -17,6 +17,8 @@
 #
 # See http://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
 
+require "database_cleaner"
+
 require 'byebug'
 
 require 'json_attribute'
@@ -136,5 +138,9 @@ RSpec.configure do |config|
   config.before :suite do
     dbconfig = YAML.load(File.open("db/config.yml"))
     ActiveRecord::Base.establish_connection(dbconfig["test"])
+  end
+
+  config.before do
+    DatabaseCleaner.clean_with(:truncation)
   end
 end
