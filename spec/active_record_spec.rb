@@ -57,6 +57,18 @@ RSpec.describe JsonAttribute::Record do
     end
   end
 
+  it "can set nil" do
+    instance.str = nil
+    expect(instance.str).to be_nil
+    expect(instance.json_attributes).to eq("str" => nil, "int_with_default" => 5)
+
+    instance.save!
+    instance.reload
+
+    expect(instance.str).to be_nil
+    expect(instance.json_attributes).to eq("str" => nil, "int_with_default" => 5)
+  end
+
   it "supports arrays" do
     instance.int_array = %w(1 2 3)
     expect(instance.int_array).to eq([1, 2, 3])

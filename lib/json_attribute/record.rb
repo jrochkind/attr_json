@@ -73,10 +73,18 @@ module JsonAttribute
         _json_attributes_module.module_eval do
           define_method("#{name}=") do |value|
             attribute_def = self.class.json_attributes_registry.fetch(name.to_sym)
-
             # write_store_attribute copied from Rails store_accessor implementation.
             # https://github.com/rails/rails/blob/74c3e43fba458b9b863d27f0c45fd2d8dc603cbc/activerecord/lib/active_record/store.rb#L90-L96
-            write_store_attribute(attribute_def.container_attribute, attribute_def.store_key, attribute_def.cast(value))
+
+            # special handling for nil, sorry, because if name key was previously
+            # not present, write_store_attribute by default will decide there was
+            # no change and refuse to make the change. TODO messy.
+            if value.nil? && !public_send(attribute_def.container_attribute).has_key?(attribute_def.store_key)
+               public_send :"#{attribute_def.container_attribute}_will_change!"
+               public_send(attribute_def.container_attribute)[attribute_def.store_key] = nil
+            else
+              write_store_attribute(attribute_def.container_attribute, attribute_def.store_key, attribute_def.cast(value))
+            end
           end
 
           define_method("#{name}") do
