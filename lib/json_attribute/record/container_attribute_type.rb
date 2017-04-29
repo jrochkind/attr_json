@@ -10,8 +10,11 @@ module JsonAttribute
         @container_attribute = container_attribute.to_s
       end
       def cast(v)
+        # this seems to be rarely/never called by AR, not sure where if ever.
         h = super || {}
         model.json_attributes_registry.definitions.each do |attr_def|
+          next unless container_attribute.to_s == attr_def.container_attribute.to_s
+
           if h.has_key?(attr_def.store_key)
             h[attr_def.store_key] = attr_def.cast(h[attr_def.store_key])
           elsif attr_def.has_default?

@@ -287,6 +287,32 @@ RSpec.describe JsonAttribute::Record do
           expect(instance.other_value).to eq("other_value")
           expect(instance.other_attributes).to eq("_store_key" => "other_value")
         end
+        describe "with defaults" do
+          let(:klass) do
+            Class.new(ActiveRecord::Base) do
+              include JsonAttribute::Record
+              self.table_name = "products"
+
+              json_attribute :value, :string, default: "value default", store_key: "_store_key", container_attribute: :json_attributes
+              json_attribute :other_value, :string, default: "other value default", store_key: "_store_key", container_attribute: :other_attributes
+            end
+          end
+
+          it "is all good" do
+            expect(instance.value).to eq("value default")
+            expect(instance.json_attributes).to eq("_store_key" => "value default")
+            expect(instance.other_value).to eq("other value default")
+            expect(instance.other_attributes).to eq("_store_key" => "other value default")
+          end
+
+          it "fills default on direct set" do
+            instance.json_attributes = {}
+            expect(instance.json_attributes).to eq("_store_key" => "value default")
+
+            instance.other_attributes = {}
+            expect(instance.other_attributes).to eq("_store_key" => "other value default")
+          end
+        end
       end
     end
 
