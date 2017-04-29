@@ -23,16 +23,6 @@ module JsonAttribute
 
       class_attribute :json_attributes_registry, instance_accessor: false
       self.json_attributes_registry = JsonAttribute::AttributeDefinition::Registry.new
-
-      scope(:json_attributes_where, lambda do |attributes|
-        attributes = attributes.collect do |key, value|
-          attr_def = json_attributes_registry[key.to_sym]
-
-          [attr_def.store_key, attr_def.serialize(attr_def.cast value)]
-        end.to_h
-
-        where("#{table_name}.json_attributes @> (?)::jsonb", attributes.to_json)
-      end)
     end
 
 
