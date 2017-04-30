@@ -209,6 +209,106 @@ RSpec.describe JsonAttribute::Record do
     end
   end
 
+  # time-like objects get super weird on edge cases, so they get their own
+  # spec context.
+  context "time-like objects" do
+    let(:zone_under_test) { "America/Chicago" }
+    around do |example|
+      orig_tz = ENV['TZ']
+      ENV['TZ'] = zone_under_test
+      example.run
+      ENV['TZ'] = orig_tz
+    end
+
+    # Make sure it has non-zero usecs for our tests, and freeze it
+    # to make sure code under test does not mutate it.
+    let(:datetime_value) { DateTime.now.change(usec: 555555).freeze }
+    let(:klass) do
+      Class.new(ActiveRecord::Base) do
+        include JsonAttribute::Record
+
+        self.table_name = "products"
+        json_attribute :json_datetime, :datetime
+        json_attribute :json_time, :time
+        json_attribute :json_time_array, :time, array: true
+        json_attribute :json_datetime_array, :datetime, array: true
+      end
+    end
+
+    context ":datetime type" do
+      # 345123 to 345100
+      def truncate_usec_to_ms(int)
+        int.to_i / 1000 * 1000
+      end
+
+      before do
+        instance.datetime_type = datetime_value
+        instance.json_datetime = datetime_value
+      end
+      it "has the same class and zone on create" do
+        # AR doesn't cast or transform in any way here, so we shouldn't either.
+        expect(instance.json_datetime.class).to eq(instance.datetime_type.class)
+        expect(instance.json_datetime.zone).to eq(instance.datetime_type.zone)
+      end
+
+      it "has the same microseconds on create" do
+        # AR doesn't touch it in any way here, so we shouldn't either.
+        expect(instance.json_datetime.usec).to eq(instance.datetime_type.usec)
+      end
+      it "has the same class and zone after save" do
+        instance.save!
+
+        expect(instance.json_datetime.class).to eq(instance.datetime_type.class)
+        expect(instance.json_datetime.zone).to eq(instance.datetime_type.zone)
+
+        # It's actually a Time with zone UTC now, not a DateTime, don't REALLY
+        # need to check for this, but if it changes AR may have changed enough
+        # that we should pay attention -- failing here doesn't neccesarily
+        # mean anything is wrong though, although we prob want OURs to be UTC.
+        expect(instance.json_datetime.class).to eq(Time)
+        expect(instance.json_datetime.zone).to eq("UTC")
+      end
+      it "rounds usec to ms after save" do
+        instance.save!
+
+        expect(instance.json_datetime.usec % 1000).to eq(0)
+
+        expect(truncate_usec_to_ms(instance.json_datetime.usec)).to eq(truncate_usec_to_ms(instance.datetime_type.usec))
+      end
+      it "has the same class and zone on fetch" do
+        instance.save!
+
+        new_instance = klass.find(instance.id)
+        expect(new_instance.json_datetime.class).to eq(instance.datetime_type.class)
+        expect(new_instance.json_datetime.zone).to eq(instance.datetime_type.zone)
+      end
+
+      describe "attributes_before_type_cast" do
+        it "serializes as iso8601 in UTC with ms precision" do
+          instance.json_datetime = datetime_value
+          instance.save!
+
+          json_serialized = JSON.parse(instance.json_attributes_before_type_cast)
+
+          expect(json_serialized["json_datetime"]).to match /\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d.\d{3}Z/
+          expect(DateTime.iso8601(json_serialized["json_datetime"])).to eq(datetime_value.utc.change(usec: truncate_usec_to_ms(datetime_value.usec)))
+        end
+      end
+
+      describe "to_json" do
+        it "to_json's before save same as raw ActiveRecord" do
+          to_json = JSON.parse(instance.to_json)
+          expect(to_json["json_attributes"]["json_datetime"]).to eq to_json["datetime_type"]
+        end
+        it "to_json's after save same as raw ActiveRecord" do
+          instance.save!
+          to_json = JSON.parse(instance.to_json)
+          expect(to_json["json_attributes"]["json_datetime"]).to eq to_json["datetime_type"]
+        end
+      end
+    end
+  end
+
   context "specified container_attribute" do
     let(:klass) do
       Class.new(ActiveRecord::Base) do
