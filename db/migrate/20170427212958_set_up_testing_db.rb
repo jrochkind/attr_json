@@ -16,7 +16,7 @@ class SetUpTestingDb < ActiveRecord::Migration[5.0]
     end
 
     create_table :product_categories do |t|
-      t.jsonb :options
+      t.jsonb :json_attributes
     end
   end
 end
