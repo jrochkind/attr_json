@@ -16,11 +16,11 @@
       @original_args = [name, type, options]
 
       #TODO arg checking for name and type. type has to be an ActiveModel::Type?
-      @name = name
+      @name = name.to_sym
 
       @container_attribute = options[:container_attribute] && options[:container_attribute].to_s
 
-      @store_key = options[:store_key]
+      @store_key = options[:store_key] && options[:store_key].to_s
 
       @default = if options.has_key?(:default)
         options[:default]
