@@ -1,9 +1,9 @@
 module JsonAttribute
-  module Record
+  module Type
     # A type that gets applied to the AR container/store jsonb attribute,
     # to do serialization/deserialization/cast using declared json_attributes,
     # before calling super to original ActiveRecord::ConnectionAdapters::PostgreSQL::OID::Jsonb
-    class ContainerAttributeType < ActiveRecord::ConnectionAdapters::PostgreSQL::OID::Jsonb
+    class ContainerAttribute < ActiveRecord::ConnectionAdapters::PostgreSQL::OID::Jsonb
       attr_reader :model, :container_attribute
       def initialize(model, container_attribute)
         @model = model

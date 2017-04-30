@@ -1,6 +1,6 @@
 require 'json_attribute/attribute_definition'
 require 'json_attribute/attribute_definition/registry'
-require 'json_attribute/record/container_attribute_type'
+require 'json_attribute/type/container_attribute'
 
 module JsonAttribute
   # The mix-in to provide JsonAttribute support to ActiveRecord::Base models.
@@ -52,8 +52,8 @@ module JsonAttribute
         # Rails API here, but only way to do this lazily, which I thought was
         # worth it.
         unless attributes_to_define_after_schema_loads[container_attribute.to_s] &&
-               attributes_to_define_after_schema_loads[container_attribute.to_s].first.is_a?(JsonAttribute::Record::ContainerAttributeType)
-            attribute container_attribute.to_sym, JsonAttribute::Record::ContainerAttributeType.new(self, container_attribute)
+               attributes_to_define_after_schema_loads[container_attribute.to_s].first.is_a?(JsonAttribute::Type::ContainerAttribute)
+            attribute container_attribute.to_sym, JsonAttribute::Type::ContainerAttribute.new(self, container_attribute)
         end
 
         self.json_attributes_registry = json_attributes_registry.with(
