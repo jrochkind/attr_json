@@ -1,4 +1,4 @@
- require 'json_attribute/array_type'
+ require 'json_attribute/type/array'
 
  module JsonAttribute
 
@@ -34,7 +34,7 @@
         # to a json primitive type that'll go in the json hash.
          type = ActiveModel::Type.lookup(type)
       end
-      @type = (options[:array] == true ? ArrayType.new(type) : type)
+      @type = (options[:array] == true ? JsonAttribute::Type::Array.new(type) : type)
     end
 
     def cast(value)
