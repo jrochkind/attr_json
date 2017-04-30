@@ -74,6 +74,36 @@ RSpec.describe JsonAttribute::Record::QueryScopes do
       end
     end
 
+    describe "array of primitives" do
+      let(:klass) do
+        Class.new(ActiveRecord::Base) do
+          include JsonAttribute::Record
+          include JsonAttribute::Record::QueryScopes
+
+          self.table_name = "products"
+          json_attribute :value, :string, array: true
+        end
+      end
+      before do
+        instance.value = ["one", "two", "three"]
+        instance.save!
+      end
+      it "matches any element in array with single arg query" do
+        result = klass.jsonb_contains(value: "one").first
+        expect(result).to eq(instance)
+      end
+      # this is kind of just what the natural implementation does, but
+      # let's call it intentional?
+      it "matches when ALL of array query match" do
+        result = klass.jsonb_contains(value: ["one", "two"]).first
+        expect(result).to eq(instance)
+      end
+      it "does not match with a non-matching element in query array" do
+        result = klass.jsonb_contains(value: ["one", "nonexisting"]).first
+        expect(result).to be_nil
+      end
+    end
+
     describe "multi-column query" do
       let(:klass) do
         Class.new(ActiveRecord::Base) do
