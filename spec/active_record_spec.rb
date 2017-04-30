@@ -97,6 +97,29 @@ RSpec.describe JsonAttribute::Record do
     }.to raise_error(ArgumentError, /Can't add, conflict with existing attribute name `value`/)
   end
 
+  context "initialize" do
+    it "casts and fills in defaults" do
+      o = klass.new(int: "12", str: 12, int_array: "12")
+
+      expect(o.int).to eq 12
+      expect(o.str).to eq "12"
+      expect(o.int_array).to eq [12]
+      expect(o.int_with_default).to eq 5
+      expect(o.json_attributes).to eq('int' => 12, 'str' => "12", 'int_array' => [12], 'int_with_default' => 5)
+    end
+  end
+
+  context "assign_attributes" do
+    it "casts" do
+      instance.assign_attributes(int: "12", str: 12, int_array: "12")
+
+      expect(instance.int).to eq 12
+      expect(instance.str).to eq "12"
+      expect(instance.int_array).to eq [12]
+      expect(instance.json_attributes).to include('int' => 12, 'str' => "12", 'int_array' => [12], 'int_with_default' => 5)
+    end
+  end
+
   context "defaults" do
     let(:klass) do
       Class.new(ActiveRecord::Base) do
