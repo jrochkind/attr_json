@@ -1,3 +1,5 @@
+require 'json_attribute/record/query_builder'
+
 module JsonAttribute
   module Record
     # Adds query-ing scopes into a JsonAttribute::Record, based
@@ -9,12 +11,7 @@ module JsonAttribute
 
       included do
         scope(:jsonb_contains, lambda do |attributes|
-          attributes = attributes.collect do |key, value|
-            attr_def = json_attributes_registry[key.to_sym]
-
-            [attr_def.store_key, attr_def.serialize(attr_def.cast value)]
-          end.to_h
-          where("#{table_name}.json_attributes @> (?)::jsonb", attributes.to_json)
+          QueryBuilder.new(self, attributes).contains_relation
         end)
       end
     end
