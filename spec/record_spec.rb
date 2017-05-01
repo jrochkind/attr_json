@@ -153,6 +153,43 @@ RSpec.describe JsonAttribute::Record do
     end
   end
 
+  context "validation" do
+    let(:klass) do
+      Class.new(ActiveRecord::Base) do
+        self.table_name = "products"
+        include JsonAttribute::Record
+
+        # validations need a model_name, which our anon class doens't have
+        def self.model_name
+          ActiveModel::Name.new(self, nil, "TestClass")
+        end
+
+        validates :str_array, presence: true
+        validates :str,
+          inclusion: {
+            in: %w(small medium large),
+            message: "%{value} is not a valid size"
+          }
+
+        json_attribute :str, :string
+        json_attribute :str_array, :string, array: true
+      end
+    end
+
+    it "has the usual validation errors" do
+      instance.str = "nosize"
+      expect(instance.save).to be false
+      expect(instance.errors[:str_array]).to eq(["can't be blank"])
+      expect(instance.errors[:str]).to eq(["nosize is not a valid size"])
+    end
+    it "saves with valid data" do
+      instance.str = "small"
+      instance.str_array = ["foo"]
+      expect(instance.save).to be true
+    end
+
+  end
+
   context "store keys" do
     let(:klass) do
       Class.new(ActiveRecord::Base) do
