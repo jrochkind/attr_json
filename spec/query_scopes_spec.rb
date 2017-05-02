@@ -133,4 +133,36 @@ RSpec.describe JsonAttribute::Record::QueryScopes do
       end
     end
   end
+
+  describe "multiple container attributes" do
+    # let's give em the same store key to make it really challenging?
+    let(:klass) do
+      Class.new(ActiveRecord::Base) do
+        include JsonAttribute::Record
+        include JsonAttribute::Record::QueryScopes
+
+        self.table_name = "products"
+        json_attribute :str_json_attributes, :string, store_key: "_str"
+        json_attribute :str_other_attributes, :string, store_key: "_str", container_attribute: "other_attributes"
+      end
+    end
+    before do
+      instance.str_json_attributes = "j_value"
+      instance.str_other_attributes = "o_value"
+      instance.save!
+    end
+    it "still queries okay" do
+      query = klass.jsonb_contains(str_json_attributes: "j_value", str_other_attributes: "o_value")
+
+      expect(query.to_sql).to include "products.json_attributes @> ('{\"_str\":\"j_value\"}'"
+      expect(query.to_sql).to include "products.other_attributes @> ('{\"_str\":\"o_value\"}'"
+
+      result = query.last
+      expect(result).to eq(instance)
+    end
+  end
+
+  #TODO multiple container attributes!!!
+
+
 end
