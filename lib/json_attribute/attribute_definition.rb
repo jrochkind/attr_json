@@ -15,7 +15,6 @@
       # reflection useful for debugging, maybe other things.
       @original_args = [name, type, options]
 
-      #TODO arg checking for name and type. type has to be an ActiveModel::Type?
       @name = name.to_sym
 
       @container_attribute = options[:container_attribute] && options[:container_attribute].to_s
@@ -32,7 +31,9 @@
         # should we be using ActiveRecord::Type instead for db-specific
         # types? I think maybe not, we just want to serialize
         # to a json primitive type that'll go in the json hash.
-         type = ActiveModel::Type.lookup(type)
+        type = ActiveModel::Type.lookup(type)
+      elsif ! type.is_a? ActiveModel::Type::Value
+        raise ArgumentError "Second argument must be a symbol or ActiveModel::Type::Value subclass"
       end
       @type = (options[:array] == true ? JsonAttribute::Type::Array.new(type) : type)
     end
