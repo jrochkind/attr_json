@@ -33,7 +33,7 @@
         # to a json primitive type that'll go in the json hash.
         type = ActiveModel::Type.lookup(type)
       elsif ! type.is_a? ActiveModel::Type::Value
-        raise ArgumentError "Second argument must be a symbol or ActiveModel::Type::Value subclass"
+        raise ArgumentError, "Second argument (#{type}) must be a symbol or ActiveModel::Type::Value subclass"
       end
       @type = (options[:array] == true ? JsonAttribute::Type::Array.new(type) : type)
     end
