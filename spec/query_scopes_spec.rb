@@ -184,13 +184,26 @@ RSpec.describe JsonAttribute::Record::QueryScopes do
         self.table_name = "products"
         json_attribute :model, model_class_type
         json_attribute :int, :integer
-        json_attribute :int_array, :integer, array: true
-        json_attribute :int_with_default, :integer, default: 5
       end
     end
     it "can create keypath query" do
       sql = klass.jsonb_contains("model.str" => "foo").to_sql
-      expect(sql).to include "products.json_attributes @> ('{\"model\":\"foo\"}'"
+      expect(sql).to include "products.json_attributes @> ('{\"model\":{\"str\":\"foo\"}}')"
+    end
+    it "can find object" do
+      instance.model = {}
+      instance.model.str = "foo"
+      instance.save!
+
+      result = klass.jsonb_contains("model.str" => "foo").first
+      expect(result).to eq(instance)
+    end
+    it "doesn't error on find if there's no key at all for model" do
+      instance.save!
+      # precondition for our test, sorry
+      expect(instance.json_attributes.keys).to be_empty
+
+      expect(klass.jsonb_contains("model.str" => "foo").first).to be_nil
     end
   end
 

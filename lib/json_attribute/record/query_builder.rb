@@ -24,20 +24,18 @@ module JsonAttribute
 
       protected
 
+      # Some tricky business taking care of key paths in a loopy unrolled
+      # recursion kind of thing.
       def add_to_param_hash(param_hash, key, value)
         leaf_hash = param_hash
-        current_model = relation
-
         key_path = key.to_s.split(".")
-        while(key_path.count > 0)
-          key = key_path.shift
-          attr_def = current_model.json_attributes_registry.fetch(key)
 
-          if key_path.count > 0
-            leaf_hash = (param_hash[attr_def.store_key] ||= {})
-            current_model == attr_def.model
-          end
-          attr_def = current_model.json_attributes_registry.fetch(key)
+        attr_def = relation.json_attributes_registry.fetch(key_path.first)
+        key = key_path.shift
+        while(key_path.count > 0)
+          leaf_hash = (param_hash[attr_def.store_key] ||= {})
+          attr_def = attr_def.type.model.json_attributes_registry.fetch(key_path.first)
+          key = key_path.shift
         end
 
         leaf_hash[attr_def.store_key] = attr_def.serialize(attr_def.cast value)
