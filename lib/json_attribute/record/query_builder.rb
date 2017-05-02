@@ -26,15 +26,29 @@ module JsonAttribute
 
       # Some tricky business taking care of key paths in a loopy unrolled
       # recursion kind of thing.
-      def add_to_param_hash(param_hash, key, value)
+      def add_to_param_hash(param_hash, key_path_str, value)
         leaf_hash = param_hash
-        key_path = key.to_s.split(".")
+        key_path = key_path_str.to_s.split(".")
 
         attr_def = relation.json_attributes_registry.fetch(key_path.first)
         key = key_path.shift
         while(key_path.count > 0)
-          leaf_hash = (param_hash[attr_def.store_key] ||= {})
-          attr_def = attr_def.type.model.json_attributes_registry.fetch(key_path.first)
+          # Yes, this is a weird and confusing API. To chain another
+          # component on to our param_hash, we ask the current type
+          # to do so, so it can do so in a type specific way. We give it
+          # the current 'leaf_hash' the current attr_def (cause the type
+          # doesn't know how it's been embedded), and the key it should apply.
+          # It adds a NEW hash into the hash we gave it, and returns the
+          # new hash -- our new 'leaf_hash' -- as well as returning the
+          # the NEXT AttributeDefinition after applying the key we gave it.
+          #
+          # If you can figure out a less confusing way to design this, let me know. :)
+          leaf_hash, attr_def =
+            attr_def.type.add_keypath_component_to_query(
+              leaf_hash,
+              attr_def,
+              key_path.first
+            )
           key = key_path.shift
         end
 

@@ -57,6 +57,16 @@ module JsonAttribute
       def changed_in_place?(raw_old_value, new_value)
         serialize(new_value) != raw_old_value
       end
+
+      # This is used only by our own keypath-chaining query stuff. Yes, it's
+      # a bit confusing, sorry.
+      def add_keypath_component_to_query(current_hash, attribute_definition, key)
+        leaf_hash = (current_hash[attribute_definition.store_key] ||= {})
+        next_attr_def = model.json_attributes_registry.fetch(key)
+
+        return leaf_hash, next_attr_def
+      end
+
     end
   end
 end

@@ -210,7 +210,47 @@ RSpec.describe JsonAttribute::Record::QueryScopes do
 
       expect(klass.jsonb_contains("model.str" => "foo").first).to be_nil
     end
+
+    describe "double-nested model with array" do
+      let(:lang_and_val_class) do
+        Class.new do
+          include JsonAttribute::Model
+
+          json_attribute :lang, :string, default: "en"
+          json_attribute :value, :string
+        end
+      end
+      let(:some_labels_class) do
+        lang_and_val_type = lang_and_val_class.to_type
+        Class.new do
+          include JsonAttribute::Model
+
+          json_attribute :hello, lang_and_val_type, array: true
+        end
+      end
+      let(:klass) do
+        some_labels_class_type = some_labels_class.to_type
+        Class.new(ActiveRecord::Base) do
+          self.table_name = "products"
+          include JsonAttribute::Record
+          include JsonAttribute::Record::QueryScopes
+
+          json_attribute :my_labels, some_labels_class_type
+        end
+      end
+      before do
+        instance.my_labels = {}
+        instance.my_labels.hello = [{lang: 'en', value: 'hello'}, {lang: 'es', value: 'hola'}]
+        instance.save!
+      end
+      it "generates query okay" do
+        query = klass.jsonb_contains("my_labels.hello.lang" => "en").to_sql
+        expect(query).to include "(products.json_attributes @> ('{\"my_labels\":{\"hello\":[{\"lang\":\"en\"}]}}')::jsonb)"
+      end
+      it "fetches" do
+        result = klass.jsonb_contains("my_labels.hello.lang" => "en").first
+        expect(result).to eq(instance)
+      end
+    end
   end
-
-
 end
