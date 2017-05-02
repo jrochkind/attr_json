@@ -162,7 +162,37 @@ RSpec.describe JsonAttribute::Record::QueryScopes do
     end
   end
 
-  #TODO multiple container attributes!!!
+  describe "nested models" do
+    # why not a crazy recursive one? I think we can do that.
+    let(:model_class) do
+      Class.new do
+        include JsonAttribute::Model
+
+        json_attribute :str, :string
+        json_attribute :model, self.to_type
+        json_attribute :int_array, :integer, array: true
+        json_attribute :int_with_default, :integer, default: 5
+        json_attribute :datetime, :datetime
+      end
+    end
+    let(:klass) do
+      model_class_type = model_class.to_type
+      Class.new(ActiveRecord::Base) do
+        include JsonAttribute::Record
+        include JsonAttribute::Record::QueryScopes
+
+        self.table_name = "products"
+        json_attribute :model, model_class_type
+        json_attribute :int, :integer
+        json_attribute :int_array, :integer, array: true
+        json_attribute :int_with_default, :integer, default: 5
+      end
+    end
+    it "can create keypath query" do
+      sql = klass.jsonb_contains("model.str" => "foo").to_sql
+      expect(sql).to include "products.json_attributes @> ('{\"model\":\"foo\"}'"
+    end
+  end
 
 
 end
