@@ -327,7 +327,7 @@ RSpec.describe JsonAttribute::Record do
 
           json_serialized = JSON.parse(instance.json_attributes_before_type_cast)
 
-          expect(json_serialized["json_datetime"]).to match /\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d.\d{3}Z/
+          expect(json_serialized["json_datetime"]).to match(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d.\d{3}Z/)
           expect(DateTime.iso8601(json_serialized["json_datetime"])).to eq(datetime_value.utc.change(usec: truncate_usec_to_ms(datetime_value.usec)))
         end
       end

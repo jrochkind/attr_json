@@ -198,10 +198,15 @@ RSpec.describe JsonAttribute::Record::QueryScopes do
       result = klass.jsonb_contains("model.str" => "foo").first
       expect(result).to eq(instance)
     end
-    it "doesn't error on find if there's no key at all for model" do
+    it "doesn't error on find if there's no hash at all model" do
       instance.save!
-      # precondition for our test, sorry
-      expect(instance.json_attributes.keys).to be_empty
+      # our casting is sometimes insisting on a {} there, we want to
+      # to make sure it's really null in the db, and it doesn't complain
+      # on our search.
+      klass.update_all("json_attributes = null")
+      # precondition for our test, sorry, hacky
+      raw_result = ActiveRecord::Base.connection.execute("select json_attributes from #{klass.table_name} where id = #{instance.id}").first
+      expect(raw_result["json_attributes"]).to be_nil
 
       expect(klass.jsonb_contains("model.str" => "foo").first).to be_nil
     end
