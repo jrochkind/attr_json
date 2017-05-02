@@ -26,6 +26,10 @@ module JsonAttribute
     #include ActiveModel::Dirty
 
     included do
+      if self < ActiveRecord::Base
+        raise TypeError, "JsonAttribute::Model is not for an ActiveRecord::Base model. #{self} appears to be one. Are you looking for ::JsonAttribute::Record?"
+      end
+
       class_attribute :json_attributes_registry, instance_accessor: false
       self.json_attributes_registry = ::JsonAttribute::AttributeDefinition::Registry.new
     end
