@@ -34,6 +34,67 @@ module JsonAttribute
       self.json_attributes_registry = ::JsonAttribute::AttributeDefinition::Registry.new
     end
 
+    class_methods do
+
+      def to_type
+        @type ||= JsonAttribute::Type::Model.new(self)
+      end
+
+      # Type can be an ActiveSupport::Type sort of object, or a symbol that will
+      # be looked up in `ActiveModel::Type.lookup`
+      def json_attribute(name, type, **options)
+        self.json_attributes_registry = json_attributes_registry.with(
+          AttributeDefinition.new(name.to_sym, type, options)
+        )
+
+        _json_attributes_module.module_eval do
+          define_method("#{name}=") do |value|
+            write_json_attribute(self.class.json_attributes_registry.fetch(name).store_key, value)
+          end
+
+          define_method("#{name}") do
+            # TODO, cast in case someone set in the hash directly, do we want
+            # to cast?
+            attributes[self.class.json_attributes_registry.fetch(name).store_key]
+          end
+        end
+      end
+
+      # This should kind of be considered 'protected', but the semantics
+      # of how we want to call it don't give us a visibility modifier that works.
+      # TODO?
+      def fill_in_defaults(hash)
+        # Only if we need to mutate it to add defaults, we'll dup it first. deep_dup not neccesary
+        # since we're only modifying top-level here.
+        duped = false
+        json_attributes_registry.definitions.each do |definition|
+          if definition.has_default? && ! (hash.has_key?(definition.store_key.to_s) || hash.has_key?(definition.store_key.to_sym))
+            unless duped
+              hash = hash.dup
+              duped = true
+            end
+
+            hash[definition.store_key] = definition.provide_default!
+          end
+        end
+
+        hash
+      end
+
+      private
+
+      # Define an anonymous module and include it, so can still be easily
+      # overridden by concrete class. Design cribbed from ActiveRecord::Store
+      # https://github.com/rails/rails/blob/4590d7729e241cb7f66e018a2a9759cb3baa36e5/activerecord/lib/active_record/store.rb
+      def _json_attributes_module # :nodoc:
+        @_json_attributes_module ||= begin
+          mod = Module.new
+          include mod
+          mod
+        end
+      end
+    end
+
     def initialize(attributes = {})
       # TODO, move this all/some to #assign_attributes, so we get store key translation
       # on assign_attributes. And defaults fill-in, is that appropriate on assign_attributes?
@@ -142,70 +203,6 @@ module JsonAttribute
     # throws out rather than raises on non defined attributes?
     def _assign_attribute(k, v)
       write_json_attribute(k, v)
-    end
-
-    module ClassMethods
-
-      def to_type
-        @type ||= JsonAttribute::Type::Model.new(self)
-      end
-
-
-
-
-      # Type can be an ActiveSupport::Type sort of object, or a symbol that will
-      # be looked up in `ActiveModel::Type.lookup`
-      def json_attribute(name, type, **options)
-        self.json_attributes_registry = json_attributes_registry.with(
-          AttributeDefinition.new(name.to_sym, type, options)
-        )
-
-        _json_attributes_module.module_eval do
-          define_method("#{name}=") do |value|
-            write_json_attribute(self.class.json_attributes_registry.fetch(name).store_key, value)
-          end
-
-          define_method("#{name}") do
-            # TODO, cast in case someone set in the hash directly, do we want
-            # to cast?
-            attributes[self.class.json_attributes_registry.fetch(name).store_key]
-          end
-        end
-      end
-
-      # This should kind of be considered 'protected', but the semantics
-      # of how we want to call it don't give us a visibility modifier that works.
-      # TODO?
-      def fill_in_defaults(hash)
-        # Only if we need to mutate it to add defaults, we'll dup it first. deep_dup not neccesary
-        # since we're only modifying top-level here.
-        duped = false
-        json_attributes_registry.definitions.each do |definition|
-          if definition.has_default? && ! (hash.has_key?(definition.store_key.to_s) || hash.has_key?(definition.store_key.to_sym))
-            unless duped
-              hash = hash.dup
-              duped = true
-            end
-
-            hash[definition.store_key] = definition.provide_default!
-          end
-        end
-
-        hash
-      end
-
-      private
-
-      # Define an anonymous module and include it, so can still be easily
-      # overridden by concrete class. Design cribbed from ActiveRecord::Store
-      # https://github.com/rails/rails/blob/4590d7729e241cb7f66e018a2a9759cb3baa36e5/activerecord/lib/active_record/store.rb
-      def _json_attributes_module # :nodoc:
-        @_json_attributes_module ||= begin
-          mod = Module.new
-          include mod
-          mod
-        end
-      end
     end
   end
 end
