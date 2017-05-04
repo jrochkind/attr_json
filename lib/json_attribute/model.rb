@@ -83,13 +83,7 @@ module JsonAttribute
       super.collect do |key, value|
         if attribute_def = self.class.json_attributes_registry[key.to_sym]
           key = attribute_def.store_key
-          # WARN TODO, insist on utc and taking off microseconds for datetime and time objects?
-          # AR the way we're using it is a bit inconsistent, seems to do one or both
-          # when actually sending to the jsonb column, but not neccesarily
-          # out of #to_json from this #as_json. Let's make it all consistent, although
-          # not sure why it won't let us put usec's in a serialized json
           if value.kind_of?(Time) || value.kind_of?(DateTime)
-            byebug
             value = value.utc.change(usec: 0)
           end
 
@@ -110,15 +104,14 @@ module JsonAttribute
       serializable_hash(*options)
     end
 
-    # TODO: Is a dup appropriate here, or should we return original?
-    # I think dup, you want attributes unduped, ask for #attributes.
+    # We deep_dup on #to_h, you want attributes unduped, ask for #attributes.
     def to_h
       attributes.deep_dup
     end
 
     # Two JsonAttribute::Model objects are equal if they are the same class
     # or one is a subclass of the other, AND their #attributes are equal.
-    # TODO: Should we allow subclasses to be equal, or do they have to be the
+    # TODO: Should we allow subclasses to be equal, or should they have to be the
     # exact same class?
     def ==(other_object)
       (other_object.is_a?(self.class) || self.is_a?(other_object.class)) &&
@@ -128,7 +121,7 @@ module JsonAttribute
     private
 
     # Don't take from instance variables, take from the attributes
-    # hash itself. Docs suggest we can override this for an intended
+    # hash itself. Docs suggest we can override this for this very
     # use case: https://github.com/rails/rails/blob/e1e3be7c02acb0facbf81a97bbfe6d1a6e9ca598/activemodel/lib/active_model/serialization.rb#L152-L168
     def read_attribute_for_serialization(key)
       attributes[key]
@@ -137,7 +130,7 @@ module JsonAttribute
     # Override to just set in hash. We are overriding a private method,
     # and docs don't really say we can as part of intended API -- but how
     # else to get the counterpart to `read_attribute_for_serialization`
-    # suggested in docs?  If needed, we could override all of assign_attributes
+    # that docs do say you can override?  If needed, we could override all of assign_attributes
     # or something, I guess?
     #
     # WARNING: using possibly non-public Rails API
