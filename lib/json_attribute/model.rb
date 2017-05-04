@@ -150,34 +150,7 @@ module JsonAttribute
         @type ||= JsonAttribute::Type::Model.new(self)
       end
 
-      # class can serve as an ActiveSupport::Type for instances of itself
-      def cast(v)
-        if v.nil?
-          v
-        elsif v.kind_of? self
-          v
-        # to_hash is actually the 'implicit' conversion, try first
-        elsif v.respond_to?(:to_hash)
-          self.new(v.to_hash)
-        elsif v.respond_to?(:to_h)
-          self.new(v.to_h)
-        else
-          # TODO better error
-          raise "type error, can't do that"
-        end
-      end
 
-      def serialize(v)
-        if v.kind_of?(self)
-          v.serializable_hash
-        else
-          cast(v).serializable_hash
-        end
-      end
-
-      def deserialize(v)
-        cast(v)
-      end
 
 
       # Type can be an ActiveSupport::Type sort of object, or a symbol that will
@@ -199,7 +172,6 @@ module JsonAttribute
           end
         end
       end
-
 
       # This should kind of be considered 'protected', but the semantics
       # of how we want to call it don't give us a visibility modifier that works.
