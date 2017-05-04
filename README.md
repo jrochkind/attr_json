@@ -121,9 +121,11 @@ to get this behavior.
 ```ruby
 model = MyModel.create(my_string: "foo", my_integer: 100)
 
-MyModel.jsonb_contains(my_string: "foo", my_integer: 100)
-# => Returns it. This is an ordinary ActiveRelation scope
-#    you can combine with other things just like a `where`.
+MyModel.jsonb_contains(my_string: "foo", my_integer: 100).to_sql
+# SELECT "products".* FROM "products" WHERE (products.json_attributes @> ('{"my_string":"foo","my_integer":100}')::jsonb)
+MyModel.jsonb_contains(my_string: "foo", my_integer: 100).first
+# Implemented with scopes, this is an ordinary relation, you can
+# combine it with whatever, just like ordinary `where`.
 
 # typecasts much like ActiveRecord on query too:
 MyModel.jsonb_contains(my_string: "foo", my_integer: "100")
