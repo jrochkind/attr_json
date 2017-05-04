@@ -208,12 +208,30 @@ RSpec.describe JsonAttribute::Record do
       end
     end
 
+    describe "single hash param" do
+      before do
+        instance.models = {str: 'string value', int: 12}
+      end
+      it "casts all the way, with defaults" do
+        expect(instance.models).to eq([
+          model_class.new(str: 'string value', int: "12")
+        ])
+
+        instance.save!
+        serialized = JSON.parse(instance.json_attributes_before_type_cast)
+
+        expect(serialized["models"]).to eq([
+          {"str"=>"string value", "int"=>12, "int_with_default"=>5}
+        ])
+      end
+    end
+
     describe "with existing array" do
       before do
         instance.models = [model_class.new(str: 'string value', int: "12", int_array: "12")]
         instance.save!
       end
-      it "let's us add on and save" do
+      it "lets us add on and save" do
         instance.models << model_class.new(str: 'new value', int: "100", int_array: "100")
         expect(instance.changed?).to be true
         instance.save!
@@ -231,5 +249,7 @@ RSpec.describe JsonAttribute::Record do
     end
 
   end
-
+#TODO default {} should give you a blank model please, or lambda with constructor should also work.
+# TODO even if model has defaults, if you don't set the model to anything, model key
+#   shoudl be nil!
 end

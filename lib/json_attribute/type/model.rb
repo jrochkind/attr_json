@@ -58,15 +58,18 @@ module JsonAttribute
         serialize(new_value) != raw_old_value
       end
 
-      # This is used only by our own keypath-chaining query stuff. Yes, it's
-      # a bit confusing, sorry.
-      def add_keypath_component_to_query(current_hash, attribute_definition, key)
-        leaf_hash = (current_hash[attribute_definition.store_key] ||= {})
-        next_attr_def = model.json_attributes_registry.fetch(key)
-
-        return leaf_hash, next_attr_def
+      # This is used only by our own keypath-chaining query stuff.
+      def value_for_contains_query(key_path_arr, value)
+        first_key, rest_keys = key_path_arr.first, key_path_arr[1..-1]
+        attr_def = model.json_attributes_registry.fetch(first_key)
+        {
+          attr_def.store_key => if rest_keys.present?
+            attr_def.type.value_for_contains_query(rest_keys, value)
+          else
+            attr_def.serialize(attr_def.cast value)
+          end
+        }
       end
-
     end
   end
 end

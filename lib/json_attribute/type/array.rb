@@ -15,28 +15,37 @@ module JsonAttribute
       end
 
       def cast(value)
-        Array(value).collect { |v| base_type.cast(v) }
+        convert_to_array(value).collect { |v| base_type.cast(v) }
       end
 
       def serialize(value)
-        Array(value).collect { |v| base_type.serialize(v) }
+        convert_to_array(value).collect { |v| base_type.serialize(v) }
       end
 
       def deserialize(value)
-        Array(value).collect { |v| base_type.deserialize(v) }
+        convert_to_array(value).collect { |v| base_type.deserialize(v) }
       end
 
-      # This is used only by our own keypath-chaining query stuff. Yes, it's
-      # a bit confusing, sorry.
-      def add_keypath_component_to_query(current_hash, attribute_definition, key)
-        array = current_hash[attribute_definition.store_key] ||= []
-        array << {} if array.empty?
-        leaf_hash = array.first
-
-        next_attr_def = base_type.model.json_attributes_registry.fetch(key)
-
-        return leaf_hash, next_attr_def
+      # This is used only by our own keypath-chaining query stuff.
+      def value_for_contains_query(key_path_arr, value)
+        [
+          if key_path_arr.present?
+            base_type.value_for_contains_query(key_path_arr, value)
+          else
+            base_type.serialize(base_type.cast value)
+          end
+        ]
       end
+
+      protected
+      def convert_to_array(value)
+        if value.kind_of?(Hash)
+          [value]
+        else
+          Array(value)
+        end
+      end
+
     end
   end
 end

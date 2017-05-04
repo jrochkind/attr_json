@@ -55,7 +55,7 @@ RSpec.describe JsonAttribute::Record::QueryScopes do
             json_attribute :value, type
           end
         end
-        it "can query for already cast #{type}" do
+        it "can query with exact type" do
           instance.value = cast_value
           instance.save!
 
@@ -63,7 +63,7 @@ RSpec.describe JsonAttribute::Record::QueryScopes do
 
           expect(result).to eq(instance)
         end
-        it "can cast to query for #{type}" do
+        it "can cast value for query" do
           instance.value = cast_value
           instance.save!
 
@@ -243,14 +243,32 @@ RSpec.describe JsonAttribute::Record::QueryScopes do
         instance.my_labels.hello = [{lang: 'en', value: 'hello'}, {lang: 'es', value: 'hola'}]
         instance.save!
       end
-      it "generates query okay" do
-        query = klass.jsonb_contains("my_labels.hello.lang" => "en").to_sql
-        expect(query).to include "(products.json_attributes @> ('{\"my_labels\":{\"hello\":[{\"lang\":\"en\"}]}}')::jsonb)"
+
+      describe ", complete key path" do
+        let(:relation) { klass.jsonb_contains("my_labels.hello.lang" => "en") }
+
+        it "generates query okay" do
+          expect(relation.to_sql).to include "(products.json_attributes @> ('{\"my_labels\":{\"hello\":[{\"lang\":\"en\"}]}}')::jsonb)"
+        end
+        it "fetches" do
+          expect(relation.count).to eq 1
+          expect(relation.first).to eq(instance)
+        end
       end
-      it "fetches" do
-        result = klass.jsonb_contains("my_labels.hello.lang" => "en").first
-        expect(result).to eq(instance)
+
+      describe ", hash value in query" do
+        let(:relation) { klass.jsonb_contains("my_labels.hello" => {lang: "en"}) }
+
+        it "generates query okay" do
+          expect(relation.to_sql).to include "(products.json_attributes @> ('{\"my_labels\":{\"hello\":[{\"lang\":\"en\"}]}}')::jsonb)"
+        end
+
+        it "fetches" do
+          expect(relation.count).to eq 1
+          expect(relation.first).to eq(instance)
+        end
       end
+
     end
   end
 end
