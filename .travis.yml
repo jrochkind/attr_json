@@ -1,9 +1,14 @@
 sudo: false
 language: ruby
 cache: bundler
+addons:
+  postgresql: '9.4'
 rvm:
   - 2.4.1
 env:
   - RAILS_SPEC="~> 5.0.0"
   - RAILS_SPEC="~> 5.1.0"
 before_install: gem install bundler -v 1.14.6
+before_script:
+  - bundle exec rake db:create
+  - bundle exec rake db:schema:load
