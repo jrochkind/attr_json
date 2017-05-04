@@ -15,7 +15,7 @@ think or what problems you find, also welcome any comments on implementation
 and AR integration, I'd really apprecaite it.
 - - -
 
-### Tour of Features
+## Tour of Features
 
 ```ruby
 # migration
