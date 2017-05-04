@@ -141,18 +141,11 @@ MyModel.jsonb_contains(int_array: [10, 1000]) # nope, returns nil, has to contai
 attribute name, it'll actually query on store_key), as well as any
 `json_container_attribute` (it'll look in the proper jsonb column).
 
-There are limits to what you can do with the postgres jsonb containment
-operator used here -- but anything you can do with `jsonb_contains` should be handled
+Anything you can do with `jsonb_contains` should be handled
 by a [postgres `USING GIN` index](https://www.postgresql.org/docs/9.5/static/datatype-json.html#JSON-INDEXING)
-(I think! can anyone help confirm/deny?)
-
-**Planned for the future not here yet** `jsonb_order` clauses, and
-more types of jsonb-translated queries, something like what
-the [jsonb_accessor](https://github.com/devmynd/jsonb_accessor) gem
-can do.
-
-But the more types of queries get complicated to implement with the most
-exciting feature of all: nested/structured data. Read on!
+(I think! can anyone help confirm/deny?). Check out `to_sql` on
+any query to see what jsonb SQL it generates, and figure out
+what it will do.
 
 ## Nested/Structured/Compound data
 
@@ -262,7 +255,17 @@ MyModel.jsonb_contains("my_labels.hello" => {"lang" => "en"}).to_sql
 
 ```
 
-## State of Code
+## Note on Optimistic Locking
+
+When you save a record with any changes to any json_attributes, it will
+overwrite the _whole json structure_ in the relevant column for that row.
+Unlike ordinary AR attributes where updates just touch changed attributes.
+
+Becuase of this, you probably want to seriously consider using ActiveRecord
+[Optimistic Locking](http://api.rubyonrails.org/classes/ActiveRecord/Locking/Optimistic.html)
+to prevent overwriting other updates from processes.
+
+## State of Code, and To Be Done
 
 Work in progress. But working pretty well. There are some known edge cases,
 or questions about the proper semantics, or proper way to interact with
@@ -276,6 +279,44 @@ to a json-like hash even in a blob/text column. It would require just a
 couple tweaks and perhaps another layer of abstraction; my brain was
 too full and the code complex/abstract enough for now, but could come later.
 
+This is sort of a proof of concept at present, there are many features
+that still need attending to, to really smooth off the edges.
+
+* Dirty/change tracking. This is not currently doing
+  specific json_attribute dirty/change tracking -- either
+  for ActiveRecord JsonAttribute::Record or ActiveModel
+  JsonAttribute::Model. It probably would not be too hard to get it to.
+  There are use cases?
+
+* Validation should be built in such that if an internal JsonAttribute::Model
+  doesn't validate, you can't save. Should be quite doable.
+  Should we also give JsonAttribute::Model a before_serialize hook that you might
+  want to use similar to AR before_save?
+
+* There are limits to what you can do with just jsonb_contains
+  queries. We could support operations like `>`, `<`, `<>`
+  as [jsonb_accessor](https://github.com/devmynd/jsonb_accessor),
+  even accross keypaths -- but the semantics get confusing
+  accross keypaths, especially with multiple keypaths
+  expressed. The proper postgres indexing also
+  gets confusing accross keypaths. Even with jsonb
+  contains, the semantics get confusing, it's not always
+  clear what you're asking for. Full query language support
+  for something similar to what mongodb does is probably quite
+  possible to translate to postgres jsonb, but a bunch of work to write,
+  and confusing how indexes apply.
+
+* We could/should probably support `jsonb_order` clauses, even
+  accross key paths, like jsonb_accessor.
+
+* I think it's important to be able to use these, even nested/array, with
+  _Rails forms_, in a natural way. This ought to be fairly straightforward,
+  the parameter format here is actually a lot _simpler_ than
+  what Rails needs to do for normalized rdbms data, but it might
+  run into Rails' assumptions about that extra complexity,
+  need to experiment with it.
+
+
 ## Acknowledements and Prior Art
 
 * The excellent work [Sean Griffin](https://twitter.com/sgrif) did on ActiveModel::Type
@@ -286,9 +327,10 @@ too full and the code complex/abstract enough for now, but could come later.
 
 * The existing [jsonb_accessor](https://github.com/devmynd/jsonb_accessor) was
   an inspiration, and provided some good examples of how to do some things
-  with AR. I started out trying to figure out how to fit in nested hashes
-  to jsonb_accessor... but ended up pretty much rewriting it entirely,
-  to lean on object-oriented polymorphism and ActiveModel::Type a lot heavier.
+  with AR and ActiveModel::Types. I [started out trying to figure out](https://github.com/devmynd/jsonb_accessor/issues/69#issuecomment-294081059)
+  how to fit in nested hashes to jsonb_accessor... but ended up pretty much rewriting it entirely,
+  to lean on object-oriented polymorphism and ActiveModel::Type a lot heavier and have
+  the API and internals I wanted/imagined.
 
 * Took a look at existing [active_model_attributes](https://github.com/Azdaroth/active_model_attributes) too.
 
