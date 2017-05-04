@@ -82,19 +82,7 @@ module JsonAttribute
 
             # read_store_attribute copied from Rails store_accessor implementation.
             # https://github.com/rails/rails/blob/74c3e43fba458b9b863d27f0c45fd2d8dc603cbc/activerecord/lib/active_record/store.rb#L90-L96
-            from_hash_value = read_store_attribute(attribute_def.container_attribute, attribute_def.store_key)
-return from_hash_value
-            # If this already is of the correct cast type, cast will generally
-            # quickly return itself, so this is actually a cheap way to lazily
-            # convert and memoize serialized verison to proper in-memory object.
-            # They'll be properly serialized out by Rails.... we think. Might
-            # need a custom serializer on the json attribute, we'll see.
-            # casted = attribute_def.deserialize(from_hash_value)
-            # unless casted.equal?(from_hash_value)
-            #   write_store_attribute(attribute_def.container_attribute, name.to_s, casted)
-            # end
-
-            # return casted
+            read_store_attribute(attribute_def.container_attribute, attribute_def.store_key)
           end
         end
       end
