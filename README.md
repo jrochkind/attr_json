@@ -1,41 +1,299 @@
-# JsonAttribute
+# JsonAttribute or Name Yet to Be Determined (suggest a name?)
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/json_attribute`. To experiment with that code, run `bin/console` for an interactive prompt.
+Typed, structured, and compound/nested attributes backed by ActiveRecord
+and Postgres Jsonb. With some query support.  Or, we could say, "Postgres
+jsonb via ActiveRecord as a basic typed, object-oriented document store."
 
-TODO: Delete this and the text above, and describe your gem
+---------
+This is an in-progress experiment, not ready for production use, may
+change substantially before 1.0.
 
-## Installation
+**Peer-review would be very appreciated though**, especially but not only from those who
+understand some of the depths of ActiveRecord. There is enough here you should
+be able to take a look at code and/or take it for a spin, and tell me what you
+think or what problems you find, also welcome any comments on implementation
+and AR integration, I'd really apprecaite it.
+---------
 
-Add this line to your application's Gemfile:
+### Tour of Features
 
 ```ruby
-gem 'json_attribute'
+# migration
+class CreatMyModels < ActiveRecord::Migration[5.0]
+  def change
+    create_table :my_models do |t|
+      t.jsonb :json_attributes
+      # an index would prob be wise here TBD
+    end
+  end
+end
+
+class MyModel < ActiveRecord::Base
+   include JsonAttribute::Record
+
+   # use any ActiveModel::Type types: string, integer, decimal (BigDecimal),
+   # float, datetime, boolean.
+   json_attribute :my_string, :string
+   json_attribute :my_integer, :integer
+   json_attribute :my_datetime, :datetime
+
+   # You can have an _array_ of those things too.
+   json_attribute :int_array, :integer, array: true
+
+   #and/or defaults
+   json_attribute :int_with_default, :integer, default: 100
+end
 ```
 
-And then execute:
+You can treat these as if they were attributes, and they cast much like
+ordinary ActiveRecord values -- even the arrays.
 
-    $ bundle
+```ruby
+model = MyModel.new
+model.my_integer = "12"
+model.my_integer # => 12
+model.int_array = "12"
+model.int_array # => [12]
+model.my_datetime = "2016-01-01 17:45"
+model.my_datetime # => a Time object representing that, just like AR would cast
+```
 
-Or install it yourself as:
+These are all serialized to json in the `json_attributes` column, by default.
+If you look at `model.json_attributes`, you'll see already cast values.
+But one way to see something like what it's really like in the db is to
+save and then use the standard Rails `*_before_type_cast` method.
 
-    $ gem install json_attribute
+```ruby
+model.save!
+model.json_attributes_before_type_cast
+# => string containing: {"my_integer":12,"int_array":[12],"my_datetime":"2016-01-01T17:45:00.000Z"}
+```
 
-## Usage
+While the default is to assume a column called `json_attributes`, no worries,
+of course you can pick whatever named jsonb column you like. Either for the class default:
 
-TODO: Write usage instructions here
+```ruby
+class OtherModel < ActiveRecord::Base
+  include JsonAttribute::Record
+  self.default_json_container_attribute = :some_other_column_name
 
-## Development
+  # now this is going to serialize to column 'some_other_column_name'
+  json_attribute :my_int, :integer
+end
+```
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+And/or on a per-attribute basis, including different json_attributes in
+different jsonb columns if you like.
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+```ruby
+    json_attribute :my_int, :integer, json_container_attribute: "some_other_column_name"
+```
 
-## Contributing
+You can also specify that the serialized JSON key
+should be different than the attribute name with the `store_key` argument.
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/json_attribute.
+```ruby
+class MyModel < ActiveRecord::Base
+  include JsonAttribute::Record
+
+  json_attribute :special_string, :string, store_key: "__my_string"
+end
+
+model = MyModel.new
+model.special_string = "foo"
+model.json_attributes # => {"__my_string"=>"foo"}
+model.save!
+model.json_attributes_before_type_cast # => string containing: {"__my_string":"foo"}
+```
+
+You can of course combine `array`, `default`, `store_key`, and `json_container_attribute`
+params however you like, with whatever types you like: symbols resolvable
+with `ActiveModel::Type.lookup`, or any valid [ActiveModel::Type](https://apidock.com/rails/ActiveRecord/Attributes/ClassMethods/attribute)
+like object, built-in or custom. (For now, arg checking says it must actually
+be an `ActiveModel::Type::Value` subclass).
+
+## Querying
+
+There is some built-in support for querying using postgres jsonb containment
+(`@>`) operator. For now you need to additonally `include JsonAttribute::Record::QueryScopes`
+to get this behavior.
+
+```ruby
+model = MyModel.create(my_string: "foo", my_integer: 100)
+
+MyModel.jsonb_contains(my_string: "foo", my_integer: 100)
+# => Returns it. This is an ordinary ActiveRelation scope
+#    you can combine with other things just like a `where`.
+
+# typecasts much like ActiveRecord on query too:
+MyModel.jsonb_contains(my_string: "foo", my_integer: "100")
+# no problem
+
+# works for arrays too
+model = MyModel.create(int_array: [10, 20, 30])
+MyModel.jsonb_contains(int_array: 10) # finds it
+MyModel.jsonb_contains(int_array: [10]) # still finds it
+MyModel.jsonb_contains(int_array: [10, 20]) # it contains both, so still finds it
+MyModel.jsonb_contains(int_array: [10, 1000]) # nope, returns nil, has to contain ALL listed in query for array args
+```
+
+`jsonb_contains` of course handles any `store_key` you have set (you should specify
+attribute name, it'll actually query on store_key), as well as any
+`json_container_attribute` (it'll look in the proper jsonb column).
+
+There are limits to what you can do with the postgres jsonb containment
+operator used here -- but anything you can do with `jsonb_contains` should be handled
+by a [postgres `USING GIN` index](https://www.postgresql.org/docs/9.5/static/datatype-json.html#JSON-INDEXING)
+(I think! can anyone help confirm/deny?)
+
+**Planned for the future not here yet** `jsonb_order` clauses, and
+more types of jsonb-translated queries, something like what
+the [jsonb_accessor](https://github.com/devmynd/jsonb_accessor) gem
+can do.
+
+But the more types of queries get complicated to implement with the most
+exciting feature of all: nested/structured data. Read on!
+
+## Nested/Structured/Compound data
+
+`JsonAttribute::Model` lets you make ActiveModel objects that always
+represent something that can be serialized to a json hash, and they can
+be used as types for your top-level JsonAttribute::Record.
+
+`JsonAttribute::Model` has an identical `json_attribute` api to
+`JsonAttribute::Record`, with the exception that `store_key` is not supported.
+
+```ruby
+class LangAndValue
+  include JsonAttribute::Model
+
+  json_attribute :lang, :string, default: "en"
+  json_attribute :value, :string
+
+  # Validations, not yet really.
+end
+
+class MyModel < ActiveRecord::Base
+  include JsonAttribute::Record
+  include JsonAttribute::Record::QueryScopes
+
+  json_attribute :lang_and_value, LangAndValue.to_type
+  # YES, you can even have an array of them
+  json_attribute :lang_and_value_array, LangAndValue.to_type, array: true
+end
+
+# Set with a model object, in initializer or writer
+m = MyModel.new(lang_and_value: LangAndValue.new(lang: "fr", value: "S'il vous plaît"))
+m.lang_and_value = LangAndValue.new(lang: "es", value: "hola")
+m.lang_and_value
+# => #<LangAndValue:0x007fb64f12bb70 @attributes={"lang"=>"es", "value"=>"hola"}>
+m.save!
+m.json_attributes_before_type_cast
+# => string containing: {"lang_and_value":{"lang":"es","value":"hola"}}
+
+# Or with a hash, no problem.
+
+m = MyModel.new(lang_and_value: { lang: 'fr', value: "S'il vous plaît"})
+m.lang_and_value = { lang: 'en', value: "Hey there" }
+m.save!
+m.json_attributes_before_type_cast
+# => string containing: {"lang_and_value":{"lang":"en","value":"Hey there"}}
+found = MyModel.find(m.id)
+m.lang_and_value
+# => #<LangAndValue:0x007fb64eb78e58 @attributes={"lang"=>"en", "value"=>"Hey there"}>
+
+# Arrays too, yup
+m = MyModel.new(lang_and_value_array: [{ lang: 'fr', value: "S'il vous plaît"}, { lang: 'en', value: "Hey there" }])
+m.lang_and_value_array
+# => [#<LangAndValue:0x007fb64eb19980 @attributes={"lang"=>"fr", "value"=>"S'il vous plat"}>, #<LangAndValue:0x007fb64eb196b0 @attributes={"lang"=>"en", "value"=>"Hey there"}>]
+m.save!
+m.json_attributes_before_type_cast
+# => string containing: {"lang_and_value_array":[{"lang":"fr","value":"S'il vous plat"},{"lang":"en","value":"Hey there"}]}
+```
+
+You can nest JsonAttribute::Model objects inside each other, as deeply as you like.
+
+```ruby
+class SomeLabels
+  include JsonAttribute::Model
+
+  json_attribute :hello, LangAndValue.to_type, array: true
+  json_attribute :goodbye, LangAndValue.to_type, array: true
+end
+class MyModel < ActiveRecord::Base
+  include JsonAttribute::Record
+  include JsonAttribute::Record::QueryScopes
+
+  json_attribute :my_labels, SomeLabels.to_type
+end
+
+m = MyModel.new
+m.my_labels = {}
+m.my_labels
+# => #<SomeLabels:0x007fed2a3b1a18>
+m.my_labels.hello = [{lang: 'en', value: 'hello'}, {lang: 'es', value: 'hola'}]
+m.my_labels
+# => #<SomeLabels:0x007fed2a3b1a18 @attributes={"hello"=>[#<LangAndValue:0x007fed2a0eafc8 @attributes={"lang"=>"en", "value"=>"hello"}>, #<LangAndValue:0x007fed2a0bb4d0 @attributes={"lang"=>"es", "value"=>"hola"}>]}>
+m.my_labels.hello.find { |l| l.lang == "en" }.value = "Howdy"
+m.save!
+m.json_attributes
+# => {"my_labels"=>#<SomeLabels:0x007fed2a714e80 @attributes={"hello"=>[#<LangAndValue:0x007fed2a714cf0 @attributes={"lang"=>"en", "value"=>"Howdy"}>, #<LangAndValue:0x007fed2a714ac0 @attributes={"lang"=>"es", "value"=>"hola"}>]}>}
+m.json_attributes_before_type_cast
+# => string containing: {"my_labels":{"hello":[{"lang":"en","value":"Howdy"},{"lang":"es","value":"hola"}]}}
+```
+
+**GUESS WHAT?** You can **QUERY** nested structures with `jsonb_contains`,
+using a dot-keypath notation, even through arrays as in this case.
+
+```ruby
+MyModel.jsonb_contains("my_labels.hello.lang" => "en").to_sql
+# => SELECT "products".* FROM "products" WHERE (products.json_attributes @> ('{"my_labels":{"hello":[{"lang":"en"}]}}')::jsonb)
+MyModel.jsonb_contains("my_labels.hello.lang" => "en").first
 
 
-## License
+# also can give hashes, at any level, or models themselves. They will
+# be cast. Trying to make everything super consistent with no surprises.
 
-The gem is available as open source under the terms of the [MIT License](http://opensource.org/licenses/MIT).
+MyModel.jsonb_contains("my_labels.hello" => LangAndValue.new(lang: 'en')).to_sql
+# => SELECT "products".* FROM "products" WHERE (products.json_attributes @> ('{"my_labels":{"hello":[{"lang":"en"}]}}')::jsonb)
 
+MyModel.jsonb_contains("my_labels.hello" => {"lang" => "en"}).to_sql
+# => SELECT "products".* FROM "products" WHERE (products.json_attributes @> ('{"my_labels":{"hello":[{"lang":"en"}]}}')::jsonb)
+
+```
+
+## State of Code
+
+Work in progress. But working pretty well. There are some known edge cases,
+or questions about the proper semantics, or proper way to interact with
+existing ActiveRecord API -- search code for "TODO".
+
+While the _querying_ stuff relies on postgres-jsonb-specific features,
+the stuff to simply store complex nested typed data in a json column
+doesn't really have any postgres-specifics, and the design should work
+on a MySQL json column, or possibly any ActiveRecord column `serialize`d
+to a json-like hash even in a blob/text column. It would require just a
+couple tweaks and perhaps another layer of abstraction; my brain was
+too full and the code complex/abstract enough for now, but could come later.
+
+## Acknowledements and Prior Art
+
+* The excellent work [Sean Griffin](https://twitter.com/sgrif) did on ActiveModel::Type
+  really lays the groundwork and makes this possible. Plus many other Rails developers.
+  Rails has a reputation for being composed of messy or poorly designed code, but
+  it's some really nice design in Rails that allows us to do some pretty powerful
+  stuff here, in under 1000 lines of code.
+
+* The existing [jsonb_accessor](https://github.com/devmynd/jsonb_accessor) was
+  an inspiration, and provided some good examples of how to do some things
+  with AR. I started out trying to figure out how to fit in nested hashes
+  to jsonb_accessor... but ended up pretty much rewriting it entirely,
+  to lean on object-oriented polymorphism and ActiveModel::Type a lot heavier.
+
+* Took a look at existing [active_model_attributes](https://github.com/Azdaroth/active_model_attributes) too.
+
+* Didn't actually notice existing [json_attributes](https://github.com/joel/json_attributes)
+  until I was well on my way here. I think it's not updated for Rails5 or type-aware,
+  haven't looked at it too much.
+
+(Btw, so many names are taken... what should I call this gem?)
