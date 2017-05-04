@@ -36,8 +36,8 @@ module JsonAttribute
       end
 
       # Type can be a symbol that will be looked up in `ActiveModel::Type.lookup`,
-      # or anything that's an ActiveSupport::Type-like thing (usually
-      # subclassing ActiveSupport::Type::Value)
+      # or anything that's an ActiveModel::Type-like thing (usually
+      # subclassing ActiveModel:::Type::Value)
       #
       # TODO, doc or
       def json_attribute(name, type,

@@ -40,7 +40,7 @@ module JsonAttribute
         @type ||= JsonAttribute::Type::Model.new(self)
       end
 
-      # Type can be an ActiveSupport::Type sort of object, or a symbol that will
+      # Type can be an ActiveModel::Type sort of object, or a symbol that will
       # be looked up in `ActiveModel::Type.lookup`
       def json_attribute(name, type, **options)
         self.json_attributes_registry = json_attributes_registry.with(
