@@ -1,5 +1,6 @@
 require 'spec_helper'
 
+#TODO tests could use a lot of DRYing up, maybe with shared example groups
 RSpec.describe JsonAttribute::Record::QueryScopes do
   let(:klass) do
     Class.new(ActiveRecord::Base) do
@@ -261,6 +262,25 @@ RSpec.describe JsonAttribute::Record::QueryScopes do
 
         it "generates query okay" do
           expect(relation.to_sql).to include "(products.json_attributes @> ('{\"my_labels\":{\"hello\":[{\"lang\":\"en\"}]}}')::jsonb)"
+        end
+
+        it "fetches" do
+          expect(relation.count).to eq 1
+          expect(relation.first).to eq(instance)
+        end
+      end
+
+      describe "multiple query attributes" do
+        let(:relation) { klass.jsonb_contains("my_labels.hello.lang" => "en", "my_labels.hello.value" => "hello") }
+
+        # TODO. We need a custom deep_merge in query builder, bah.
+        # Semantics are actually not entirely clear. Did the user mean
+        # the same structure needs to have `{lang: 'en', {value: 'hello'}}`,
+        # or were they asking for an object that might have one of those pairs
+        # in one hash, and the other in another, in the array? I think the former
+        # probably, use separate jsonb_contains calls for the latter.
+        pending "generates query okay" do
+          expect(relation.to_sql).to include "(products.json_attributes @> ('{\"my_labels\":{\"hello\":[{\"lang\":\"en\",\"value\":\"hello\"}]}}')::jsonb)"
         end
 
         it "fetches" do
