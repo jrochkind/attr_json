@@ -2,7 +2,8 @@
 
 Typed, structured, and compound/nested attributes backed by ActiveRecord
 and Postgres Jsonb. With some query support.  Or, we could say, "Postgres
-jsonb via ActiveRecord as a basic typed, object-oriented document store."
+jsonb via ActiveRecord as a typed, object-oriented document store." A basic
+one anyway.
 
 - - -
 This is an in-progress experiment, not ready for production use, may
@@ -13,6 +14,8 @@ understand some of the depths of ActiveRecord. There is enough here you should
 be able to take a look at code and/or take it for a spin, and tell me what you
 think or what problems you find, also welcome any comments on implementation
 and AR integration, I'd really apprecaite it.
+
+The examples below in the README are real, they all work now.
 - - -
 
 ## Tour of Features
@@ -155,6 +158,9 @@ what it will do.
 represent something that can be serialized to a json hash, and they can
 be used as types for your top-level JsonAttribute::Record.
 
+That is, you can serialize complex object-oriented graphs of models into a single
+jsonb column, and get them back as they went in.
+
 `JsonAttribute::Model` has an identical `json_attribute` api to
 `JsonAttribute::Record`, with the exception that `store_key` is not supported.
 
@@ -238,7 +244,8 @@ m.json_attributes_before_type_cast
 ```
 
 **GUESS WHAT?** You can **QUERY** nested structures with `jsonb_contains`,
-using a dot-keypath notation, even through arrays as in this case.
+using a dot-keypath notation, even through arrays as in this case. Your specific
+defined `json_attribute` types determine the query and type-casting.
 
 ```ruby
 MyModel.jsonb_contains("my_labels.hello.lang" => "en").to_sql
@@ -256,6 +263,12 @@ MyModel.jsonb_contains("my_labels.hello" => {"lang" => "en"}).to_sql
 # => SELECT "products".* FROM "products" WHERE (products.json_attributes @> ('{"my_labels":{"hello":[{"lang":"en"}]}}')::jsonb)
 
 ```
+
+Remember, we're using a postgres containment (`@>`) operator, so queries
+always mean 'contains' -- the previous query needs a `my_labels.hello`
+which is a hash that includes the key/value, `lang: en`, it can have
+other key/values in it too.
+
 
 ## Note on Optimistic Locking
 
