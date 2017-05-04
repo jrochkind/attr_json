@@ -279,7 +279,7 @@ RSpec.describe JsonAttribute::Record::QueryScopes do
         # or were they asking for an object that might have one of those pairs
         # in one hash, and the other in another, in the array? I think the former
         # probably, use separate jsonb_contains calls for the latter.
-        pending "generates query okay" do
+        it "generates query okay" do
           expect(relation.to_sql).to include "(products.json_attributes @> ('{\"my_labels\":{\"hello\":[{\"lang\":\"en\",\"value\":\"hello\"}]}}')::jsonb)"
         end
 

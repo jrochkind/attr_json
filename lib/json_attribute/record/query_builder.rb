@@ -24,6 +24,18 @@ module JsonAttribute
 
       protected
 
+      def merge_param_hash!(original, new)
+        original.deep_merge!(new) do |key, old_val, new_val|
+          if old_val.is_a?(Array) && old_val.first.is_a?(Hash) && new_val.is_a?(Array) && new_val.first.is_a?(Hash)
+            [merge_param_hash!(old_val.first, new_val.first)]
+          elsif old_val.is_a?(Hash) && new_val.is_a?(Hash)
+            merge_param_hash!(old_val, new_val)
+          else
+            new_val
+          end
+        end
+      end
+
 
       def add_to_param_hash!(param_hash, key_path_str, value)
         key_path = key_path_str.to_s.split(".")
@@ -38,9 +50,7 @@ module JsonAttribute
 
         if value.kind_of?(Hash)
           param_hash[attr_def.store_key] ||= {}
-          # TODO, ActiveSupport deep_merge! isn't actually right, needs
-          # to merge arrays too. we can build it ourselves with merge-with-block
-          param_hash[attr_def.store_key].deep_merge!( value )
+          merge_param_hash!(param_hash[attr_def.store_key], value)
         else
           param_hash[attr_def.store_key] = value
         end
