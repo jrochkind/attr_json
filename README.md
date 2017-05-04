@@ -269,6 +269,34 @@ always mean 'contains' -- the previous query needs a `my_labels.hello`
 which is a hash that includes the key/value, `lang: en`, it can have
 other key/values in it too.
 
+## Do you want this?
+
+Why might you want this?
+
+* Single-Table Inheritance, and sub-classes have a few unique data fields,
+  you don't want to make columns for them all that don't apply to all.
+
+* A "content management system" type project, where you need complex
+  structured data of various types, maybe needs to be vary depending
+  on plugins or configuration, or for different article types -- but
+  doesn't need to be very queryable generally.
+
+* Generally, we're turning postgres into a _simple_ object-oriented
+  document store. That can be mixed with an rdbms. The very same
+  row can have document-oriented json data _and_ foreign keys
+  and real rdbms associations to other rows. And it all just
+  feels like ActiveRecord, mostly.
+
+Why might you _not_ want this?
+
+* An rdbms and SQL is a wonderful thing, if you need sophisticated
+  querying and reporting with reasonable performance, complex data
+  in a single jsonb probably isn't gonna be the best.
+
+* This is pretty well-designed code that _mostly_ only uses
+  fairly stable and public Rails API, but there is still some
+  risk of tying your boat to it, it's not Rails itself.
+
 
 ## Note on Optimistic Locking
 
