@@ -1,5 +1,8 @@
 sudo: false
 language: ruby
 rvm:
-  - 2.4.0
+  - 2.4.1
+env:
+  - RAILS_SPEC="~> 5.0.0"
+  - RAILS_SPEC="~> 5.1.0"
 before_install: gem install bundler -v 1.14.6

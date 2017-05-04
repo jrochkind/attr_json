@@ -18,6 +18,8 @@ and AR integration, I'd really apprecaite it.
 The examples below in the README are real, they all work now.
 - - -
 
+[![Build Status](https://travis-ci.org/jrochkind/json_attribute.svg?branch=master)](https://travis-ci.org/jrochkind/json_attribute)
+
 ## Tour of Features
 
 ```ruby
