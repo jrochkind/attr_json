@@ -4,7 +4,7 @@ Typed, structured, and compound/nested attributes backed by ActiveRecord
 and Postgres Jsonb. With some query support.  Or, we could say, "Postgres
 jsonb via ActiveRecord as a basic typed, object-oriented document store."
 
----------
+- - -
 This is an in-progress experiment, not ready for production use, may
 change substantially before 1.0.
 
@@ -13,7 +13,7 @@ understand some of the depths of ActiveRecord. There is enough here you should
 be able to take a look at code and/or take it for a spin, and tell me what you
 think or what problems you find, also welcome any comments on implementation
 and AR integration, I'd really apprecaite it.
----------
+- - -
 
 ### Tour of Features
 
