@@ -35,6 +35,13 @@ module JsonAttribute
     end
 
     def initialize(attributes = {})
+      # TODO, move this all/some to #assign_attributes, so we get store key translation
+      # on assign_attributes. And defaults fill-in, is that appropriate on assign_attributes?
+      # test ActiveRecord objects and see.
+      if !attributes.respond_to?(:transform_keys)
+        raise ArgumentError, "When assigning attributes, you must pass a hash as an argument."
+      end
+
       attributes = attributes.transform_keys do |key|
         # store keys in arguments get translated to attribute names on initialize.
         if attribute_def = self.class.json_attributes_registry.store_key_lookup("attributes", key.to_s)
