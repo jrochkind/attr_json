@@ -291,6 +291,9 @@ Why might you want this?
   on plugins or configuration, or for different article types -- but
   doesn't need to be very queryable generally.
 
+* You want to version your models, which is tricky with associations.
+  Minimize associations by inlining the complex data.
+
 * Generally, we're turning postgres into a _simple_ object-oriented
   document store. That can be mixed with an rdbms. The very same
   row can have document-oriented json data _and_ foreign keys
