@@ -42,10 +42,18 @@ module JsonAttribute
 
       # Type can be an ActiveModel::Type sort of object, or a symbol that will
       # be looked up in `ActiveModel::Type.lookup`
+      # TODO doc options
       def json_attribute(name, type, **options)
         self.json_attributes_registry = json_attributes_registry.with(
           AttributeDefinition.new(name.to_sym, type, options)
         )
+
+        # By default, automatically validate nested models
+        if type.kind_of?(JsonAttribute::Type::Model) && options[:validate] != false
+          # Yes. we're passing an ActiveRecord::Validations valiator, but
+          # it works fine for ActiveModel. If it stops, tests will catch.
+          self.validates_with ActiveRecord::Validations::AssociatedValidator, attributes: [name.to_sym]
+        end
 
         _json_attributes_module.module_eval do
           define_method("#{name}=") do |value|
