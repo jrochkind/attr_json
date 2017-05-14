@@ -3,7 +3,9 @@
 Typed, structured, and compound/nested attributes backed by ActiveRecord
 and Postgres Jsonb. With some query support.  Or, we could say, "Postgres
 jsonb via ActiveRecord as a typed, object-oriented document store." A basic
-one anyway.
+one anyway. We intend JSON attributes to act consistently, with no surprises,
+and just like you expect from ordinary ActiveRecord, by using as much of
+existing ActiveRecord architecture as we can.
 
 - - -
 This is an in-progress experiment, not ready for production use, may
@@ -276,6 +278,11 @@ other key/values in it too.
 
 Why might you want this?
 
+* You have complicated data, which you want to access in object-oriented
+  fashion, but want to avoid very complicated normalized rdbms schema --
+  and are willing to trade the powerful complex querying support normalized rdbms
+  schema gives you.
+
 * Single-Table Inheritance, and sub-classes have a few unique data fields,
   you don't want to make columns for them all that don't apply to all.
 
@@ -349,7 +356,9 @@ that still need attending to, to really smooth off the edges.
   clear what you're asking for. Full query language support
   for something similar to what mongodb does is probably quite
   possible to translate to postgres jsonb, but a bunch of work to write,
-  and confusing how indexes apply.
+  and confusing how indexes apply. (You can always use a
+  before_safe to denormalize/renormalize copy your data into
+  ordinary AR columns/associations though.)
 
 * We could/should probably support `jsonb_order` clauses, even
   accross key paths, like jsonb_accessor.
@@ -361,6 +370,8 @@ that still need attending to, to really smooth off the edges.
   run into Rails' assumptions about that extra complexity,
   need to experiment with it.
 
+* Could we make these attributes work in ordinary AR where, same
+  as they do in jsonb_contains? Maybe.
 
 ## Acknowledements and Prior Art
 

@@ -10,7 +10,12 @@ Gem::Specification.new do |spec|
   spec.email         = ["jonathan@dnil.net"]
 
   spec.summary       = %q{experimental in progress}
-  #spec.description   = %q{TODO: Write a longer description or delete this line.}
+  spec.description   = %q{Typed, structured, and compound/nested attributes backed by ActiveRecord
+and Postgres Jsonb. With some query support.  Or, we could say, "Postgres
+jsonb via ActiveRecord as a typed, object-oriented document store." A basic
+one anyway. We intend JSON attributes to act consistently, with no surprises,
+and just like you expect from ordinary ActiveRecord, by using as much of
+existing ActiveRecord architecture as we can.}
   #spec.homepage      = "TODO: Put your gem's website or public repo URL here."
   spec.license       = "MIT"
 
