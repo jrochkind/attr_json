@@ -295,7 +295,6 @@ RSpec.describe JsonAttribute::Record do
         end
       end
       it "defaults to new model" do
-        # not casting, it's still a {} somehow.
         expect(instance.model).to be_present
         expect(instance.model).to be_kind_of(model_class)
         expect(instance.model.int_with_default).to be_present
