@@ -13,7 +13,7 @@ change substantially before 1.0.
 
 **Peer-review would be very appreciated though**, especially but not only from those who
 understand some of the depths of ActiveRecord. There is enough here you should
-be able to take a look at code and/or take it for a spin, and tell me what you
+be able to take a look at code and/or take it for a spin (Gemfile point to git repo), and tell me what you
 think or what problems you find, also welcome any comments on implementation
 and AR integration, I'd really apprecaite it.
 
@@ -77,23 +77,21 @@ model.json_attributes_before_type_cast
 ```
 
 While the default is to assume a column called `json_attributes`, no worries,
-of course you can pick whatever named jsonb column you like. Either for the class default:
+of course you can pick whatever named jsonb column you like.
 
 ```ruby
 class OtherModel < ActiveRecord::Base
   include JsonAttribute::Record
+
+  # as a default for the model
   self.default_json_container_attribute = :some_other_column_name
 
   # now this is going to serialize to column 'some_other_column_name'
   json_attribute :my_int, :integer
+
+  # Or on a per-attribute basis
+  json_attribute :my_int, :integer, json_container_attribute: "yet_another_column_name"
 end
-```
-
-And/or on a per-attribute basis, including different json_attributes in
-different jsonb columns if you like.
-
-```ruby
-    json_attribute :my_int, :integer, json_container_attribute: "some_other_column_name"
 ```
 
 You can also specify that the serialized JSON key
