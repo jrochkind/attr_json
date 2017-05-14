@@ -10,6 +10,10 @@ module JsonAttribute
       extend ActiveSupport::Concern
 
       included do
+        unless self < JsonAttribute::Record
+          raise TypeError, "JsonAttribute::Record::QueryScopes can only be included in a JsonAttribute::Record"
+        end
+
         scope(:jsonb_contains, lambda do |attributes|
           QueryBuilder.new(self, attributes).contains_relation
         end)
