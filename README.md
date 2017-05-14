@@ -370,6 +370,8 @@ that still need attending to, to really smooth off the edges.
   run into Rails' assumptions about that extra complexity,
   need to experiment with it.
 
+* Polymorphic JSON attributes.
+
 * Could we make these attributes work in ordinary AR where, same
   as they do in jsonb_contains? Maybe.
 
