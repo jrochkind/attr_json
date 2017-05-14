@@ -166,7 +166,7 @@ That is, you can serialize complex object-oriented graphs of models into a singl
 jsonb column, and get them back as they went in.
 
 `JsonAttribute::Model` has an identical `json_attribute` api to
-`JsonAttribute::Record`, with the exception that `store_key` is not supported.
+`JsonAttribute::Record`, with the exception that `container_attribute` is not supported.
 
 ```ruby
 class LangAndValue
