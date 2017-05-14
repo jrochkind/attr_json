@@ -33,6 +33,10 @@ RSpec.describe JsonAttribute::Record do
 
 # TODO datetimes are weird, sometimes rails takes off fractional seconds, sometimes it doesn't.
 
+  it "starts out nil" do
+    expect(instance.model).to be_nil
+  end
+
   it "can set, save, and load with real object" do
     instance.model = model_class.new(str: 'string value', int: "12", int_array: "12")
 
@@ -275,7 +279,47 @@ RSpec.describe JsonAttribute::Record do
       end
     end
   end
-#TODO default {} should give you a blank model please, or lambda with constructor should also work.
-# TODO even if model has defaults, if you don't set the model to anything, model key
-#   shoudl be nil!
+
+  describe "model defaults" do
+    describe "empty hash" do
+      let(:klass) do
+        # really hard to get the class def closure to capture the rspec
+        # `let` for some reason, but this works.
+        model_class_type = model_class.to_type
+        Class.new(ActiveRecord::Base) do
+          include JsonAttribute::Record
+          def self.model_name ; ActiveModel::Name.new(self, nil, "Product") ; end
+          self.table_name = "products"
+
+          json_attribute :model, model_class_type, default: {}
+        end
+      end
+      it "defaults to new model" do
+        # not casting, it's still a {} somehow.
+        expect(instance.model).to be_present
+        expect(instance.model).to be_kind_of(model_class)
+        expect(instance.model.int_with_default).to be_present
+      end
+    end
+    describe "constructor lambda" do
+      let(:klass) do
+        # really hard to get the class def closure to capture the rspec
+        # `let` for some reason, but this works.
+        model_klass = model_class
+        model_class_type = model_class.to_type
+        Class.new(ActiveRecord::Base) do
+          include JsonAttribute::Record
+          def self.model_name ; ActiveModel::Name.new(self, nil, "Product") ; end
+          self.table_name = "products"
+
+          json_attribute :model, model_class_type, default: -> { model_klass.new }
+        end
+      end
+      it "defaults to new model" do
+        expect(instance.model).to be_present
+        expect(instance.model).to be_kind_of(model_class)
+        expect(instance.model.int_with_default).to be_present
+      end
+    end
+  end
 end

@@ -71,9 +71,9 @@
       # Proc's aren't serializable, so fine assumption. Modeled after:
       # https://github.com/rails/rails/blob/f2dfd5c6fdffdf65e6f07aae8e855ac802f9302f/activerecord/lib/active_record/attribute/user_provided_default.rb#L12-L16
       if @default.is_a?(Proc)
-        @default.call
+        cast(@default.call)
       else
-        @default
+        cast(@default)
       end
     end
   end

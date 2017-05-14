@@ -233,15 +233,15 @@ RSpec.describe JsonAttribute::Record do
         Class.new(klass) do
           self.table_name = "products"
           include JsonAttribute::Record
-          json_attribute :new_value, :integer, default: "NEW_DEFAULT_VALUE", store_key: :_new_store_key
+          json_attribute :new_value, :integer, default: 10101, store_key: :_new_store_key
         end
       end
       let(:subklass_instance) { subklass.new }
 
       it "includes default values from the parent in the jsonb hash with the correct store keys" do
         expect(subklass_instance.value).to eq("DEFAULT_VALUE")
-        expect(subklass_instance.new_value).to eq("NEW_DEFAULT_VALUE")
-        expect(subklass_instance.json_attributes).to eq("_store_key" => "DEFAULT_VALUE", "_new_store_key" => "NEW_DEFAULT_VALUE")
+        expect(subklass_instance.new_value).to eq(10101)
+        expect(subklass_instance.json_attributes).to eq("_store_key" => "DEFAULT_VALUE", "_new_store_key" => 10101)
       end
     end
   end
