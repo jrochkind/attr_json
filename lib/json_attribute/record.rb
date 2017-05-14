@@ -60,6 +60,11 @@ module JsonAttribute
           AttributeDefinition.new(name.to_sym, type, options.merge(container_attribute: container_attribute))
         )
 
+        # By default, automatically validate nested models
+        if type.kind_of?(JsonAttribute::Type::Model) && options[:validate] != false
+          self.validates_with ActiveRecord::Validations::AssociatedValidator, attributes: [name.to_sym]
+        end
+
         _json_attributes_module.module_eval do
           define_method("#{name}=") do |value|
             attribute_def = self.class.json_attributes_registry.fetch(name.to_sym)

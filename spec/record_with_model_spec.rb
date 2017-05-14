@@ -23,6 +23,7 @@ RSpec.describe JsonAttribute::Record do
     model_class_type = model_class.to_type
     Class.new(ActiveRecord::Base) do
       include JsonAttribute::Record
+      def self.model_name ; ActiveModel::Name.new(self, nil, "Product") ; end
       self.table_name = "products"
 
       json_attribute :model, model_class_type
@@ -150,6 +151,32 @@ RSpec.describe JsonAttribute::Record do
     end
   end
 
+  describe "validating nested model" do
+    let(:model_class) do
+      Class.new do
+        include JsonAttribute::Model
+
+        def self.model_name ; ActiveModel::Name.new(self, nil, "ModelClass") ; end
+
+        json_attribute :str, :string
+        validates_presence_of :str
+      end
+    end
+    before do
+      instance.model = model_class.new
+    end
+    it "is invalid when nested is" do
+      expect(instance.valid?).to be false
+      expect(instance.errors.key?(:model)).to be true
+      expect(instance.errors[:model]).to include("is invalid")
+
+      expect(instance.model.errors.key?(:str))
+      expect(instance.model.errors[:str]).to include("can't be blank")
+
+      expect(instance.errors.details[:model].first[:value]).to be_kind_of(model_class)
+    end
+  end
+
   # TODO test deeply nested models? Pretty sure we're fine.
 
   describe "array of models" do
@@ -247,7 +274,6 @@ RSpec.describe JsonAttribute::Record do
         ])
       end
     end
-
   end
 #TODO default {} should give you a blank model please, or lambda with constructor should also work.
 # TODO even if model has defaults, if you don't set the model to anything, model key

@@ -173,7 +173,8 @@ class LangAndValue
   json_attribute :lang, :string, default: "en"
   json_attribute :value, :string
 
-  # Validations, not yet really.
+  # Validations work fine, and will post up to parent record
+  validates :lang, inclusion_in: I18n.config.available_locales.collect(&:to_s)
 end
 
 class MyModel < ActiveRecord::Base
@@ -333,10 +334,9 @@ that still need attending to, to really smooth off the edges.
   JsonAttribute::Model. It probably would not be too hard to get it to.
   There are use cases?
 
-* Validation should be built in such that if an internal JsonAttribute::Model
-  doesn't validate, you can't save. Should be quite doable.
-  Should we also give JsonAttribute::Model a before_serialize hook that you might
-  want to use similar to AR before_save?
+* Should we give JsonAttribute::Model a before_serialize hook that you might
+  want to use similar to AR before_save?  Should JsonAttribute::Models
+  raise on trying to serialize an invalid model?
 
 * There are limits to what you can do with just jsonb_contains
   queries. We could support operations like `>`, `<`, `<>`
