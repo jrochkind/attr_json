@@ -8,9 +8,9 @@ require 'json_attribute/type/model'
 
 module JsonAttribute
 
-  # Meant for use in an ActiveModel::Model, NOT an ActiveRecord::Base model,
-  # see `Record` for ActiveRecord use. TODO: raise if including in ActiveRecord
-  # to avoid mistakes.
+  # Meant for use in a plain class, turns it into an ActiveModel::Model
+  # with json_attribute support. NOT for use in an ActiveRecord::Base model,
+  # see `Record` for ActiveRecord use.
   #
   # Creates an ActiveModel object with _typed_ attributes, easily serializable
   # to json, and with a corresponding ActiveModel::Type representing the class.
@@ -35,6 +35,18 @@ module JsonAttribute
     end
 
     class_methods do
+      # Like `.new`, but translate store keys in hash
+      def new_from_serializable(attributes = {})
+        attributes = attributes.transform_keys do |key|
+          # store keys in arguments get translated to attribute names on initialize.
+          if attribute_def = self.json_attributes_registry.store_key_lookup("", key.to_s)
+            attribute_def.name.to_s
+          else
+            key
+          end
+        end
+        self.new(attributes)
+      end
 
       def to_type
         @type ||= JsonAttribute::Type::Model.new(self)
@@ -50,27 +62,25 @@ module JsonAttribute
 
         # By default, automatically validate nested models
         if type.kind_of?(JsonAttribute::Type::Model) && options[:validate] != false
-          # Yes. we're passing an ActiveRecord::Validations valiator, but
-          # it works fine for ActiveModel. If it stops, tests will catch.
+          # Yes. we're passing an ActiveRecord::Validations validator, but
+          # it works fine for ActiveModel. If this changes in the future, tests will catch.
           self.validates_with ActiveRecord::Validations::AssociatedValidator, attributes: [name.to_sym]
         end
 
         _json_attributes_module.module_eval do
           define_method("#{name}=") do |value|
-            write_json_attribute(self.class.json_attributes_registry.fetch(name).store_key, value)
+            write_json_attribute(name.to_s, value)
           end
 
           define_method("#{name}") do
-            # TODO, cast in case someone set in the hash directly, do we want
-            # to cast?
-            attributes[self.class.json_attributes_registry.fetch(name).store_key]
+            attributes[name.to_s]
           end
         end
       end
 
       # This should kind of be considered 'protected', but the semantics
       # of how we want to call it don't give us a visibility modifier that works.
-      # TODO?
+      # Prob means refactoring called for. TODO?
       def fill_in_defaults(hash)
         # Only if we need to mutate it to add defaults, we'll dup it first. deep_dup not neccesary
         # since we're only modifying top-level here.
@@ -111,17 +121,7 @@ module JsonAttribute
         raise ArgumentError, "When assigning attributes, you must pass a hash as an argument."
       end
 
-      attributes = attributes.transform_keys do |key|
-        # store keys in arguments get translated to attribute names on initialize.
-        if attribute_def = self.class.json_attributes_registry.store_key_lookup("attributes", key.to_s)
-          attribute_def.name.to_s
-        else
-          key
-        end
-      end
-
       attributes = self.class.fill_in_defaults(attributes)
-
       super(attributes)
     end
 

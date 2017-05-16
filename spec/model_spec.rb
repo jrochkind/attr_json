@@ -3,6 +3,33 @@ require 'spec_helper'
 RSpec.describe JsonAttribute::Record do
   let(:instance) { klass.new }
 
+  describe "store_key" do
+    let(:klass) do
+      Class.new do
+        include JsonAttribute::Model
+
+        json_attribute :str_one, :string, store_key: "__str_one"
+      end
+    end
+
+    it "reads attribute name from initializer" do
+      instance = klass.new(str_one: "value")
+      expect(instance.str_one).to eq("value")
+      # attribute name in attributes
+      expect(instance.attributes).to eq("str_one" => "value")
+      # but store_key when serialized
+      expect(instance.as_json).to eq("__str_one" => "value")
+    end
+
+    it "reads attribute name from assign_attributes" do
+      instance.assign_attributes(str_one: "value")
+      expect(instance.str_one).to eq("value")
+      # attribute name in attributes
+      expect(instance.attributes).to eq("str_one" => "value")
+      # but store_key when serialized
+      expect(instance.as_json).to eq("__str_one" => "value")
+    end
+  end
 
   describe "validation" do
     let(:klass) do

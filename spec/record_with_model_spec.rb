@@ -280,6 +280,25 @@ RSpec.describe JsonAttribute::Record do
     end
   end
 
+  describe "model with store_keys" do
+    let(:model_class) do
+      Class.new do
+        include JsonAttribute::Model
+
+        json_attribute :str, :string, store_key: "__string__"
+      end
+    end
+    it "serializes and deserializes properly" do
+      instance.model = {}
+      instance.model.str = "Value"
+      instance.save!
+
+      expect(JSON.parse instance.json_attributes_before_type_cast) .to include("model" => {"__string__" => "Value"})
+      instance_reloaded = klass.find(1)
+      expect(instance_reloaded.model.str).to eq("Value")
+    end
+  end
+
   describe "model defaults" do
     describe "empty hash" do
       let(:klass) do

@@ -20,7 +20,8 @@ module JsonAttribute
 
       def cast(v)
         if v.nil?
-          # TODO should we insist on an empty hash instead?
+          # important to stay nil instead of empty object, because they
+          # are different things.
           v
         elsif v.kind_of? model
           v
@@ -28,9 +29,10 @@ module JsonAttribute
           # to_hash is actually the 'implicit' conversion, it really is a hash
           # even though it isn't is_a?(Hash), try to_hash first before to_h,
           # the explicit conversion.
-          model.new(v.to_hash)
+          model.new_from_serializable(v.to_hash)
         elsif v.respond_to?(:to_h)
-          model.new(v.to_h)
+          # TODO Maybe we ought not to do this on #to_h?
+          model.new_from_serializable(v.to_h)
         else
           # Bad input? Most existing ActiveModel::Types seem to decide
           # either nil, or a base value like the empty string. They don't
