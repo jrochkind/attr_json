@@ -216,6 +216,18 @@ RSpec.describe JsonAttribute::Record do
       expect(instance.json_attributes).to eq("_store_key" => "set value")
     end
 
+    it "takes from attribute name in new" do
+      instance = klass.new(value: "set value")
+      expect(instance.value).to eq("set value")
+      expect(instance.json_attributes).to eq("_store_key" => "set value")
+    end
+
+    it "takes from attribute name in assign_attributes" do
+      instance.assign_attributes(value: "set value")
+      expect(instance.value).to eq("set value")
+      expect(instance.json_attributes).to eq("_store_key" => "set value")
+    end
+
     it "raises on conflicting store key" do
       expect {
         Class.new(ActiveRecord::Base) do
