@@ -209,10 +209,10 @@ m.lang_and_value
 # Arrays too, yup
 m = MyModel.new(lang_and_value_array: [{ lang: 'fr', value: "S'il vous plaît"}, { lang: 'en', value: "Hey there" }])
 m.lang_and_value_array
-# => [#<LangAndValue:0x007fb64eb19980 @attributes={"lang"=>"fr", "value"=>"S'il vous plat"}>, #<LangAndValue:0x007fb64eb196b0 @attributes={"lang"=>"en", "value"=>"Hey there"}>]
+# => [#<LangAndValue:0x007f89b4f08f30 @attributes={"lang"=>"fr", "value"=>"S'il vous plaît"}>, #<LangAndValue:0x007f89b4f086e8 @attributes={"lang"=>"en", "value"=>"Hey there"}>]
 m.save!
 m.json_attributes_before_type_cast
-# => string containing: {"lang_and_value_array":[{"lang":"fr","value":"S'il vous plat"},{"lang":"en","value":"Hey there"}]}
+# => string containing: {"lang_and_value_array":[{"lang":"fr","value":"S'il vous plaît"},{"lang":"en","value":"Hey there"}]}
 ```
 
 You can nest JsonAttribute::Model objects inside each other, as deeply as you like.
