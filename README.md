@@ -115,7 +115,7 @@ You can of course combine `array`, `default`, `store_key`, and `json_container_a
 params however you like, with whatever types you like: symbols resolvable
 with `ActiveModel::Type.lookup`, or any valid [ActiveModel::Type](https://apidock.com/rails/ActiveRecord/Attributes/ClassMethods/attribute)
 like object, built-in or custom. (For now, arg checking says it must actually
-be an `ActiveModel::Type::Value` subclass).
+be an instance of an `ActiveModel::Type::Value` subclass).
 
 ## Querying
 

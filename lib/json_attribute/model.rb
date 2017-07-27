@@ -52,7 +52,7 @@ module JsonAttribute
         @type ||= JsonAttribute::Type::Model.new(self)
       end
 
-      # Type can be an ActiveModel::Type sort of object, or a symbol that will
+      # Type can be an instance of an ActiveModel::Type::Value subclass, or a symbol that will
       # be looked up in `ActiveModel::Type.lookup`
       # TODO doc options
       def json_attribute(name, type, **options)
