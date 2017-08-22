@@ -376,10 +376,23 @@ RSpec.describe JsonAttribute::Record do
 
       instance.save!
       instance.reload
-
       expect(instance.value).to eq("X")
       expect(instance.other_attributes).to eq("value" => "X")
       expect(instance.json_attributes).to be_blank
+
+      instance.other_attributes = { value: "Y" }
+      instance.save!
+      instance.reload
+      expect(instance.value).to eq("Y")
+      expect(instance.other_attributes).to eq("value" => "Y")
+      expect(instance.json_attributes).to be_blank
+
+      instance.update_attributes!({ value: "Z" })
+      instance.reload
+      expect(instance.value).to eq("Z")
+      expect(instance.other_attributes).to eq("value" => "Z")
+      expect(instance.json_attributes).to be_blank
+
     end
 
     describe "change default container attribute" do
@@ -401,10 +414,100 @@ RSpec.describe JsonAttribute::Record do
 
         instance.save!
         instance.reload
-
         expect(instance.value).to eq("X")
         expect(instance.other_attributes).to eq("value" => "X")
         expect(instance.json_attributes).to be_blank
+
+        instance.other_attributes = { value: "Y" }
+        instance.save!
+        instance.reload
+        expect(instance.value).to eq("Y")
+        expect(instance.other_attributes).to eq("value" => "Y")
+        expect(instance.json_attributes).to be_blank
+
+        instance.update_attributes!({ value: "Z" })
+        instance.reload
+        expect(instance.value).to eq("Z")
+        expect(instance.other_attributes).to eq("value" => "Z")
+        expect(instance.json_attributes).to be_blank
+      end
+    end
+
+    describe "multiple jsonb container attributes" do
+      let(:klass) do
+        Class.new(ActiveRecord::Base) do
+          include JsonAttribute::Record
+          self.table_name = "products"
+
+          self.default_json_container_attribute = :other_attributes
+          json_attribute :foo, :string
+          json_attribute :bar, :string
+
+          json_attribute :value, :string, container_attribute: :json_attributes
+          json_attribute :value2, :string, container_attribute: :json_attributes
+        end
+      end
+
+      it "saves in right place" do
+        instance.value = "X"
+        instance.value2 = "Y"
+        expect(instance.value).to eq("X")
+        expect(instance.value2).to eq("Y")
+        expect(instance.json_attributes).to eq("value" => "X", "value2" => "Y")
+        expect(instance.other_attributes).to be_blank
+
+        instance.save!
+        instance.reload
+        expect(instance.value).to eq("X")
+        expect(instance.value2).to eq("Y")
+        expect(instance.json_attributes).to eq("value" => "X", "value2" => "Y")
+        expect(instance.other_attributes).to be_blank
+
+        instance.json_attributes = { value: "A", value2: "B" }
+        instance.save!
+        instance.reload
+        expect(instance.value).to eq("A")
+        expect(instance.value2).to eq("B")
+        expect(instance.json_attributes).to eq("value" => "A", "value2" => "B")
+        expect(instance.other_attributes).to be_blank
+
+        instance.update_attributes!({ json_attributes: { value: "C", value2: "D" } })
+        instance.reload
+        expect(instance.value).to eq("C")
+        expect(instance.value2).to eq("D")
+        expect(instance.json_attributes).to eq("value" => "C", "value2" => "D")
+        expect(instance.other_attributes).to be_blank
+
+        instance.foo = "X"
+        instance.bar = "Y"
+        expect(instance.foo).to eq("X")
+        expect(instance.bar).to eq("Y")
+        expect(instance.json_attributes).to eq("value" => "C", "value2" => "D")
+        expect(instance.other_attributes).to eq("foo" => "X", "bar" => "Y")
+
+        instance.save!
+        instance.reload
+        expect(instance.foo).to eq("X")
+        expect(instance.bar).to eq("Y")
+        expect(instance.json_attributes).to eq("value" => "C", "value2" => "D")
+        expect(instance.other_attributes).to eq("foo" => "X", "bar" => "Y")
+
+        instance.other_attributes = { foo: "A", bar: "B" }
+        instance.save!
+        instance.reload
+        expect(instance.foo).to eq("A")
+        expect(instance.bar).to eq("B")
+        expect(instance.json_attributes).to eq("value" => "C", "value2" => "D")
+        expect(instance.other_attributes).to eq("foo" => "A", "bar" => "B")
+
+        instance.update_attributes!({ json_attributes: { value: "K", value2: "L" }, other_attributes: { foo: "M", bar: "N"} })
+        instance.reload
+        expect(instance.foo).to eq("M")
+        expect(instance.bar).to eq("N")
+        expect(instance.value).to eq("K")
+        expect(instance.value2).to eq("L")
+        expect(instance.json_attributes).to eq("value" => "K", "value2" => "L")
+        expect(instance.other_attributes).to eq("foo" => "M", "bar" => "N")
       end
     end
 
