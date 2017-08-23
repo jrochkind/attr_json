@@ -90,7 +90,7 @@ class OtherModel < ActiveRecord::Base
   json_attribute :my_int, :integer
 
   # Or on a per-attribute basis
-  json_attribute :my_int, :integer, json_container_attribute: "yet_another_column_name"
+  json_attribute :my_int, :integer, container_attribute: "yet_another_column_name"
 end
 ```
 
@@ -111,7 +111,7 @@ model.save!
 model.json_attributes_before_type_cast # => string containing: {"__my_string":"foo"}
 ```
 
-You can of course combine `array`, `default`, `store_key`, and `json_container_attribute`
+You can of course combine `array`, `default`, `store_key`, and `container_attribute`
 params however you like, with whatever types you like: symbols resolvable
 with `ActiveModel::Type.lookup`, or any valid [ActiveModel::Type](https://apidock.com/rails/ActiveRecord/Attributes/ClassMethods/attribute)
 like object, built-in or custom. (For now, arg checking says it must actually
@@ -146,7 +146,7 @@ MyModel.jsonb_contains(int_array: [10, 1000]) # nope, returns nil, has to contai
 
 `jsonb_contains` of course handles any `store_key` you have set (you should specify
 attribute name, it'll actually query on store_key), as well as any
-`json_container_attribute` (it'll look in the proper jsonb column).
+`container_attribute` (it'll look in the proper jsonb column).
 
 Anything you can do with `jsonb_contains` should be handled
 by a [postgres `USING GIN` index](https://www.postgresql.org/docs/9.5/static/datatype-json.html#JSON-INDEXING)
