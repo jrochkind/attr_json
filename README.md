@@ -119,8 +119,8 @@ be an instance of an `ActiveModel::Type::Value` subclass).
 
 ## Querying
 
-There is some built-in support for querying using postgres jsonb containment
-(`@>`) operator. For now you need to additonally `include JsonAttribute::Record::QueryScopes`
+There is some built-in support for querying using [postgres jsonb containment](https://www.postgresql.org/docs/9.5/static/functions-json.html)
+(`@>`) operator. (or see [here](https://blog.hasura.io/the-unofficial-guide-to-jsonb-operators-in-postgres-part-1-7ad830485ddf) or [here](https://hackernoon.com/how-to-query-jsonb-beginner-sheet-cheat-4da3aa5082a3)). For now you need to additonally `include JsonAttribute::Record::QueryScopes`
 to get this behavior.
 
 ```ruby
@@ -281,20 +281,21 @@ Why might you want this?
   and are willing to trade the powerful complex querying support normalized rdbms
   schema gives you.
 
-* Single-Table Inheritance, and sub-classes have a few unique data fields,
-  you don't want to make columns for them all that don't apply to all.
+* Single-Table Inheritance, and sub-classes have some or even many non-shared
+  data fields. You rather not make all those columns, some of which will then also appear
+  to inapplicable sub-classes.
 
 * A "content management system" type project, where you need complex
   structured data of various types, maybe needs to be vary depending
   on plugins or configuration, or for different article types -- but
   doesn't need to be very queryable generally.
 
-* You want to version your models, which is tricky with associations.
+* You want to version your models, which is tricky with associations between models.
   Minimize associations by inlining the complex data.
 
 * Generally, we're turning postgres into a _simple_ object-oriented
   document store. That can be mixed with an rdbms. The very same
-  row can have document-oriented json data _and_ foreign keys
+  row in a table in your db can have document-oriented json data _and_ foreign keys
   and real rdbms associations to other rows. And it all just
   feels like ActiveRecord, mostly.
 
@@ -306,7 +307,8 @@ Why might you _not_ want this?
 
 * This is pretty well-designed code that _mostly_ only uses
   fairly stable and public Rails API, but there is still some
-  risk of tying your boat to it, it's not Rails itself.
+  risk of tying your boat to it, it's not Rails itself, and there is
+  some risk it won't keep up with Rails in the future.
 
 
 ## Note on Optimistic Locking

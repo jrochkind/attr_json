@@ -2,13 +2,13 @@ require 'json_attribute/attribute_definition'
 
 module JsonAttribute
   class AttributeDefinition
-    # Attached to a class to registers the json attributes registered,
-    #  with either JsonAttribute::Record or JsonAttribute::Module.
+    # Attached to a class to record the json attributes registered,
+    #  with either JsonAttribute::Record or JsonAttribute::Model.
     #
     # Think of it as mostly like a hash keyed by attribute name, value
     # an AttributeDefinition.
     #
-    # It is expected to be used by JsonAttribute::Record and JsonAttribute::Module,
+    # It is expected to be used by JsonAttribute::Record and JsonAttribute::Model,
     # you shouldn't need to interact with it directly.
     #
     # It is intentionally immutable to make it harder to accidentally mutate
@@ -20,6 +20,7 @@ module JsonAttribute
     #     )
     #     # => Returns a NEW AttributeDefinition object
     #
+    # All references in code to "definition" are to a JsonAttribute::AttributeDefinition instance.
     class Registry
       def initialize(hash = {})
         @name_to_definition = hash
