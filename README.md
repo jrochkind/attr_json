@@ -375,6 +375,8 @@ that still need attending to, to really smooth off the edges.
 
 * Polymorphic JSON attributes.
 
+* partial updates for json hashes, use postgres jsonb merge operators to only overwrite what changed
+
 * Could we make these attributes work in ordinary AR where, same
   as they do in jsonb_contains? Maybe.
 
