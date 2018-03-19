@@ -343,6 +343,19 @@ that still need attending to, to really smooth off the edges.
   for ActiveRecord JsonAttribute::Record or ActiveModel
   JsonAttribute::Model. It probably would not be too hard to get it to.
   There are use cases?
+  
+* Polymorphic JSON attributes.
+
+* partial updates for json hashes, use postgres jsonb merge operators to only overwrite what changed
+
+* I think it's important to be able to use these, even nested/array, with
+  _Rails forms_, in a natural way. (also with simple_form) This ought to be fairly straightforward,
+  the parameter format here is actually a lot _simpler_ than
+  what Rails needs to do for normalized rdbms data, but it might
+  run into Rails' assumptions about that extra complexity,
+  need to experiment with it.
+
+* seamless compatibility with ransack
 
 * Should we give JsonAttribute::Model a before_serialize hook that you might
   want to use similar to AR before_save?  Should JsonAttribute::Models
@@ -365,17 +378,6 @@ that still need attending to, to really smooth off the edges.
 
 * We could/should probably support `jsonb_order` clauses, even
   accross key paths, like jsonb_accessor.
-
-* I think it's important to be able to use these, even nested/array, with
-  _Rails forms_, in a natural way. This ought to be fairly straightforward,
-  the parameter format here is actually a lot _simpler_ than
-  what Rails needs to do for normalized rdbms data, but it might
-  run into Rails' assumptions about that extra complexity,
-  need to experiment with it.
-
-* Polymorphic JSON attributes.
-
-* partial updates for json hashes, use postgres jsonb merge operators to only overwrite what changed
 
 * Could we make these attributes work in ordinary AR where, same
   as they do in jsonb_contains? Maybe.
