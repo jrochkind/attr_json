@@ -126,6 +126,20 @@ RSpec.describe JsonAttribute::Record::Dirty do
     end
   end
 
+  describe "unknown attribute" do
+    it "returns nil without complaining, like ordinary AR attributes" do
+      expect(changes.saved_change_to_attribute?(:unknown)).to be nil
+      expect(changes.saved_change_to_attribute(:unknown)).to be nil
+      expect(changes.attribute_before_last_save(:unknown)).to be nil
+      expect(changes.changed_attribute_names_to_save).to eq([])
+
+      expect(changes.will_save_change_to_attribute?(:unknown)).to be nil
+      expect(changes.attribute_change_to_be_saved(:unknown)).to eq nil
+      expect(changes.attribute_in_database(:unknown)).to be nil
+      expect(changes.attributes_in_database).to eq({})
+    end
+  end
+
   describe "array" do
     describe "after save, with more unsaved changes" do
       let(:instance) do

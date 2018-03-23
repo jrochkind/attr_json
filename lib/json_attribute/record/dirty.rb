@@ -43,7 +43,7 @@ module JsonAttribute
 
 
         def saved_change_to_attribute(attr_name)
-          attribute_def = registry.fetch(attr_name.to_sym)
+          attribute_def = registry[attr_name.to_sym]
           return nil unless attribute_def
 
           json_container = attribute_def.container_attribute
@@ -71,6 +71,7 @@ module JsonAttribute
         end
 
         def saved_change_to_attribute?(attr_name)
+          return nil unless registry[attr_name.to_sym]
           ! saved_change_to_attribute(attr_name).nil?
         end
 
@@ -108,7 +109,7 @@ module JsonAttribute
         end
 
         def attribute_change_to_be_saved(attr_name)
-          attribute_def = registry.fetch(attr_name.to_sym)
+          attribute_def = registry[attr_name.to_sym]
           return nil unless attribute_def
 
           json_container = attribute_def.container_attribute
@@ -129,6 +130,7 @@ module JsonAttribute
         end
 
         def will_save_change_to_attribute?(attr_name)
+          return nil unless registry[attr_name.to_sym]
           ! attribute_change_to_be_saved(attr_name).nil?
         end
 
