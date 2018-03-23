@@ -52,9 +52,14 @@ module JsonAttribute
 
           return nil if before_container.nil? && after_container.nil?
 
+          before_v = before_container[attribute_def.store_key]
+          after_v  = after_container[attribute_def.store_key]
+
+          return nil if before_v.nil? && after_v.nil?
+
           [
-            before_container[attribute_def.store_key],
-            after_container[attribute_def.store_key]
+            before_v,
+            after_v
           ]
         end
 
@@ -112,9 +117,14 @@ module JsonAttribute
 
           return nil if before_container.nil? && after_container.nil?
 
+          before_v = before_container[attribute_def.store_key]
+          after_v  = after_container[attribute_def.store_key]
+
+          return nil if before_v.nil? && after_v.nil?
+
           [
-            before_container[attribute_def.store_key],
-            after_container[attribute_def.store_key]
+            before_v,
+            after_v
           ]
         end
 

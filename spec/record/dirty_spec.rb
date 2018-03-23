@@ -63,6 +63,17 @@ RSpec.describe JsonAttribute::Record::Dirty do
         expect(changes.saved_changes?).to be false
         expect(changes.attributes_in_database).to eq({'str' => nil})
       end
+
+      it "does not have changes for untouched json attribute" do
+        expect(changes.saved_change_to_attribute?(:int)).to be false
+        expect(changes.saved_change_to_attribute(:int)).to be nil
+        expect(changes.attribute_before_last_save(:int)).to be nil
+
+        expect(changes.attribute_change_to_be_saved(:int)).to be nil
+        expect(changes.attribute_in_database(:int)).to be nil
+        expect(changes.will_save_change_to_attribute?(:int)).to be false
+      end
+
     end
 
     describe "after save, with more unsaved changes" do
@@ -87,6 +98,16 @@ RSpec.describe JsonAttribute::Record::Dirty do
         expect(changes.saved_changes).to eq('str' => [nil, "old"])
         expect(changes.saved_changes?).to be true
         expect(changes.attributes_in_database).to eq('str' => 'old')
+      end
+
+      it "does not have changes for untouched json attribute" do
+        expect(changes.saved_change_to_attribute?(:int)).to be false
+        expect(changes.saved_change_to_attribute(:int)).to be nil
+        expect(changes.attribute_before_last_save(:int)).to be nil
+
+        expect(changes.will_save_change_to_attribute?(:int)).to be false
+        expect(changes.attribute_change_to_be_saved(:int)).to be nil
+        expect(changes.attribute_in_database(:int)).to be nil
       end
     end
   end
