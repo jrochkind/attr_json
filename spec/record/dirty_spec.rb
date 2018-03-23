@@ -6,6 +6,7 @@ RSpec.describe JsonAttribute::Record::Dirty do
 
       self.table_name = "products"
       json_attribute :str, :string
+      json_attribute :int, :integer
     end
   end
   let(:instance) { klass.new }

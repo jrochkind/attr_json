@@ -1,6 +1,6 @@
 module JsonAttribute
   module Record
-    # Added into an ActiveRecord object with JsonAttribute::Record,
+    # Add into an ActiveRecord object with JsonAttribute::Record,
     # to track dirty changes to json_attributes.
     module Dirty
       def json_attribute_changes
@@ -72,13 +72,17 @@ module JsonAttribute
 
           registry.definitions.collect do |definition|
             if container_change = saved_changes[definition.container_attribute]
-            [
-              definition.name.to_s,
-              [
-                container_change[0][definition.store_key],
-                container_change[1][definition.store_key]
-              ]
-            ]
+              old_v = container_change[0][definition.store_key]
+              new_v = container_change[1][definition.store_key]
+              if old_v != new_v
+                [
+                  definition.name.to_s,
+                  [
+                    container_change[0][definition.store_key],
+                    container_change[1][definition.store_key]
+                  ]
+                ]
+              end
             end
           end.compact.to_h
         end
@@ -121,13 +125,17 @@ module JsonAttribute
 
           registry.definitions.collect do |definition|
             if container_change = changes_to_save[definition.container_attribute]
-            [
-              definition.name.to_s,
-              [
-                container_change[0][definition.store_key],
-                container_change[1][definition.store_key]
-              ]
-            ]
+              old_v = container_change[0][definition.store_key]
+              new_v = container_change[1][definition.store_key]
+              if old_v != new_v
+                [
+                  definition.name.to_s,
+                  [
+                    old_v,
+                    new_v
+                  ]
+                ]
+              end
             end
           end.compact.to_h
         end
