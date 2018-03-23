@@ -59,6 +59,7 @@ end
 class Product < StaticProduct
   include JsonAttribute::Record
   include JsonAttribute::Record::QueryScopes
+  include JsonAttribute::Record::Dirty
 
   json_attribute :title, :string
   json_attribute :rank, :integer

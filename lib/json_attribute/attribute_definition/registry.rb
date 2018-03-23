@@ -36,6 +36,10 @@ module JsonAttribute
         @name_to_definition[key.to_sym]
       end
 
+      def attribute_registered?(key)
+        @name_to_definition.has_key?(key.to_sym)
+      end
+
       # Can return nil if none found.
       def store_key_lookup(container_attribute, store_key)
         @store_key_to_definition[container_attribute.to_s] &&
@@ -44,6 +48,10 @@ module JsonAttribute
 
       def definitions
         @name_to_definition.values
+      end
+
+      def container_attributes
+        @store_key_to_definition.keys.collect(&:to_s)
       end
 
       # This is how you register additional definitions, as a non-mutating
