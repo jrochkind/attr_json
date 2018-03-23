@@ -34,27 +34,43 @@ module JsonAttribute
 
         attr_reader :model
 
-        def initialize(model, merged: false)
+        def initialize(model, merged: false, merge_containers: false)
           @model = model
           @merged = !!merged
+          @merge_containers = !!merge_containers
         end
 
-        # return a copy with `merged` attribute true, so you can do things
-        # like
+        # return a copy with `merged` attribute true, so dirty tracking
+        # will include ordinary AR attributes too, and you can do things like:
+        #
         #     model.json_attribute_changes.merged.saved_change_to_attribute?(ordinary_or_json_attribute)
-        def merged
-          self.class.new(model, merged: true)
+        #
+        # By default, the json container attributes are included too. If you
+        # instead want our dirty tracking to pretend they don't exist:
+        #
+        #     model.json_attribute_changes.merged(containers: false).etc
+        #
+        def merged(containers: true)
+          self.class.new(model, merged: true, merge_containers: containers)
         end
 
+        # should we handle ordinary AR attributes too in one merged
+        # change tracker?
         def merged?
           @merged
         end
 
+        # if we're `merged?` and `merge_containers?` is **false**, we
+        # _omit_ our json container attributes from our dirty tracking.
+        # only has meaning if `merged?` is true. Defaults to true.
+        def merge_containers?
+          @merge_containers
+        end
 
         def saved_change_to_attribute(attr_name)
           attribute_def = registry[attr_name.to_sym]
           if ! attribute_def
-            if merged?
+            if merged? && (merge_containers? || ! registry.container_attributes.include?(attr_name.to_s))
               return model.saved_change_to_attribute(attr_name)
             else
               return nil
@@ -86,7 +102,7 @@ module JsonAttribute
         end
 
         def saved_change_to_attribute?(attr_name)
-          return nil unless registry[attr_name.to_sym] || merged?
+          return nil unless registry[attr_name.to_sym] || merged? && (merge_containers? || ! registry.container_attributes.include?(attr_name.to_s))
           ! saved_change_to_attribute(attr_name).nil?
         end
 
@@ -111,7 +127,11 @@ module JsonAttribute
           end.compact.to_h
 
           if merged?
-            saved_changes.merge(json_attr_changes)
+            saved_changes.merge(json_attr_changes).tap do |merged|
+              unless merge_containers?
+                merged.except!(*registry.container_attributes)
+              end
+            end
           else
             json_attr_changes
           end
@@ -125,7 +145,7 @@ module JsonAttribute
         def attribute_in_database(attr_name)
           to_be_saved = attribute_change_to_be_saved(attr_name)
           if to_be_saved.nil?
-            if merged?
+            if merged? && (merge_containers? || ! registry.container_attributes.include?(attr_name.to_s))
               return model.attribute_change_to_be_saved(attr_name)
             else
               return nil
@@ -138,7 +158,7 @@ module JsonAttribute
         def attribute_change_to_be_saved(attr_name)
           attribute_def = registry[attr_name.to_sym]
           if ! attribute_def
-            if merged?
+            if merged? && (merge_containers? || ! registry.container_attributes.include?(attr_name.to_s))
               return model.attribute_change_to_be_saved(attr_name)
             else
               return nil
@@ -163,13 +183,12 @@ module JsonAttribute
         end
 
         def will_save_change_to_attribute?(attr_name)
-          return nil unless registry[attr_name.to_sym] || merged?
+          return nil unless registry[attr_name.to_sym] || merged? && (merge_containers? || ! registry.container_attributes.include?(attr_name.to_s))
           ! attribute_change_to_be_saved(attr_name).nil?
         end
 
         def changes_to_save
           changes_to_save = model.changes_to_save
-
 
           return {} if changes_to_save == {}
 
@@ -190,7 +209,11 @@ module JsonAttribute
           end.compact.to_h
 
           if merged?
-            changes_to_save.merge(json_attr_changes)
+            changes_to_save.merge(json_attr_changes).tap do |merged|
+              unless merge_containers?
+                merged.except!(*registry.container_attributes)
+              end
+            end
           else
             json_attr_changes
           end

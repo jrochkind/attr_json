@@ -222,5 +222,61 @@ RSpec.describe JsonAttribute::Record::Dirty do
         expect(changes.saved_changes).to eq(instance.saved_changes)
       end
     end
+
+    describe "with merged(containers: false) and both kinds of changes" do
+      let(:instance) do
+        klass.new(string_type: "old_ordinary", str: "old_json").tap do |i|
+          i.save
+          i.str = "new_json"
+          i.string_type = "new_ordinary"
+        end
+      end
+      let(:changes) { instance.json_attribute_changes.merged(containers: false) }
+
+      it "has the right changes" do
+        expect(changes.saved_change_to_attribute(:string_type)).to eq [nil, "old_ordinary"]
+        expect(changes.saved_change_to_attribute(:str)).to eq [nil, "old_json"]
+        expect(changes.saved_change_to_attribute(:json_attributes)).to be nil
+
+        expect(changes.saved_change_to_attribute?(:string_type)).to be true
+        expect(changes.saved_change_to_attribute?(:str)).to be true
+        expect(changes.saved_change_to_attribute?(:json_attributes)).to be nil
+
+        expect(changes.attribute_before_last_save(:string_type)).to be nil
+        expect(changes.attribute_before_last_save(:str)).to be nil
+        expect(changes.attribute_before_last_save(:json_attributes)).to be nil
+
+        expect(changes.changes_to_save).to eq(
+          'string_type' => ["old_ordinary", "new_ordinary"],
+          'str'         => ["old_json", "new_json"]
+        )
+
+        expect(changes.has_changes_to_save?).to be true
+        expect(changes.changed_attribute_names_to_save).to eq(["string_type", "str"])
+
+        expect(changes.attribute_change_to_be_saved(:string_type)).to eq ["old_ordinary", "new_ordinary"]
+        expect(changes.attribute_change_to_be_saved(:str)).to eq ["old_json", "new_json"]
+        expect(changes.attribute_before_last_save(:json_attributes)).to be nil
+
+        expect(changes.will_save_change_to_attribute?(:string_type)).to be true
+        expect(changes.will_save_change_to_attribute?(:str)).to be true
+        expect(changes.will_save_change_to_attribute?(:json_attributes)).to be nil
+
+        expect(changes.attribute_in_database(:string_type)).to eq "old_ordinary"
+        expect(changes.attribute_in_database(:str)).to eq "old_json"
+        expect(changes.attribute_in_database(:json_attributes)).to be nil
+
+        expect(changes.saved_changes?).to be true
+        expect(changes.attributes_in_database).to eq(
+          'string_type' => 'old_ordinary',
+          'str'         => 'old_json'
+        )
+        expect(changes.saved_changes).to eq(
+          instance.saved_changes.except("json_attributes").merge(
+            'str' => [nil, "old_json"]
+          )
+        )
+      end
+    end
   end
 end
