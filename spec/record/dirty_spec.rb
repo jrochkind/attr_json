@@ -1,5 +1,18 @@
 RSpec.describe JsonAttribute::Record::Dirty do
+  let(:model_class) do
+    Class.new do
+      include JsonAttribute::Model
+
+      json_attribute :str, :string
+      json_attribute :int, :integer
+    end
+  end
+
   let(:klass) do
+    # really hard to get the class def closure to capture the rspec
+    # `let` for some reason, but this works.
+    model_class_type = model_class.to_type
+
     Class.new(ActiveRecord::Base) do
       include JsonAttribute::Record
       include JsonAttribute::Record::Dirty
@@ -8,6 +21,7 @@ RSpec.describe JsonAttribute::Record::Dirty do
       json_attribute :str, :string
       json_attribute :int, :integer
       json_attribute :str_array, :string, array: true
+      json_attribute :embedded, model_class_type
     end
   end
   let(:instance) { klass.new }
@@ -138,4 +152,35 @@ RSpec.describe JsonAttribute::Record::Dirty do
       end
     end
   end
+
+  describe "embedded" do
+    describe "after save, with more unsaved changes" do
+      let(:instance) do
+        klass.new(embedded: {str: "oldstr", int: 0}).tap do |i|
+          i.save
+          i.embedded.str = "newstr"
+        end
+      end
+      let(:orig_model_eq) { model_class.new(str: "oldstr", int: 0) }
+      let(:new_model_eq) { model_class.new(str: "newstr", int: 0) }
+
+      it "has all changes" do
+        expect(changes.saved_change_to_attribute?(:embedded)).to be true
+        expect(changes.saved_change_to_attribute(:embedded)).to eq [nil, orig_model_eq]
+        expect(changes.attribute_before_last_save(:embedded)).to be nil
+        expect(changes.saved_changes).to eq('embedded' => [nil, orig_model_eq])
+        expect(changes.saved_changes?).to be true
+
+
+        expect(changes.attribute_change_to_be_saved(:embedded)).to eq [orig_model_eq, new_model_eq]
+        expect(changes.will_save_change_to_attribute?(:embedded)).to be true
+        expect(changes.attribute_in_database(:embedded)).to eq orig_model_eq
+        expect(changes.changes_to_save).to eq('embedded' => [orig_model_eq, new_model_eq])
+        expect(changes.has_changes_to_save?).to be true
+        expect(changes.changed_attribute_names_to_save).to eq(["embedded"])
+        expect(changes.attributes_in_database).to eq('embedded' => orig_model_eq)
+      end
+    end
+  end
+
 end
