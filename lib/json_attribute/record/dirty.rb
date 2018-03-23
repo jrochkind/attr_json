@@ -1,12 +1,18 @@
 module JsonAttribute
   module Record
+    # This only works in Rails 5.1+, and only uses the 'new style' dirty
+    # tracking methods, available in Rails 5.1+.
+    #
     # Add into an ActiveRecord object with JsonAttribute::Record,
-    # to track dirty changes to json_attributes.
+    # to track dirty changes to json_attributes, off the json_attribute_changes
+    # object.
     #
     #    some_model.json_attribute_changes.saved_changes
     #    some_model.json_attribute_changes.json_attr_before_last_save
     #
-    # By default, it _only_ includes changes from json attributes.
+    # All methods ordinarily in ActiveRecord::Attributes::Dirty should be available,
+    # including synthetic attribute-specific ones like `will_save_change_to_attribute_name?`.
+    # By default, they _only_ report changes from json attributes.
     # To have a merged list also including ordinary AR changes, add on `merged`:
     #
     #    some_model.json_attribute_changes.merged.saved_changes
@@ -20,6 +26,8 @@ module JsonAttribute
     # You can combine as_json and merged if you like:
     #
     #    some_model.json_attribute_changes.as_json.merged.saved_changes
+    #
+    # See more in [separate documentation guide](../../../doc_src/dirty_tracking.md)
     module Dirty
       def json_attribute_changes
         Implementation.new(self)

@@ -1,23 +1,28 @@
 # JsonAttribute or Name Yet to Be Determined (suggest a name?)
 
-Typed, structured, and compound/nested attributes backed by ActiveRecord
-and Postgres Jsonb. With some query support.  Or, we could say, "Postgres
-jsonb via ActiveRecord as a typed, object-oriented document store." A basic
-one anyway. We intend JSON attributes to act consistently, with no surprises,
-and just like you expect from ordinary ActiveRecord, by using as much of
-existing ActiveRecord architecture as we can.
+Typed, structured, and compound/nested attributes via ActiveRecord
+backed by [Postgres jsonb](https://www.postgresql.org/docs/9.5/static/datatype-json.html).
+With dirty tracking support, and some query support.
+
+Or, we could say: Use Postgres as a typed object store via ActiveRecord
+('schemaless' on the postgres side, but with AR-style typing and casting
+in your app), in the same models right next to ordinary ActiveRecord
+column-backed attributes and associations.
+
+Your `json_attribute`s act consistently with ordinary AR column-backed
+attributes, with the implementation re-using as much of the existing AR architecture
+as we can.
 
 - - -
-This is an in-progress experiment, not ready for production use, may
-change substantially before 1.0.
+This is an in-progress experiment, not ready for production use, and may
+include backwards-incompat API changes at any time before 1.0.
+However, all features currently documented are fully implemented and appear to
+be solid -- the README and other docs are real, not fantasy.
 
-**Peer-review would be very appreciated though**, especially but not only from those who
-understand some of the depths of ActiveRecord. There is enough here you should
-be able to take a look at code and/or take it for a spin (Gemfile point to git repo), and tell me what you
-think or what problems you find, also welcome any comments on implementation
-and AR integration, I'd really apprecaite it.
-
-The examples below in the README are real, they all work now.
+**Peer-review would be very appreciated**, especially but not only from those who
+understand some of the depths of ActiveRecord. I very much appreciate hearing what you
+think or what problems you find or additional features you desire, and also welcome
+any comments on implementation and AR integration.
 - - -
 
 [![Build Status](https://travis-ci.org/jrochkind/json_attribute.svg?branch=master)](https://travis-ci.org/jrochkind/json_attribute)
@@ -52,8 +57,9 @@ class MyModel < ActiveRecord::Base
 end
 ```
 
-You can treat these as if they were attributes, and they cast much like
-ordinary ActiveRecord values -- even the arrays.
+You can treat these as if they were attributes; they have type-casting behavior
+very much like ordinary ActiveRecord values -- even the arrays. Setting a value
+will automatically cast it.
 
 ```ruby
 model = MyModel.new
@@ -76,8 +82,9 @@ model.json_attributes_before_type_cast
 # => string containing: {"my_integer":12,"int_array":[12],"my_datetime":"2016-01-01T17:45:00.000Z"}
 ```
 
-While the default is to assume a column called `json_attributes`, no worries,
-of course you can pick whatever named jsonb column you like.
+While the default is to assume you want to serialize in a column called
+`json_attributes`, no worries, of course you can pick whatever named
+jsonb column you like.
 
 ```ruby
 class OtherModel < ActiveRecord::Base
@@ -113,9 +120,7 @@ model.json_attributes_before_type_cast # => string containing: {"__my_string":"f
 
 You can of course combine `array`, `default`, `store_key`, and `container_attribute`
 params however you like, with whatever types you like: symbols resolvable
-with `ActiveModel::Type.lookup`, or any valid [ActiveModel::Type](https://apidock.com/rails/ActiveRecord/Attributes/ClassMethods/attribute)
-like object, built-in or custom. (For now, arg checking says it must actually
-be an instance of an `ActiveModel::Type::Value` subclass).
+with `ActiveModel::Type.lookup`, or any [ActiveModel::Type::Value](https://apidock.com/rails/ActiveRecord/Attributes/ClassMethods/attribute) subclass, built-in or custom.
 
 ## Querying
 
@@ -150,9 +155,9 @@ attribute name, it'll actually query on store_key), as well as any
 
 Anything you can do with `jsonb_contains` should be handled
 by a [postgres `USING GIN` index](https://www.postgresql.org/docs/9.5/static/datatype-json.html#JSON-INDEXING)
-(I think! can anyone help confirm/deny?). Check out `to_sql` on
-any query to see what jsonb SQL it generates, and figure out
-what it will do.
+(I think! can anyone help confirm/deny?). To be sure, I recommend you
+investigate: Check out `to_sql` on any query to see what jsonb SQL it generates,
+and explore if you have the indexes you need.
 
 ## Nested/Structured/Compound data
 
@@ -182,6 +187,7 @@ class MyModel < ActiveRecord::Base
   include JsonAttribute::Record::QueryScopes
 
   json_attribute :lang_and_value, LangAndValue.to_type
+
   # YES, you can even have an array of them
   json_attribute :lang_and_value_array, LangAndValue.to_type, array: true
 end
@@ -207,6 +213,7 @@ m.lang_and_value
 # => #<LangAndValue:0x007fb64eb78e58 @attributes={"lang"=>"en", "value"=>"Hey there"}>
 
 # Arrays too, yup
+
 m = MyModel.new(lang_and_value_array: [{ lang: 'fr', value: "S'il vous plaît"}, { lang: 'en', value: "Hey there" }])
 m.lang_and_value_array
 # => [#<LangAndValue:0x007f89b4f08f30 @attributes={"lang"=>"fr", "value"=>"S'il vous plaît"}>, #<LangAndValue:0x007f89b4f086e8 @attributes={"lang"=>"en", "value"=>"Hey there"}>]
@@ -215,7 +222,8 @@ m.json_attributes_before_type_cast
 # => string containing: {"lang_and_value_array":[{"lang":"fr","value":"S'il vous plaît"},{"lang":"en","value":"Hey there"}]}
 ```
 
-You can nest JsonAttribute::Model objects inside each other, as deeply as you like.
+You can nest JsonAttribute::Model objects inside each other, as deeply as you like --
+although very large/complex graphs _may_ have performance implications, test/investigate.
 
 ```ruby
 class SomeLabels
@@ -272,6 +280,40 @@ always mean 'contains' -- the previous query needs a `my_labels.hello`
 which is a hash that includes the key/value, `lang: en`, it can have
 other key/values in it too.
 
+(No built-in way currently to do `like` queries?)
+
+## Dirty tracking
+
+Full change-tracking, ActiveRecord::Attributes::Dirty-style, is available in
+Rails 5.1+ on `json_attribute`s on your ActiveRecord classes that include
+`JsonAttribute::Record`, by including `JsonAttribute::Record::Dirty`.
+Change-tracking methods are available off the `json_attribute_changes` method.
+
+    class MyModel < ActiveRecord::Base
+       include JsonAttribute::Record
+       include JsonAttribute::Record::Dirty
+
+       json_attribute :str, :string
+    end
+
+    model = MyModel.new
+    model.str = "old"
+    model.save
+    model.str = "new"
+
+    # All and only "new" style dirty tracking methods (Raisl 5.1+)
+    # are available:
+
+    model.saved_changes
+    model.changes_to_save
+    model.saved_change_to_str?
+    model.saved_change_to_str
+    model.will_save_change_to_str?
+    # etc
+
+More options are available, including merging changes from 'ordinary'
+ActiveRecord attributes in. See docs on [Dirty Tracking](./doc_src/dirty_tracking.md)
+
 ## Do you want this?
 
 Why might you want this?
@@ -281,7 +323,7 @@ Why might you want this?
   and are willing to trade the powerful complex querying support normalized rdbms
   schema gives you.
 
-* Single-Table Inheritance, and sub-classes have some or even many non-shared
+* Single-Table Inheritance, with sub-classes that have non-shared
   data fields. You rather not make all those columns, some of which will then also appear
   to inapplicable sub-classes.
 
@@ -291,7 +333,7 @@ Why might you want this?
   doesn't need to be very queryable generally.
 
 * You want to version your models, which is tricky with associations between models.
-  Minimize associations by inlining the complex data.
+  Minimize associations by inlining the complex data into one table row.
 
 * Generally, we're turning postgres into a _simple_ object-oriented
   document store. That can be mixed with an rdbms. The very same
@@ -338,12 +380,7 @@ too full and the code complex/abstract enough for now, but could come later.
 This is sort of a proof of concept at present, there are many features
 that still need attending to, to really smooth off the edges.
 
-* Dirty/change tracking. This is not currently doing
-  specific json_attribute dirty/change tracking -- either
-  for ActiveRecord JsonAttribute::Record or ActiveModel
-  JsonAttribute::Model. It probably would not be too hard to get it to.
-  There are use cases?
-  
+
 * Polymorphic JSON attributes.
 
 * partial updates for json hashes, use postgres jsonb merge operators to only overwrite what changed
@@ -388,7 +425,7 @@ that still need attending to, to really smooth off the edges.
   really lays the groundwork and makes this possible. Plus many other Rails developers.
   Rails has a reputation for being composed of messy or poorly designed code, but
   it's some really nice design in Rails that allows us to do some pretty powerful
-  stuff here, in under 1000 lines of code.
+  stuff here, in surprisingly few lines of code.
 
 * The existing [jsonb_accessor](https://github.com/devmynd/jsonb_accessor) was
   an inspiration, and provided some good examples of how to do some things
