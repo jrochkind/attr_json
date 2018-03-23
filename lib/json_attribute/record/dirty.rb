@@ -11,6 +11,15 @@ module JsonAttribute
     #
     #    some_model.json_attribute_changes.merged.saved_changes
     #    some_model.json_attribute_changes.merged.ordinary_attr_before_last_save
+    #
+    # Complex nested models will show up in changes as the cast models. If you want
+    # the raw json instead, use `as_json`:
+    #
+    #    some_model.json_attribute_changes.as_json.saved_changes
+    #
+    # You can combine as_json and merged if you like:
+    #
+    #    some_model.json_attribute_changes.as_json.merged.saved_changes
     module Dirty
       def json_attribute_changes
         Implementation.new(self)
@@ -34,10 +43,11 @@ module JsonAttribute
 
         attr_reader :model
 
-        def initialize(model, merged: false, merge_containers: false)
+        def initialize(model, merged: false, merge_containers: false, as_json: false)
           @model = model
           @merged = !!merged
           @merge_containers = !!merge_containers
+          @as_json = !!as_json
         end
 
         # return a copy with `merged` attribute true, so dirty tracking
@@ -51,7 +61,18 @@ module JsonAttribute
         #     model.json_attribute_changes.merged(containers: false).etc
         #
         def merged(containers: true)
-          self.class.new(model, merged: true, merge_containers: containers)
+          self.class.new(model, merged: true, merge_containers: containers,
+            as_json: as_json?)
+        end
+
+        # return a copy with as_json parameter set to true, so change diffs
+        # will be the json structures serialized, not the cast models.
+        # for 'primitive' types will be the same, but for JsonAttribute::Models
+        # very different.
+        def as_json
+          self.class.new(model, as_json: true,
+            merged: merged?,
+            merge_containers: merge_containers?)
         end
 
         # should we handle ordinary AR attributes too in one merged
@@ -66,6 +87,11 @@ module JsonAttribute
         def merge_containers?
           @merge_containers
         end
+
+        def as_json?
+          @as_json
+        end
+
 
         def saved_change_to_attribute(attr_name)
           attribute_def = registry[attr_name.to_sym]
@@ -87,6 +113,11 @@ module JsonAttribute
           after_v  = after_container[attribute_def.store_key]
 
           return nil if before_v.nil? && after_v.nil?
+
+          if as_json?
+            before_v = attribute_def.type.serialize(before_v) unless before_v.nil?
+            after_v = attribute_def.type.serialize(after_v) unless after_v.nil?
+          end
 
           [
             before_v,
@@ -115,11 +146,16 @@ module JsonAttribute
               old_v = container_change[0][definition.store_key]
               new_v = container_change[1][definition.store_key]
               if old_v != new_v
+               if as_json?
+                 old_v = definition.type.serialize(old_v) unless old_v.nil?
+                 new_v = definition.type.serialize(new_v) unless new_v.nil?
+               end
+
                 [
                   definition.name.to_s,
                   [
-                    container_change[0][definition.store_key],
-                    container_change[1][definition.store_key]
+                    old_v,
+                    new_v
                   ]
                 ]
               end
@@ -176,6 +212,11 @@ module JsonAttribute
 
           return nil if before_v.nil? && after_v.nil?
 
+         if as_json?
+           before_v = attribute_def.type.serialize(before_v) unless before_v.nil?
+           after_v = attribute_def.type.serialize(after_v) unless after_v.nil?
+         end
+
           [
             before_v,
             after_v
@@ -197,6 +238,11 @@ module JsonAttribute
               old_v = container_change[0][definition.store_key]
               new_v = container_change[1][definition.store_key]
               if old_v != new_v
+                if as_json?
+                  old_v = definition.type.serialize(old_v) unless old_v.nil?
+                  new_v = definition.type.serialize(new_v) unless new_v.nil?
+                end
+
                 [
                   definition.name.to_s,
                   [
@@ -236,7 +282,6 @@ module JsonAttribute
         def registry
           model.class.json_attributes_registry
         end
-
 
         # Override from ActiveModel::AttributeMethods
         # to not require class-static define_attribute, but instead dynamically

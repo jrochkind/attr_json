@@ -279,4 +279,26 @@ RSpec.describe JsonAttribute::Record::Dirty do
       end
     end
   end
+
+  describe "with as_json" do
+    let(:changes) { instance.json_attribute_changes.as_json }
+    let(:instance) do
+      klass.new(embedded: {str: "oldstr", int: 0}).tap do |i|
+        i.save
+        i.embedded.str = "newstr"
+      end
+    end
+    let(:orig_json_eq) { { 'str' => "oldstr", 'int' => 0 } }
+    let(:new_json_eq) { { 'str' => "newstr", 'int' => 0 } }
+
+    it "has changes as json" do
+      expect(changes.saved_change_to_attribute(:embedded)).to eq [nil, orig_json_eq]
+      expect(changes.saved_changes).to eq('embedded' => [nil, orig_json_eq])
+
+      expect(changes.attribute_change_to_be_saved(:embedded)).to eq [orig_json_eq, new_json_eq]
+      expect(changes.attribute_in_database(:embedded)).to eq orig_json_eq
+      expect(changes.changes_to_save).to eq('embedded' => [orig_json_eq, new_json_eq])
+      expect(changes.attributes_in_database).to eq('embedded' => orig_json_eq)
+    end
+  end
 end
