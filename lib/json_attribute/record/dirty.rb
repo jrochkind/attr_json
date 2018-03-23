@@ -115,22 +115,10 @@ module JsonAttribute
 
           (before_container, after_container) = model.saved_change_to_attribute(json_container)
 
-          return nil if before_container.nil? && after_container.nil?
-
-          before_v = before_container[attribute_def.store_key]
-          after_v  = after_container[attribute_def.store_key]
-
-          return nil if before_v.nil? && after_v.nil?
-
-          if as_json?
-            before_v = attribute_def.type.serialize(before_v) unless before_v.nil?
-            after_v = attribute_def.type.serialize(after_v) unless after_v.nil?
-          end
-
-          [
-            before_v,
-            after_v
-          ]
+          formatted_before_after(
+            before_container.try(:[], attribute_def.store_key),
+            after_container.try(:[], attribute_def.store_key),
+            attribute_def)
         end
 
         def attribute_before_last_save(attr_name)
@@ -154,31 +142,12 @@ module JsonAttribute
               old_v = container_change[0][definition.store_key]
               new_v = container_change[1][definition.store_key]
               if old_v != new_v
-               if as_json?
-                 old_v = definition.type.serialize(old_v) unless old_v.nil?
-                 new_v = definition.type.serialize(new_v) unless new_v.nil?
-               end
-
-                [
-                  definition.name.to_s,
-                  [
-                    old_v,
-                    new_v
-                  ]
-                ]
+                [ definition.name.to_s, formatted_before_after(old_v, new_v, definition) ]
               end
             end
           end.compact.to_h
 
-          if merged?
-            saved_changes.merge(json_attr_changes).tap do |merged|
-              unless merge_containers?
-                merged.except!(*registry.container_attributes)
-              end
-            end
-          else
-            json_attr_changes
-          end
+          prepared_changes(json_attr_changes, saved_changes)
         end
 
         def saved_changes?
@@ -213,22 +182,11 @@ module JsonAttribute
 
           (before_container, after_container) = model.attribute_change_to_be_saved(json_container)
 
-          return nil if before_container.nil? && after_container.nil?
-
-          before_v = before_container[attribute_def.store_key]
-          after_v  = after_container[attribute_def.store_key]
-
-          return nil if before_v.nil? && after_v.nil?
-
-         if as_json?
-           before_v = attribute_def.type.serialize(before_v) unless before_v.nil?
-           after_v = attribute_def.type.serialize(after_v) unless after_v.nil?
-         end
-
-          [
-            before_v,
-            after_v
-          ]
+          formatted_before_after(
+            before_container.try(:[], attribute_def.store_key),
+            after_container.try(:[], attribute_def.store_key),
+            attribute_def
+          )
         end
 
         def will_save_change_to_attribute?(attr_name)
@@ -246,31 +204,12 @@ module JsonAttribute
               old_v = container_change[0][definition.store_key]
               new_v = container_change[1][definition.store_key]
               if old_v != new_v
-                if as_json?
-                  old_v = definition.type.serialize(old_v) unless old_v.nil?
-                  new_v = definition.type.serialize(new_v) unless new_v.nil?
-                end
-
-                [
-                  definition.name.to_s,
-                  [
-                    old_v,
-                    new_v
-                  ]
-                ]
+                [ definition.name.to_s, formatted_before_after(old_v, new_v, definition) ]
               end
             end
           end.compact.to_h
 
-          if merged?
-            changes_to_save.merge(json_attr_changes).tap do |merged|
-              unless merge_containers?
-                merged.except!(*registry.container_attributes)
-              end
-            end
-          else
-            json_attr_changes
-          end
+          prepared_changes(json_attr_changes, changes_to_save)
         end
 
         def has_changes_to_save?
@@ -286,6 +225,38 @@ module JsonAttribute
         end
 
         private
+
+        # returns an array of before and after, possibly formatted with as_json.
+        # if both before and after are nil, returns nil.
+        def formatted_before_after(before_v, after_v, attribute_def)
+          return nil if before_v.nil? && after_v.nil?
+
+          if as_json?
+            before_v = attribute_def.type.serialize(before_v) unless before_v.nil?
+            after_v = attribute_def.type.serialize(after_v) unless after_v.nil?
+          end
+
+          [
+            before_v,
+            after_v
+          ]
+
+        end
+
+        # Takes a hash of _our_ json_attribute changes, and possibly
+        # merges them into the hash of all changes from the parent record,
+        # depending on values of `merged?` and `merge_containers?`.
+        def prepared_changes(json_attr_changes, all_changes)
+          if merged?
+            all_changes.merge(json_attr_changes).tap do |merged|
+              unless merge_containers?
+                merged.except!(*registry.container_attributes)
+              end
+            end
+          else
+            json_attr_changes
+          end
+        end
 
         def registry
           model.class.json_attributes_registry
