@@ -2,6 +2,15 @@ module JsonAttribute
   module Record
     # Add into an ActiveRecord object with JsonAttribute::Record,
     # to track dirty changes to json_attributes.
+    #
+    #    some_model.json_attribute_changes.saved_changes
+    #    some_model.json_attribute_changes.json_attr_before_last_save
+    #
+    # By default, it _only_ includes changes from json attributes.
+    # To have a merged list also including ordinary AR changes, add on `merged`:
+    #
+    #    some_model.json_attribute_changes.merged.saved_changes
+    #    some_model.json_attribute_changes.merged.ordinary_attr_before_last_save
     module Dirty
       def json_attribute_changes
         Implementation.new(self)
@@ -44,7 +53,13 @@ module JsonAttribute
 
         def saved_change_to_attribute(attr_name)
           attribute_def = registry[attr_name.to_sym]
-          return nil unless attribute_def
+          if ! attribute_def
+            if merged?
+              return model.saved_change_to_attribute(attr_name)
+            else
+              return nil
+            end
+          end
 
           json_container = attribute_def.container_attribute
 
@@ -71,7 +86,7 @@ module JsonAttribute
         end
 
         def saved_change_to_attribute?(attr_name)
-          return nil unless registry[attr_name.to_sym]
+          return nil unless registry[attr_name.to_sym] || merged?
           ! saved_change_to_attribute(attr_name).nil?
         end
 
@@ -79,7 +94,7 @@ module JsonAttribute
           saved_changes = model.saved_changes
           return {} if saved_changes == {}
 
-          registry.definitions.collect do |definition|
+          json_attr_changes = registry.definitions.collect do |definition|
             if container_change = saved_changes[definition.container_attribute]
               old_v = container_change[0][definition.store_key]
               new_v = container_change[1][definition.store_key]
@@ -94,6 +109,12 @@ module JsonAttribute
               end
             end
           end.compact.to_h
+
+          if merged?
+            saved_changes.merge(json_attr_changes)
+          else
+            json_attr_changes
+          end
         end
 
         def saved_changes?
@@ -103,14 +124,26 @@ module JsonAttribute
 
         def attribute_in_database(attr_name)
           to_be_saved = attribute_change_to_be_saved(attr_name)
-          return nil if to_be_saved.nil?
+          if to_be_saved.nil?
+            if merged?
+              return model.attribute_change_to_be_saved(attr_name)
+            else
+              return nil
+            end
+          end
 
           to_be_saved[0]
         end
 
         def attribute_change_to_be_saved(attr_name)
           attribute_def = registry[attr_name.to_sym]
-          return nil unless attribute_def
+          if ! attribute_def
+            if merged?
+              return model.attribute_change_to_be_saved(attr_name)
+            else
+              return nil
+            end
+          end
 
           json_container = attribute_def.container_attribute
 
@@ -130,15 +163,17 @@ module JsonAttribute
         end
 
         def will_save_change_to_attribute?(attr_name)
-          return nil unless registry[attr_name.to_sym]
+          return nil unless registry[attr_name.to_sym] || merged?
           ! attribute_change_to_be_saved(attr_name).nil?
         end
 
         def changes_to_save
           changes_to_save = model.changes_to_save
+
+
           return {} if changes_to_save == {}
 
-          registry.definitions.collect do |definition|
+          json_attr_changes = registry.definitions.collect do |definition|
             if container_change = changes_to_save[definition.container_attribute]
               old_v = container_change[0][definition.store_key]
               new_v = container_change[1][definition.store_key]
@@ -153,6 +188,12 @@ module JsonAttribute
               end
             end
           end.compact.to_h
+
+          if merged?
+            changes_to_save.merge(json_attr_changes)
+          else
+            json_attr_changes
+          end
         end
 
         def has_changes_to_save?

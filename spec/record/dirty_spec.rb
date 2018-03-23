@@ -197,4 +197,30 @@ RSpec.describe JsonAttribute::Record::Dirty do
     end
   end
 
+  describe "ordinary db attributes" do
+    let(:instance) do
+      klass.new(string_type: "old").tap do |i|
+        i.save
+        i.string_type = "new"
+      end
+    end
+    describe "with merged" do
+      let(:changes) { instance.json_attribute_changes.merged }
+      it "can see changes to ordinary attr" do
+        expect(changes.saved_change_to_attribute(:string_type)).to eq [nil, "old"]
+        expect(changes.saved_change_to_attribute?(:string_type)).to be true
+        expect(changes.attribute_before_last_save(:string_type)).to be nil
+        expect(changes.changes_to_save).to eq('string_type' => ["old", "new"])
+        expect(changes.has_changes_to_save?).to be true
+        expect(changes.changed_attribute_names_to_save).to eq(["string_type"])
+
+        expect(changes.attribute_change_to_be_saved(:string_type)).to eq ["old", "new"]
+        expect(changes.will_save_change_to_attribute?(:string_type)).to be true
+        expect(changes.attribute_in_database(:string_type)).to eq "old"
+        expect(changes.saved_changes?).to be true
+        expect(changes.attributes_in_database).to eq('string_type' => 'old')
+        expect(changes.saved_changes).to eq(instance.saved_changes)
+      end
+    end
+  end
 end
