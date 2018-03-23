@@ -7,6 +7,7 @@ RSpec.describe JsonAttribute::Record::Dirty do
       self.table_name = "products"
       json_attribute :str, :string
       json_attribute :int, :integer
+      json_attribute :str_array, :string, array: true
     end
   end
   let(:instance) { klass.new }
@@ -86,6 +87,33 @@ RSpec.describe JsonAttribute::Record::Dirty do
         expect(changes.saved_changes).to eq('str' => [nil, "old"])
         expect(changes.saved_changes?).to be true
         expect(changes.attributes_in_database).to eq('str' => 'old')
+      end
+    end
+  end
+
+  describe "array" do
+    describe "after save, with more unsaved changes" do
+      let(:instance) do
+        klass.new(str_array: ["old1", "old2"]).tap do |i|
+          i.save
+          i.str_array << "new1"
+        end
+      end
+
+      it "has all changes" do
+        expect(changes.saved_change_to_attribute?(:str_array)).to be true
+        expect(changes.saved_change_to_attribute(:str_array)).to eq [nil, ["old1", "old2"]]
+        expect(changes.attribute_before_last_save(:str_array)).to be nil
+        expect(changes.saved_changes).to eq('str_array' => [nil, ["old1", "old2"]])
+        expect(changes.saved_changes?).to be true
+        expect(changes.attributes_in_database).to eq('str_array' => ["old1", "old2"])
+
+        expect(changes.will_save_change_to_attribute?(:str_array)).to be true
+        expect(changes.attribute_change_to_be_saved(:str_array)).to eq [["old1", "old2"], ["old1", "old2", "new1"]]
+        expect(changes.attribute_in_database(:str_array)).to eq ["old1", "old2"]
+        expect(changes.changes_to_save).to eq('str_array' => [["old1", "old2"], ["old1", "old2", "new1"]])
+        expect(changes.has_changes_to_save?).to be true
+        expect(changes.changed_attribute_names_to_save).to eq(["str_array"])
       end
     end
   end

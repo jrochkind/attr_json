@@ -9,6 +9,9 @@ module JsonAttribute
 
 
       class Implementation
+        # The attribute_method stuff is copied from ActiveRecord::Dirty,
+        # to give you all the same synthetic per-attribute methods.
+        # We make it work with overridden #matched_attribute_method below.
         include ActiveModel::AttributeMethods
 
         # Attribute methods for "changed in last call to save?"
