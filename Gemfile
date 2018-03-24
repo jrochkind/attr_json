@@ -17,4 +17,10 @@ if ENV['RAILS_REQ']
   gem "railties", ENV['RAILS_REQ'].split(",")
 end
 
+# Rails 5.0 won't work with pg 1.0, but that isn't actually in it's gemspec,
+# workaround.
+if ENV['PG_REQ']
+  gem "pg", ENV['PG_REQ']
+end
+
 gem "byebug"
