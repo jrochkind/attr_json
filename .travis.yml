@@ -4,7 +4,8 @@ cache: bundler
 addons:
   postgresql: '9.4'
 rvm:
-  - 2.4.1
+  - 2.4
+  - 2.5.0
 env:
   - RAILS_GEM="~> 5.0.0" PG_GEM="~> 0.18"
   - RAILS_GEM="~> 5.1.0"
