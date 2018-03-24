@@ -6,9 +6,9 @@ addons:
 rvm:
   - 2.4.1
 env:
-  - RAILS_REQ="~> 5.0.0" PG_REQ="~> 0.18"
-  - RAILS_REQ="~> 5.1.0"
-  - RAILS_REQ=">= 5.2.0.rc2,< 5.3.0"
+  - RAILS_GEM="~> 5.0.0" PG_GEM="~> 0.18"
+  - RAILS_GEM="~> 5.1.0"
+  - RAILS_GEM=">= 5.2.0.rc2,< 5.3.0"
 before_install: gem install bundler -v 1.14.6
 before_script:
   - bundle exec rake db:create
