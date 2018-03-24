@@ -31,7 +31,7 @@ JsonAttribute supports all of these new-style dirty-tracking methods, only
 in Rails 5.1+. (**Sorry, our dirty tracking support does not work with Rails 5.0,
 or old-style dirty API in Rails 5.1. Only new-style API in Rails 5.1+**). I wasn't
 able to find a good way to get changes in the default Rails dirty tracking methods,
-so instead they are available off a separate `active_record_changes` method,
+so instead they are available off a separate `json_attribute_changes` method,
 which also allows customization of if host record changes are also included.
 
 To include the JsonAttribute dirty-tracking features, include the
@@ -39,25 +39,44 @@ To include the JsonAttribute dirty-tracking features, include the
 `JsonAttribute::Record`:
 
 ```ruby
-class MyModel < ActiveRecord::Base
-   include JsonAttribute::Record
-   include JsonAttribute::Record::Dirty
+class MyEmbeddedModel
+  include JsonAttribute::Model
 
-   json_attribute :str, :string
-   json_attribute :str_array, :string, array: true
-   json_attribute :array_of_models, MyModelClass.type, array: true
+  json_attribute :str, :string
+end
+
+class MyModel < ActiveRecord::Base
+  include JsonAttribute::Record
+  include JsonAttribute::Record::Dirty
+
+  json_attribute :str, :string
+  json_attribute :str_array, :string, array: true
+  json_attribute :array_of_models, MyEmbeddedModel.to_type, array: true
+end
 ```
 
 Now dirty changes are available off a `json_attribute_changes` method.
 The full suite of (new, Rails 5.1+) ActiveRecord dirty methods are supported,
 both ones that take the attribute-name as an argument, and synthetic attribute-specific
-methods. All top-level `json_attribute`s are supported, including attributes
-including arrays and/or complex/nested/compound models.
+methods. All top-level `json_attribute`s are supported, including those that
+include arrays and/or complex/nested/compound models.
 
 ```ruby
 model = MyModel.new
-model.
+model.str = "some value"
+model.json_attribute_changes.will_save_change_to_str? #=> true
+model.str_array = ["original1", "original2"]
+model.array_of_models = [MyEmbeddedModel.new(str: "value")]
+model.save
 
+model.json_attribute_changes.saved_changes
+  # => {"str"=>[nil, "some value"], "str_array"=>[nil, ["original1", "original2"]], "array_of_models"=>[nil, [#<MyEmbeddedModel:0x00007fb285d12330 @attributes={"str"=>"value"}, @validation_context=nil, @errors=#<ActiveModel::Errors:0x00007fb285d00400 @base=#<MyEmbeddedModel:0x00007fb285d12330 ...>, @messages={}, @details={}>>]]
+
+model.str_array << "new1"
+
+model.json_attribute_changes.will_save_change_to_str_array? # => true
+model.json_attribute_changes.str_array_change_to_be_saved
+  # => [["original1", "original2"], ["original1", "original2", "new1"]]
 ```
 
 ## Cast representation vs Json representation
