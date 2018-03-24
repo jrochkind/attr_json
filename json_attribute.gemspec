@@ -35,7 +35,7 @@ existing ActiveRecord architecture as we can.}
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  spec.add_runtime_dependency "activerecord", ">= 5.0.0", "< 5.2"
+  spec.add_runtime_dependency "activerecord", ">= 5.0.0", "< 5.3"
   spec.add_runtime_dependency "pg", ">= 0.18.1"
 
   spec.add_development_dependency "bundler", "~> 1.14"
