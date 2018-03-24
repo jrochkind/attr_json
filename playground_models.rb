@@ -25,7 +25,7 @@ class SomeLabels
 end
 
 
-class MyModel < ActiveRecord::Base
+class MyModel2 < ActiveRecord::Base
   self.table_name = "products"
    include JsonAttribute::Record
    include JsonAttribute::Record::QueryScopes
@@ -51,6 +51,23 @@ class MyModel < ActiveRecord::Base
   json_attribute :my_labels, SomeLabels.to_type
 end
 
+class MyEmbeddedModel
+  include JsonAttribute::Model
+
+  json_attribute :str, :string
+end
+
+class MyModel < ActiveRecord::Base
+  self.table_name = "products"
+
+  include JsonAttribute::Record
+  include JsonAttribute::Record::Dirty
+
+  json_attribute :str, :string
+  json_attribute :str_array, :string, array: true
+  json_attribute :array_of_models, MyEmbeddedModel.to_type, array: true
+end
+
 class StaticProduct < ActiveRecord::Base
   self.table_name = "products"
   belongs_to :product_category
@@ -59,6 +76,7 @@ end
 class Product < StaticProduct
   include JsonAttribute::Record
   include JsonAttribute::Record::QueryScopes
+  include JsonAttribute::Record::Dirty
 
   json_attribute :title, :string
   json_attribute :rank, :integer
