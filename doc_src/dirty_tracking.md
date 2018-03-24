@@ -29,7 +29,10 @@ and the initial [AR pull request](https://github.com/rails/rails/pull/25337).
 
 JsonAttribute supports all of these new-style dirty-tracking methods, only
 in Rails 5.1+. (**Sorry, our dirty tracking support does not work with Rails 5.0,
-or old-style dirty API in Rails 5.1. Only new-style API in Rails 5.1+**).
+or old-style dirty API in Rails 5.1. Only new-style API in Rails 5.1+**). I wasn't
+able to find a good way to get changes in the default Rails dirty tracking methods,
+so instead they are available off a separate `active_record_changes` method,
+which also allows customization of if host record changes are also included.
 
 To include the JsonAttribute dirty-tracking features, include the
 `JsonAttribute::Record::Dirty` module in your active record model already including
@@ -126,7 +129,7 @@ model.json_attribute_changes.merged(containers: false).json_attributes_will_chan
 
 ## Combine both of these modifiers at once no problem
 
-```
+```ruby
 model.json_attribute_changes.as_json.merged.saved_changes
 model.json_attribute_changes.as_json.merged(containers: false).saved_changes
 model.json_attribute_changes.merged(containers: true).as_json.saved_changes
