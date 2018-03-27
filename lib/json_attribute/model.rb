@@ -195,6 +195,15 @@ module JsonAttribute
       other_object.attributes == self.attributes
     end
 
+    # ActiveRecord objects [have a](https://github.com/rails/rails/blob/v5.1.5/activerecord/lib/active_record/nested_attributes.rb#L367-L374)
+    # `_destroy`, related to `marked_for_destruction?` functionality used with AR nested attributes.
+    # We don't mark for destruction, our nested attributes implementation just deletes immediately,
+    # but having this simple method always returning false makes things work more compatibly
+    # and smoothly with standard code for nested attributes deletion in form builders.
+    def _destroy
+      false
+    end
+
     private
 
     def _json_attribute_write(key, value)
