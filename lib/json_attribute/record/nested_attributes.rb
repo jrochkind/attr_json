@@ -15,15 +15,17 @@ module JsonAttribute
     # Unlike AR, we try to put most of our implementation in a seperate
     # Implementation instance, instead of adding a bazillion methods to the model itself.
     #
-    # NOTES: eliminated 'update_only' option, not applicable (I think)
+    # NOTES: eliminated 'update_only' option, not applicable (I think). Eliminated allow_destroy,
+    # doesn't make sense, it's always allowed, as they could do the same just by eliminating
+    # the row from the submitted params.
     module NestedAttributes
       extend ActiveSupport::Concern
 
       class_methods do
         def json_attribute_accepts_nested_attributes_for(*attr_names)
-          options = { allow_destroy: false }
+          options = {  }
           options.update(attr_names.extract_options!)
-          options.assert_valid_keys(:allow_destroy, :reject_if, :limit)
+          options.assert_valid_keys(:reject_if, :limit)
           options[:reject_if] = REJECT_ALL_BLANK_PROC if options[:reject_if] == :all_blank
 
           attr_names.each do |attr_name|
@@ -60,7 +62,7 @@ module JsonAttribute
         #
         # Using this custom imp instead of ActiveSupport `delegate` so
         # we can send to private method in model.
-        [ :nested_attributes_options, :call_reject_if, :allow_destroy?,
+        [ :nested_attributes_options, :call_reject_if,
           :reject_new_record?, :has_destroy_flag?, :check_record_limit!
         ].each do |method|
           define_method(method) do |*args|
@@ -109,7 +111,7 @@ module JsonAttribute
 
           existing_record = model_send(attr_name)
 
-          if existing_record && has_destroy_flag?(attributes) && allow_destroy?(attr_name)
+          if existing_record && has_destroy_flag?(attributes)
             # we just delete it right away, not mark_for_destroy like in AR, hopefully
             # that'll work out.
             # setting it to nil will eliminate it in JsonAttribute, that's it.
@@ -144,11 +146,9 @@ module JsonAttribute
             end
           end
 
-          if allow_destroy?(attr_name)
-            # remove ones marked with _destroy key
-            attributes_collection = attributes_collection.reject do |hash|
-              hash.respond_to?(:[]) && has_destroy_flag?(hash)
-            end
+          # remove ones marked with _destroy key
+          attributes_collection = attributes_collection.reject do |hash|
+            hash.respond_to?(:[]) && has_destroy_flag?(hash)
           end
 
           # the magic of our type casting, this should 'just work'?
