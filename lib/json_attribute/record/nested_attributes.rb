@@ -61,7 +61,7 @@ module JsonAttribute
         # Using this custom imp instead of ActiveSupport `delegate` so
         # we can send to private method in model.
         [ :nested_attributes_options, :call_reject_if, :allow_destroy?,
-          :reject_new_record?, :has_destroy_flag?
+          :reject_new_record?, :has_destroy_flag?, :check_record_limit!
         ].each do |method|
           define_method(method) do |*args|
             model.send(method, *args)
@@ -92,13 +92,15 @@ module JsonAttribute
 
         def assign_nested_attributes(attributes)
           if is_array_type?
-            raise "not yet implemented buddy"
+            assign_nested_attributes_for_model_array(attributes)
           else
-            assign_nested_attributes_for_one_to_one_association(attributes)
+            assign_nested_attributes_for_single_model(attributes)
           end
         end
 
-        def assign_nested_attributes_for_one_to_one_association(attributes)
+        # Based on and much like AR's `assign_nested_attributes_for_one_to_one_association`,
+        # but much simpler.
+        def assign_nested_attributes_for_single_model(attributes)
           options = nested_attributes_options[attr_name]
           if attributes.respond_to?(:permitted?)
             attributes = attributes.to_h
@@ -114,16 +116,44 @@ module JsonAttribute
             model_send("#{attr_def.name}=", nil)
           elsif existing_record
             existing_record.assign_attributes(attributes.except(*unassignable_keys))
-          elsif !reject_new_record?(association_name, attributes)
+          elsif !reject_new_record?(attr_name, attributes)
             # doesn't exist yet, using the setter casting will build it for us
             # automatically.
             send("#{attr_name}=", attributes)
           end
         end
 
+        def assign_nested_attributes_for_model_array(attributes_collection)
+          options = nested_attributes_options[attr_name]
+          if attributes_collection.respond_to?(:permitted?)
+            attributes_collection = attributes_collection.to_h
+          end
 
+          unless attributes_collection.is_a?(Hash) || attributes_collection.is_a?(Array)
+            raise ArgumentError, "Hash or Array expected, got #{attributes_collection.class.name} (#{attributes_collection.inspect})"
+          end
 
+          check_record_limit!(options[:limit], attributes_collection)
 
+          if attributes_collection.is_a? Hash
+            keys = attributes_collection.keys
+            attributes_collection = if keys.include?("id") || keys.include?(:id)
+              [attributes_collection]
+            else
+              attributes_collection.values
+            end
+          end
+
+          if allow_destroy?(attr_name)
+            # remove ones marked with _destroy key
+            attributes_collection = attributes_collection.reject do |hash|
+              hash.respond_to?(:[]) && has_destroy_flag?(hash)
+            end
+          end
+
+          # the magic of our type casting, this should 'just work'?
+          model_send("#{attr_name}=", attributes_collection)
+        end
       end
     end
   end
