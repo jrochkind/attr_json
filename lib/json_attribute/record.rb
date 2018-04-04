@@ -38,7 +38,12 @@ module JsonAttribute
       # Type can be a symbol that will be looked up in `ActiveModel::Type.lookup`,
       # or an ActiveModel:::Type::Value)
       #
-      # TODO, doc or
+      # TODO, doc all params. Raise on bad keyword params.
+      #
+      # @param rails_attribute [Boolean] (keyword) Create an actual ActiveRecord `attribute`.
+      #    not needed for our functionality, but registering thusly will let the
+      #    type be picked up by simple_form and other tools that may look for it
+      #    via ActiveRecord/ActiveModel API.
       def json_attribute(name, type,
                          container_attribute: self.default_json_container_attribute,
                          **options)
@@ -62,6 +67,12 @@ module JsonAttribute
         # By default, automatically validate nested models
         if type.kind_of?(JsonAttribute::Type::Model) && options[:validate] != false
           self.validates_with ActiveRecord::Validations::AssociatedValidator, attributes: [name.to_sym]
+        end
+
+        # We don't actually use this for anything, we provide our own covers. But registering
+        # it with usual system will let simple_form and maybe others find it.
+        if options[:rails_attribute]
+          self.attribute name.to_sym, self.json_attributes_registry.fetch(name).type
         end
 
         _json_attributes_module.module_eval do

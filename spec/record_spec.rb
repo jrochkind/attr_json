@@ -591,6 +591,27 @@ RSpec.describe JsonAttribute::Record do
       end
     end
 
+    describe "rails_attribute" do
+      it "does not register rails attribute by default" do
+        expect(instance.attributes.keys).not_to include("str")
+      end
+      describe "with rails_attribute: true" do
+        let(:klass) do
+          Class.new(ActiveRecord::Base) do
+            include JsonAttribute::Record
+
+            self.table_name = "products"
+            json_attribute :str, :string, array: true, rails_attribute: true
+          end
+        end
+        it "registers attribute and type" do
+          expect(instance.attributes.keys).to include("str")
+          expect(instance.type_for_attribute("str")).to be_kind_of(JsonAttribute::Type::Array)
+          expect(instance.type_for_attribute("str").base_type).to be_kind_of(ActiveModel::Type::String)
+        end
+      end
+    end
+
     # describe "with bad attribute" do
     #   it "raises on decleration" do
     #     expect {
