@@ -8,10 +8,14 @@ module JsonAttribute
     # may not do something useful or without exceptions in other contexts.
     #
     #     JsonAttribute::Type::Array.new(base_type)
-    class Array
+    class Array < ::ActiveModel::Type::Value
       attr_reader :base_type
       def initialize(base_type)
         @base_type = base_type
+      end
+
+      def type
+        @type ||= "array_of_#{base_type.type}".to_sym
       end
 
       def cast(value)
