@@ -155,6 +155,18 @@ module JsonAttribute
       end
     end
 
+    # This attribute from ActiveRecord makes SimpleForm happy, and able to detect
+    # type.
+    def type_for_attribute(attr_name)
+      self.class.json_attributes_registry.type_for_attribute(attr_name)
+    end
+
+    # This attribute from ActiveRecord make SimpleForm happy, and able to detect
+    # type.
+    def has_attribute?(str)
+      self.class.json_attributes_registry.has_attribute?(str)
+    end
+
     # Override from ActiveModel::Serialization to #serialize
     # by type to make sure any values set directly on hash still
     # get properly type-serialized.
