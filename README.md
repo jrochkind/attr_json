@@ -304,11 +304,11 @@ Change-tracking methods are available off the `json_attribute_changes` method.
     # All and only "new" style dirty tracking methods (Raisl 5.1+)
     # are available:
 
-    model.saved_changes
-    model.changes_to_save
-    model.saved_change_to_str?
-    model.saved_change_to_str
-    model.will_save_change_to_str?
+    model.json_attribute_changes.saved_changes
+    model.json_attribute_changes.changes_to_save
+    model.json_attribute_changes.saved_change_to_str?
+    model.json_attribute_changes.saved_change_to_str
+    model.json_attribute_changes.will_save_change_to_str?
     # etc
 
 More options are available, including merging changes from 'ordinary'
