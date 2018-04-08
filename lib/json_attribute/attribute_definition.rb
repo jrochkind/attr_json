@@ -76,5 +76,9 @@
         cast(@default)
       end
     end
+
+    def array_type?
+      type.is_a? JsonAttribute::Type::Array
+    end
   end
 end
