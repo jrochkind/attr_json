@@ -22,6 +22,9 @@ module JsonAttribute
       extend ActiveSupport::Concern
 
       class_methods do
+        # @param define_build_method [Boolean] (keyword) Default true, provide `build_attribute_name`
+        #    method that works like you expect. [Cocoon](https://github.com/nathanvda/cocoon),
+        #    for example, requires this.
         def json_attribute_accepts_nested_attributes_for(*attr_names)
           options = {  }
           options.update(attr_names.extract_options!)
@@ -47,9 +50,42 @@ module JsonAttribute
                   ::JsonAttribute::Record::NestedAttributes::Writer.new(self, :#{attr_name}).assign_nested_attributes(attributes)
                 end
               eoruby
+
+              if options[:define_build_method] != false
+                build_method_name = "build_#{attr_name.to_s.singularize}"
+
+                generated_association_methods.module_eval do
+                  if method_defined?(build_method_name)
+                    remove_method(build_method_name)
+                  end
+                  define_method build_method_name do |params = {}|
+                    Builder.new(self, attr_name).build(params)
+                  end
+                end
+              end
             else
               raise ArgumentError, "No json_attribute found for name `#{attr_name}'. Has it been defined yet?"
             end
+          end
+        end
+      end
+
+      class Builder
+        attr_reader :model, :attr_name, :attr_def
+
+        def initialize(model, attr_name)
+          @model = model
+          @attr_name = attr_name
+          @attr_def = model.class.json_attributes_registry[attr_name]
+        end
+
+        def build(params = {})
+          if attr_def.array_type?
+            model.send("#{attr_name}=", (model.send(attr_name) || []) + [params])
+            return model.send("#{attr_name}").last
+          else
+            send("#{attr_name}=", params)
+            return model.send("#{attr_name}")
           end
         end
       end
@@ -75,13 +111,6 @@ module JsonAttribute
           @model = model
           @attr_name = attr_name
           @attr_def = model.class.json_attributes_registry[attr_name]
-
-          # TODO, we should be able to ask attr_def.array?
-          @is_array_type = !!attr_def.type.is_a?(JsonAttribute::Type::Array)
-        end
-
-        def is_array_type?
-          @is_array_type
         end
 
         def model_send(method, *args)
@@ -93,7 +122,7 @@ module JsonAttribute
         end
 
         def assign_nested_attributes(attributes)
-          if is_array_type?
+          if attr_def.array_type?
             assign_nested_attributes_for_model_array(attributes)
           else
             assign_nested_attributes_for_single_model(attributes)
