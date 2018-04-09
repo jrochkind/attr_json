@@ -29,7 +29,7 @@ module JsonAttribute
           options = {  }
           options.update(attr_names.extract_options!)
           options.assert_valid_keys(:reject_if, :limit)
-          options[:reject_if] = REJECT_ALL_BLANK_PROC if options[:reject_if] == :all_blank
+          options[:reject_if] = ActiveRecord::NestedAttributes::ClassMethods::REJECT_ALL_BLANK_PROC if options[:reject_if] == :all_blank
 
           attr_names.each do |attr_name|
             if attr_def = json_attributes_registry[attr_name]
@@ -64,7 +64,7 @@ module JsonAttribute
                 end
               end
             else
-              raise ArgumentError, "No json_attribute found for name `#{attr_name}'. Has it been defined yet?"
+              raise ArgumentError, "No json_attribute found for name '#{attr_name}'. Has it been defined yet?"
             end
           end
         end
@@ -84,7 +84,7 @@ module JsonAttribute
             model.send("#{attr_name}=", (model.send(attr_name) || []) + [params])
             return model.send("#{attr_name}").last
           else
-            send("#{attr_name}=", params)
+            model.send("#{attr_name}=", params)
             return model.send("#{attr_name}")
           end
         end
@@ -150,7 +150,7 @@ module JsonAttribute
           elsif !reject_new_record?(attr_name, attributes)
             # doesn't exist yet, using the setter casting will build it for us
             # automatically.
-            send("#{attr_name}=", attributes)
+            model_send("#{attr_name}=", attributes)
           end
         end
 
@@ -175,9 +175,9 @@ module JsonAttribute
             end
           end
 
-          # remove ones marked with _destroy key
+          # remove ones marked with _destroy key, or rejected
           attributes_collection = attributes_collection.reject do |hash|
-            hash.respond_to?(:[]) && has_destroy_flag?(hash)
+            hash.respond_to?(:[]) && (has_destroy_flag?(hash) || reject_new_record?(attr_name, hash))
           end
 
           # the magic of our type casting, this should 'just work'?
