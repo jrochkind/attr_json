@@ -1,7 +1,7 @@
 require 'spec_helper'
-require 'json_attribute/record/nested_attributes'
+require 'json_attribute/nested_attributes'
 
-RSpec.describe JsonAttribute::Record::NestedAttributes do
+RSpec.describe JsonAttribute::NestedAttributes do
   let(:model_class) do
     Class.new do
       include JsonAttribute::Model
@@ -15,7 +15,7 @@ RSpec.describe JsonAttribute::Record::NestedAttributes do
     model_class_type = model_class.to_type
     Class.new(ActiveRecord::Base) do
       include JsonAttribute::Record
-      include JsonAttribute::Record::NestedAttributes
+      include JsonAttribute::NestedAttributes
 
       self.table_name = "products"
 
@@ -156,7 +156,7 @@ RSpec.describe JsonAttribute::Record::NestedAttributes do
       model_class_type = model_class.to_type
       Class.new do
         include JsonAttribute::Model
-        include JsonAttribute::Record::NestedAttributes
+        include JsonAttribute::NestedAttributes
 
         json_attribute :one_model, model_class_type
         json_attribute :many_models, model_class_type, array: true

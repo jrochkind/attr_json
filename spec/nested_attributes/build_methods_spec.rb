@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'json_attribute/record/nested_attributes'
+require 'json_attribute/nested_attributes'
 
 RSpec.describe "NestedAttributes build methods" do
   let(:model_class) do
@@ -15,7 +15,7 @@ RSpec.describe "NestedAttributes build methods" do
     model_class_type = model_class.to_type
     Class.new(ActiveRecord::Base) do
       include JsonAttribute::Record
-      include JsonAttribute::Record::NestedAttributes
+      include JsonAttribute::NestedAttributes
 
       self.table_name = "products"
 
@@ -75,6 +75,28 @@ RSpec.describe "NestedAttributes build methods" do
       expect(built).to equal instance.many_models.last
 
       expect(instance.many_models).to eq [model_class.new(str: "original"), model_class.new(str: "foo", int: nil)]
+    end
+  end
+
+  describe "with define_build_method: false" do
+    let(:klass) do
+      model_class_type = model_class.to_type
+      Class.new(ActiveRecord::Base) do
+        include JsonAttribute::Record
+        include JsonAttribute::NestedAttributes
+
+        self.table_name = "products"
+
+        json_attribute :one_model, model_class_type
+        json_attribute :many_models, model_class_type, array: true
+
+        json_attribute_accepts_nested_attributes_for :one_model, :many_models, define_build_method: false
+      end
+    end
+
+    it "does not add build methods" do
+      expect(instance).not_to respond_to(:build_many_model)
+      expect(instance).not_to respond_to(:build_one_model)
     end
   end
 end
