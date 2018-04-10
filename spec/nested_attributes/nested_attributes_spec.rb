@@ -150,4 +150,47 @@ RSpec.describe JsonAttribute::Record::NestedAttributes do
       end
     end
   end
+
+  describe "in an JsonAttribute::Model" do
+    let(:klass) do
+      model_class_type = model_class.to_type
+      Class.new do
+        include JsonAttribute::Model
+        include JsonAttribute::Record::NestedAttributes
+
+        json_attribute :one_model, model_class_type
+        json_attribute :many_models, model_class_type, array: true
+
+        json_attribute_accepts_nested_attributes_for :one_model, :many_models
+      end
+    end
+
+    it "should define methods" do
+      expect(instance).to respond_to :one_model_attributes=
+      expect(instance).to respond_to :many_models_attributes=
+      expect(instance).to respond_to :build_one_model
+      expect(instance).to respond_to :build_many_model
+    end
+
+    it "assign for single model" do
+      instance.one_model_attributes= {str: "Someone", int: "101"}.stringify_keys
+      expect(instance.one_model).to be_kind_of(model_class)
+      expect(instance.one_model.str).to eq "Someone"
+      expect(instance.one_model.int).to eq 101
+    end
+
+    it "assigns for array of models" do
+      instance.many_models_attributes =
+        [
+          {str: "Someone", int: "101"},
+          {str: "Someone Else", int: "102"}
+        ].collect(&:stringify_keys)
+
+      expect(instance.many_models).to be_present
+      expect(instance.many_models.all? {|a| a.kind_of? model_class})
+
+      expect(instance.many_models).to eq [model_class.new(str: "Someone", int: "101"), model_class.new(str: "Someone Else", int: "102")]
+    end
+  end
+
 end

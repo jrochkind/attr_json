@@ -32,40 +32,49 @@ module JsonAttribute
           options.assert_valid_keys(:reject_if, :limit)
           options[:reject_if] = ActiveRecord::NestedAttributes::ClassMethods::REJECT_ALL_BLANK_PROC if options[:reject_if] == :all_blank
 
+          unless respond_to?(:nested_attributes_options)
+            # Add it when we're in a JsonAttribute::Model.  In an ActiveRecord::Base we'll just use the
+            # existing one, it'll be okay.
+            # https://github.com/rails/rails/blob/c14deceb9f36f82cd5ca3db214d85e1642eb0bfd/activerecord/lib/active_record/nested_attributes.rb#L16
+            class_attribute :nested_attributes_options, instance_writer: false
+            self.nested_attributes_options ||= {}
+          end
+
           attr_names.each do |attr_name|
-            if attr_def = json_attributes_registry[attr_name]
-              # TODO, do we really want to store this in the AR nested_attributes_options
-              nested_attributes_options = self.nested_attributes_options.dup
-              nested_attributes_options[attr_name.to_sym] = options
-              self.nested_attributes_options = nested_attributes_options
+            attr_def = json_attributes_registry[attr_name]
 
-              # We're generating into the same module normal AR nested attr setters
-              # use, I think it's fine. You can't have a real association with the same
-              # name as a `json_attribute`, that'd be all kinds of hurt anyway. If AR
-              # changes it's stuff, it might hurt us though.
-              generated_association_methods.module_eval <<-eoruby, __FILE__, __LINE__ + 1
-                if method_defined?(:#{attr_name}_attributes=)
-                  remove_method(:#{attr_name}_attributes=)
-                end
-                def #{attr_name}_attributes=(attributes)
-                  ::JsonAttribute::Record::NestedAttributes::Writer.new(self, :#{attr_name}).assign_nested_attributes(attributes)
-                end
-              eoruby
+            unless attr_def
+              raise ArgumentError, "No json_attribute found for name '#{attr_name}'. Has it been defined yet?"
+            end
 
-              if options[:define_build_method] != false
+            # TODO, do we really want to store this in the AR nested_attributes_options
+            nested_attributes_options = self.nested_attributes_options.dup
+            nested_attributes_options[attr_name.to_sym] = options
+            self.nested_attributes_options = nested_attributes_options
+
+            # We're generating into the same module normal AR nested attr setters
+            # use, I think it's fine. You can't have a real association with the same
+            # name as a `json_attribute`, that'd be all kinds of hurt anyway. If AR
+            # changes it's stuff, it might hurt us though.
+            _json_attributes_module.module_eval do
+              if method_defined?(:"#{attr_name}_attributes=")
+                remove_method(:"#{attr_name}_attributes=")
+              end
+              define_method "#{attr_name}_attributes=" do |attributes|
+                ::JsonAttribute::Record::NestedAttributes::Writer.new(self, attr_name).assign_nested_attributes(attributes)
+              end
+            end
+
+            if options[:define_build_method] != false
+              _json_attributes_module.module_eval do
                 build_method_name = "build_#{attr_name.to_s.singularize}"
-
-                generated_association_methods.module_eval do
-                  if method_defined?(build_method_name)
-                    remove_method(build_method_name)
-                  end
-                  define_method build_method_name do |params = {}|
-                    Builder.new(self, attr_name).build(params)
-                  end
+                if method_defined?(build_method_name)
+                  remove_method(build_method_name)
+                end
+                define_method build_method_name do |params = {}|
+                  Builder.new(self, attr_name).build(params)
                 end
               end
-            else
-              raise ArgumentError, "No json_attribute found for name '#{attr_name}'. Has it been defined yet?"
             end
           end
         end
@@ -75,8 +84,7 @@ module JsonAttribute
         attr_reader :model, :attr_name, :attr_def
 
         def initialize(model, attr_name)
-          @model = model
-          @attr_name = attr_name
+          @model, @attr_name = model, attr_name,
           @attr_def = model.class.json_attributes_registry[attr_name]
         end
 
@@ -94,27 +102,12 @@ module JsonAttribute
       class Writer
         attr_reader :model, :attr_name, :attr_def
 
-
-        delegate :nested_attributes_options, to: :model
-        # We can totally use the methods from ActiveRecord::NestedAttributes.
-        # Is this a bad idea? I dunno.
-        #
-        # Using this custom imp instead of ActiveSupport `delegate` so
-        # we can send to private method in model.
-        [
-          :reject_new_record?
-        ].each do |method|
-          define_method(method) do |*args|
-            model.send(method, *args)
-          end
-          private :method
-        end
-
         def initialize(model, attr_name)
-          @model = model
-          @attr_name = attr_name
+          @model, @attr_name = model, attr_name
           @attr_def = model.class.json_attributes_registry[attr_name]
         end
+
+        delegate :nested_attributes_options, to: :model
 
         def assign_nested_attributes(attributes)
           if attr_def.array_type?
@@ -134,8 +127,8 @@ module JsonAttribute
           (model.class)::UNASSIGNABLE_KEYS
         end
 
-        # Based on and much like AR's `assign_nested_attributes_for_one_to_one_association`,
-        # but much simpler.
+        # Copied with signficant modifications from:
+        # https://github.com/rails/rails/blob/master/activerecord/lib/active_record/nested_attributes.rb#L407
         def assign_nested_attributes_for_single_model(attributes)
           options = nested_attributes_options[attr_name]
           if attributes.respond_to?(:permitted?)
@@ -159,6 +152,8 @@ module JsonAttribute
           end
         end
 
+        # Copied with significant modification from
+        # https://github.com/rails/rails/blob/master/activerecord/lib/active_record/nested_attributes.rb#L466
         def assign_nested_attributes_for_model_array(attributes_collection)
           options = nested_attributes_options[attr_name]
           if attributes_collection.respond_to?(:permitted?)
@@ -171,6 +166,7 @@ module JsonAttribute
 
           check_record_limit!(options[:limit], attributes_collection)
 
+          # Dunno what this is about but it's from ActiveRecord::NestedAttributes
           if attributes_collection.is_a? Hash
             keys = attributes_collection.keys
             attributes_collection = if keys.include?("id") || keys.include?(:id)
@@ -185,7 +181,8 @@ module JsonAttribute
             hash.respond_to?(:[]) && (has_destroy_flag?(hash) || reject_new_record?(attr_name, hash))
           end
 
-          # the magic of our type casting, this should 'just work'?
+          # the magic of our type casting, this should 'just work', we'll have
+          # a new array of models.
           model_send("#{attr_name}=", attributes_collection)
         end
 
