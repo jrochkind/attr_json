@@ -1,16 +1,17 @@
 module JsonAttribute
   module Record
-    # The implementation is copied and modified from ActiveRecord::NestedAttributes.
+    # The implementation is based on ActiveRecord::NestedAttributes, from
+    # https://github.com/rails/rails/blob/a45f234b028fd4dda5338e5073a3bf2b8bf2c6fd/activerecord/lib/active_record/nested_attributes.rb
     #
-    # We have to change reflection methods for telling whether something is to-one or
-    # to-many, and implementations of destoying and ids and such.
+    # Re-used, and customized/overrode methods to match our implementation.
+    # Copied over some implementation so we can use in ActiveModel's that original
+    # isn't compatible with.
+    # The original is pretty well put together and has had very low churn history.
+    #
     #
     # But much of the AR implementation, including form builder stuff, just works,
     # if we define `#{attribute_name}_attributes=` methods that work. That's mostly what
     # we have to do here.
-    #
-    # since the AR implementation hasn't changed substantially in years, hopefully
-    # it won't start doing so and make us out of sync.
     #
     # Unlike AR, we try to put most of our implementation in a seperate
     # Implementation instance, instead of adding a bazillion methods to the model itself.
@@ -93,13 +94,15 @@ module JsonAttribute
       class Writer
         attr_reader :model, :attr_name, :attr_def
 
+
+        delegate :nested_attributes_options, to: :model
         # We can totally use the methods from ActiveRecord::NestedAttributes.
         # Is this a bad idea? I dunno.
         #
         # Using this custom imp instead of ActiveSupport `delegate` so
         # we can send to private method in model.
-        [ :nested_attributes_options, :call_reject_if,
-          :reject_new_record?, :has_destroy_flag?, :check_record_limit!
+        [
+          :reject_new_record?
         ].each do |method|
           define_method(method) do |*args|
             model.send(method, *args)
@@ -113,20 +116,22 @@ module JsonAttribute
           @attr_def = model.class.json_attributes_registry[attr_name]
         end
 
-        def model_send(method, *args)
-          model.send(method, *args)
-        end
-
-        def unassignable_keys
-          (model.class)::UNASSIGNABLE_KEYS
-        end
-
         def assign_nested_attributes(attributes)
           if attr_def.array_type?
             assign_nested_attributes_for_model_array(attributes)
           else
             assign_nested_attributes_for_single_model(attributes)
           end
+        end
+
+        protected
+
+        def model_send(method, *args)
+          model.send(method, *args)
+        end
+
+        def unassignable_keys
+          (model.class)::UNASSIGNABLE_KEYS
         end
 
         # Based on and much like AR's `assign_nested_attributes_for_one_to_one_association`,
@@ -183,6 +188,73 @@ module JsonAttribute
           # the magic of our type casting, this should 'just work'?
           model_send("#{attr_name}=", attributes_collection)
         end
+
+        # Copied from ActiveRecord::NestedAttributes:
+        #
+        # Determines if a record with the particular +attributes+ should be
+        # rejected by calling the reject_if Symbol or Proc (if defined).
+        # The reject_if option is defined by +accepts_nested_attributes_for+.
+        #
+        # Returns false if there is a +destroy_flag+ on the attributes.
+        def call_reject_if(association_name, attributes)
+          return false if will_be_destroyed?(association_name, attributes)
+
+          case callback = nested_attributes_options[association_name][:reject_if]
+          when Symbol
+            method(callback).arity == 0 ? send(callback) : send(callback, attributes)
+          when Proc
+            callback.call(attributes)
+          end
+        end
+
+        # Copied from ActiveRecord::NestedAttributes unaltered.
+        #
+        # Determines if a hash contains a truthy _destroy key.
+        def has_destroy_flag?(hash)
+          ActiveModel::Type::Boolean.new.cast(hash["_destroy"])
+        end
+
+        # Copied from ActiveRecord::NestedAttributes
+        #
+        # Takes in a limit and checks if the attributes_collection has too many
+        # records. It accepts limit in the form of symbol, proc, or
+        # number-like object (anything that can be compared with an integer).
+        #
+        # Raises TooManyRecords error if the attributes_collection is
+        # larger than the limit.
+        def check_record_limit!(limit, attributes_collection)
+          if limit
+            limit = \
+              case limit
+              when Symbol
+                model.send(limit)
+              when Proc
+                limit.call
+              else
+                limit
+              end
+
+            if limit && attributes_collection.size > limit
+              raise ActiveRecord::NestedAttributes::TooManyRecords, "Maximum #{limit} records are allowed. Got #{attributes_collection.size} records instead."
+            end
+          end
+        end
+
+        # Copied from ActiveRecord::NestedAttributes
+        #
+        # Determines if a new record should be rejected by checking
+        # has_destroy_flag? or if a <tt>:reject_if</tt> proc exists for this
+        # association and evaluates to +true+.
+        def reject_new_record?(association_name, attributes)
+          will_be_destroyed?(association_name, attributes) || call_reject_if(association_name, attributes)
+        end
+
+        # Unlike ActiveRecord, we don't have an allow_destroy option, so
+        # this is just...
+        def will_be_destroyed?(association_name, attributes)
+          has_destroy_flag?(attributes)
+        end
+
       end
     end
   end
