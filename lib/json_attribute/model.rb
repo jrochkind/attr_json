@@ -18,6 +18,14 @@ module JsonAttribute
   # JsonAttribute::Models can have attributes that are other JsonAttribute::Models.
   #
   # Includes ActiveModel::Model whether you like it or not. TODO, should it?
+  #
+  # You can control what happens if you set an unknown key (one that you didn't
+  # register with `json_attribute`) with the class attribute `json_attribute_unknown_key`.
+  # * :raise (default) raise ActiveModel::UnknownAttributeError
+  # * :strip Ignore the unknown key and do not include it, without raising.
+  # * :allow Allow the unknown key and it's value to be in the serialized hash,
+  #     and written to the database. May be useful for legacy data or columns
+  #     that other software touches, to let unknown keys just flow through.
   module Model
     extend ActiveSupport::Concern
 
@@ -32,6 +40,10 @@ module JsonAttribute
 
       class_attribute :json_attributes_registry, instance_accessor: false
       self.json_attributes_registry = ::JsonAttribute::AttributeDefinition::Registry.new
+
+      # :raise, :strip, :allow. :raise is default. Is there some way to enforce this.
+      class_attribute :json_attribute_unknown_key
+      self.json_attribute_unknown_key ||= :raise
     end
 
     class_methods do
@@ -69,7 +81,7 @@ module JsonAttribute
 
         _json_attributes_module.module_eval do
           define_method("#{name}=") do |value|
-            write_json_attribute(name.to_s, value)
+            _json_attribute_write(name.to_s, value)
           end
 
           define_method("#{name}") do
@@ -114,34 +126,32 @@ module JsonAttribute
     end
 
     def initialize(attributes = {})
-      # TODO, move this all/some to #assign_attributes, so we get store key translation
-      # on assign_attributes. And defaults fill-in, is that appropriate on assign_attributes?
-      # test ActiveRecord objects and see.
       if !attributes.respond_to?(:transform_keys)
         raise ArgumentError, "When assigning attributes, you must pass a hash as an argument."
       end
 
-      attributes = self.class.fill_in_defaults(attributes)
-      super(attributes)
+      super(self.class.fill_in_defaults(attributes))
     end
 
     def attributes
       @attributes ||= {}
     end
 
-    def attributes=(hash)
-      #TODO should this be casting? maybe not, you can always set
-      # attiributes[:foo]= without casting anyway. it'll get casted
-      # on #serializable_hash. Hmm, but i'm leaning toward it should cast TODO.
-      @attributes = hash
-    end
+    # ActiveModel method, called in initialize. overridden.
+    # from https://github.com/rails/rails/blob/42a16a4d6514f28e05f1c22a5f9125d194d9c7cb/activemodel/lib/active_model/attribute_assignment.rb
+    def assign_attributes(new_attributes)
+      if !new_attributes.respond_to?(:stringify_keys)
+        raise ArgumentError, "When assigning attributes, you must pass a hash as an argument."
+      end
+      return if new_attributes.empty?
 
-    def write_json_attribute(key, value)
-      if attribute_def = self.class.json_attributes_registry[key.to_sym]
-        attributes[key.to_s] = attribute_def.cast(value)
-      else
-        # TODO, strict mode, ignore, raise, allow.
-        attributes[key.to_s] = value
+      new_attributes.stringify_keys.each do |k, v|
+        setter = :"#{k}="
+        if respond_to?(setter)
+          public_send(setter, v)
+        else
+          _json_attribute_write_unknown_attribute(k, v)
+        end
       end
     end
 
@@ -158,9 +168,7 @@ module JsonAttribute
 
           value = attribute_def.serialize(value)
         end
-
-        # TODO strict key stuff?
-
+        # Do we need unknown key handling here? Apparently not?
         [key, value]
       end.to_h
     end
@@ -189,28 +197,35 @@ module JsonAttribute
 
     private
 
+    def _json_attribute_write(key, value)
+      if attribute_def = self.class.json_attributes_registry[key.to_sym]
+        attributes[key.to_s] = attribute_def.cast(value)
+      else
+        # TODO, strict mode, ignore, raise, allow.
+        attributes[key.to_s] = value
+      end
+    end
+
+
+    def _json_attribute_write_unknown_attribute(key, value)
+      case json_attribute_unknown_key
+      when :strip
+        # drop it, no-op
+      when :allow
+        # just put it in the hash and let standard JSON casting have it
+        _json_attribute_write(key, value)
+      else
+        # default, :raise
+        raise ActiveModel::UnknownAttributeError.new(self, key)
+      end
+    end
+
+    # ActiveModel override.
     # Don't take from instance variables, take from the attributes
     # hash itself. Docs suggest we can override this for this very
     # use case: https://github.com/rails/rails/blob/e1e3be7c02acb0facbf81a97bbfe6d1a6e9ca598/activemodel/lib/active_model/serialization.rb#L152-L168
     def read_attribute_for_serialization(key)
       attributes[key]
-    end
-
-    # Override to just set in hash. We are overriding a private method,
-    # and docs don't really say we can as part of intended API -- but how
-    # else to get the counterpart to `read_attribute_for_serialization`
-    # that docs do say you can override?  If needed, we could override all of assign_attributes
-    # or something, I guess?
-    #
-    # WARNING: using possibly non-public Rails API
-    #
-    # TODO: Should this raise on attributes not allowed as json_attribute?
-    # for now we let everything in. It IS still protected by
-    # ForbiddenAttributesProtection in default `assign_attributes` (test?)
-    # Maybe we want a 'strict_attributes' option. And/or option that
-    # throws out rather than raises on non defined attributes?
-    def _assign_attribute(k, v)
-      write_json_attribute(k, v)
     end
   end
 end
