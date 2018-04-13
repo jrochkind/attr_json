@@ -212,4 +212,87 @@ RSpec.describe JsonAttribute::NestedAttributes do
     end
   end
 
+  describe "multiparameter attributes" do
+    let(:model_class) do
+      Class.new do
+        include JsonAttribute::Model
+
+        json_attribute :embedded_datetime, :datetime
+      end
+    end
+
+    let(:klass) do
+      model_class_type = model_class.to_type
+      Class.new(ActiveRecord::Base) do
+        include JsonAttribute::Record
+        include JsonAttribute::NestedAttributes
+
+        self.table_name = "products"
+
+        json_attribute :json_datetime, :datetime
+
+        json_attribute :one_model, model_class_type
+        json_attribute :many_models, model_class_type, array: true
+
+        json_attribute_accepts_nested_attributes_for :one_model, :many_models
+      end
+    end
+    let(:instance) { klass.new }
+
+    let(:year_str) { "2018" }
+    let(:month_str) { "4" }
+    let(:day_str) { "13" }
+
+    it "assigns to direct attribute" do
+      instance.assign_attributes(
+        "json_datetime(1i)" => year_str,
+        "json_datetime(2i)" => month_str,
+        "json_datetime(3i)" => day_str
+      )
+      expect(instance.json_datetime).to be_kind_of(Time)
+      expect(instance.json_datetime).to eq Time.utc(year_str.to_i, month_str.to_i, day_str.to_i)
+    end
+
+    it "assigns to single model attribute" do
+      instance.assign_attributes(
+        "one_model_attributes" => {
+          "embedded_datetime(1i)" => year_str,
+          "embedded_datetime(2i)" => month_str,
+          "embedded_datetime(3i)" => day_str
+        }
+      )
+      expect(instance.one_model.embedded_datetime).to be_kind_of(Time)
+      expect(instance.one_model.embedded_datetime).to eq Time.utc(year_str.to_i, month_str.to_i, day_str.to_i)
+    end
+
+    it "assigns to array of models attribute" do
+      instance.assign_attributes(
+        "many_models_attributes" => [
+          {
+            "embedded_datetime(1i)" => year_str,
+            "embedded_datetime(2i)" => month_str,
+            "embedded_datetime(3i)" => day_str
+          },
+          {
+            "embedded_datetime(1i)" => year_str,
+            "embedded_datetime(2i)" => month_str,
+            "embedded_datetime(3i)" => day_str
+          }
+        ]
+      )
+
+      expect(instance.many_models.count).to eq 2
+      expect(
+        instance.many_models.to_a.all? { |m| m.kind_of? model_class }
+      ).to be true
+      expect(
+        instance.many_models.all? { |m| m.embedded_datetime.kind_of? Time }
+      ).to be true
+      expect(
+        instance.many_models.all? { |m| m.embedded_datetime == Time.utc(year_str.to_i, month_str.to_i, day_str.to_i) }
+      ).to be true
+    end
+
+  end
+
 end
