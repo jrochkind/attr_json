@@ -18,6 +18,14 @@ module JsonAttribute
   # JsonAttribute::Models can have attributes that are other JsonAttribute::Models.
   #
   # Includes ActiveModel::Model whether you like it or not. TODO, should it?
+  #
+  # You can control what happens if you set an unknown key (one that you didn't
+  # register with `json_attribute`) with the class attribute `json_attribute_unknown_key`.
+  # * :raise (default) raise ActiveModel::UnknownAttributeError
+  # * :strip Ignore the unknown key and do not include it, without raising.
+  # * :allow Allow the unknown key and it's value to be in the serialized hash,
+  #     and written to the database. May be useful for legacy data or columns
+  #     that other software touches, to let unknown keys just flow through.
   module Model
     extend ActiveSupport::Concern
 
@@ -32,6 +40,10 @@ module JsonAttribute
 
       class_attribute :json_attributes_registry, instance_accessor: false
       self.json_attributes_registry = ::JsonAttribute::AttributeDefinition::Registry.new
+
+      # :raise, :strip, :allow. :raise is default. Is there some way to enforce this.
+      class_attribute :json_attribute_unknown_key
+      self.json_attribute_unknown_key ||= :raise
     end
 
     class_methods do
@@ -138,8 +150,7 @@ module JsonAttribute
         if respond_to?(setter)
           public_send(setter, v)
         else
-          # depend on setting, raise, allow, strip. default raise like activemodel.
-          raise UnknownAttributeError.new(self, k)
+          _json_attribute_write_unknown_attribute(k, v)
         end
       end
     end
@@ -157,9 +168,7 @@ module JsonAttribute
 
           value = attribute_def.serialize(value)
         end
-
-        # TODO strict key stuff?
-
+        # Do we need unknown key handling here? Apparently not?
         [key, value]
       end.to_h
     end
@@ -194,6 +203,20 @@ module JsonAttribute
       else
         # TODO, strict mode, ignore, raise, allow.
         attributes[key.to_s] = value
+      end
+    end
+
+
+    def _json_attribute_write_unknown_attribute(key, value)
+      case json_attribute_unknown_key
+      when :strip
+        # drop it, no-op
+      when :allow
+        # just put it in the hash and let standard JSON casting have it
+        _json_attribute_write(key, value)
+      else
+        # default, :raise
+        raise ActiveModel::UnknownAttributeError.new(self, key)
       end
     end
 

@@ -66,6 +66,56 @@ RSpec.describe JsonAttribute::Record do
     end
   end
 
+  describe "unknown keys" do
+    let(:klass) do
+      Class.new do
+        include JsonAttribute::Model
+
+        json_attribute :str_one, :string
+      end
+    end
+    let(:attributes) { { str_one: "str", unknown_key: "foo" } }
+    describe "default :raise" do
+      it "raises" do
+        expect { instance.assign_attributes(attributes) }.to raise_error(ActiveModel::UnknownAttributeError)
+        expect { klass.new(attributes) }.to raise_error(ActiveModel::UnknownAttributeError)
+      end
+      it "raises on new_from_serializable" do
+        expect { klass.new_from_serializable(attributes) }.to raise_error(ActiveModel::UnknownAttributeError)
+      end
+    end
+    describe ":allow" do
+      before do
+        klass.json_attribute_unknown_key = :allow
+      end
+      it "allows" do
+        instance.assign_attributes(attributes)
+        expect(instance.str_one).to eq "str"
+        expect(instance.attributes).to eq attributes.stringify_keys
+        expect(instance.serializable_hash).to eq attributes.stringify_keys
+      end
+      it "allows on new_from_serializable" do
+        instance = klass.new_from_serializable(attributes)
+        expect(instance.attributes).to eq attributes.stringify_keys
+      end
+    end
+    describe ":strip" do
+      before do
+        klass.json_attribute_unknown_key = :strip
+      end
+      it "strips" do
+        instance.assign_attributes(attributes)
+        expect(instance.str_one).to eq "str"
+        expect(instance.attributes).to eq("str_one" => "str")
+        expect(instance.serializable_hash).to eq("str_one" => "str")
+      end
+      it "strips on new_from_serializable" do
+        instance = klass.new_from_serializable(attributes)
+        expect(instance.attributes).to eq("str_one" => "str")
+      end
+    end
+  end
+
   describe "nested model with validation" do
     let(:nested_class) do
       Class.new do
