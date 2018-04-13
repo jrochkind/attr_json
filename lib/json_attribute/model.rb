@@ -145,6 +145,7 @@ module JsonAttribute
       end
       return if new_attributes.empty?
 
+      # stringify keys just like https://github.com/rails/rails/blob/4f99a2186479d5f77460622f2c0f37708b3ec1bc/activemodel/lib/active_model/attribute_assignment.rb#L34
       new_attributes.stringify_keys.each do |k, v|
         setter = :"#{k}="
         if respond_to?(setter)

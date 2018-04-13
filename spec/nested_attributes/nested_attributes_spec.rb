@@ -62,6 +62,14 @@ RSpec.describe JsonAttribute::NestedAttributes do
       expect(instance.one_model.int).to eq 101
     end
 
+    describe "_destroy" do
+      it "should accept args with _destroy='0'" do
+       instance.update( { one_model_attributes: {str: "Someone", int: "", _destroy: "0"}}.stringify_keys )
+       expect(instance.one_model).to be_kind_of(model_class)
+       expect(instance.one_model.attributes).to eq({ "str" => "Someone", "int" => nil })
+      end
+    end
+
 
 
     describe "with existing record" do
@@ -147,6 +155,17 @@ RSpec.describe JsonAttribute::NestedAttributes do
         expect(instance.many_models.all? {|a| a.kind_of? model_class})
 
         expect(instance.many_models).to eq [model_class.new(str: "foo", int: nil)]
+      end
+    end
+
+    describe "_destroy" do
+      it "should not add objects marked with _destroy" do
+        # and should add despite _destroy: "0", without a _destroy attribute
+        # being added.
+        instance.update(
+          many_models_attributes: [{ str: "nope", _destroy: "1" }, { str: "yep", _destroy: "0" }]
+        )
+        expect(instance.many_models).to eq [model_class.new(str: "yep")]
       end
     end
   end

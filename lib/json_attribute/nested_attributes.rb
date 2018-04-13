@@ -148,7 +148,7 @@ module JsonAttribute
         elsif !reject_new_record?(attr_name, attributes)
           # doesn't exist yet, using the setter casting will build it for us
           # automatically.
-          model_send("#{attr_name}=", attributes)
+          model_send("#{attr_name}=", attributes.except(*unassignable_keys))
         end
         return model
       end
@@ -157,9 +157,6 @@ module JsonAttribute
       # https://github.com/rails/rails/blob/master/activerecord/lib/active_record/nested_attributes.rb#L466
       def assign_nested_attributes_for_model_array(attributes_collection)
         options = nested_attributes_options[attr_name]
-        if attributes_collection.respond_to?(:permitted?)
-          attributes_collection = attributes_collection.to_h
-        end
 
         unless attributes_collection.is_a?(Hash) || attributes_collection.is_a?(Array)
           raise ArgumentError, "Hash or Array expected, got #{attributes_collection.class.name} (#{attributes_collection.inspect})"
@@ -177,10 +174,17 @@ module JsonAttribute
           end
         end
 
+        if attributes_collection.respond_to?(:permitted?)
+          attributes_collection = attributes_collection.to_h
+        end
+        attributes_collection.collect!(&:stringify_keys)
+
         # remove ones marked with _destroy key, or rejected
         attributes_collection = attributes_collection.reject do |hash|
           hash.respond_to?(:[]) && (has_destroy_flag?(hash) || reject_new_record?(attr_name, hash))
         end
+
+        attributes_collection.collect! { |h| h.except(*unassignable_keys) }
 
         # the magic of our type casting, this should 'just work', we'll have
         # a NEW array of models, unlike AR we don't re-use existing nested models
