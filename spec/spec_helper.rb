@@ -16,13 +16,25 @@
 # users commonly want.
 #
 # See http://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
+require 'bundler'
+# replace manual requires with? :
+# #Bundler.require :default, :development, :test
+
 require 'yaml'
-
 require "database_cleaner"
-
 require 'byebug'
-
 require 'json_attribute'
+
+require 'combustion'
+Combustion.initialize! :active_record do
+  case "#{Rails::VERSION::MAJOR}.#{Rails::VERSION::MINOR}"
+  when "5.0"
+    # avoid deprecation notice
+    config.active_record.time_zone_aware_types = [:datetime]
+  end
+end
+
+
 
 RSpec.configure do |config|
   # rspec-expectations config goes here. You can use an alternate
@@ -107,11 +119,6 @@ RSpec.configure do |config|
   # test failures related to randomization by passing the same `--seed` value
   # as the one that triggered the failure.
   Kernel.srand config.seed
-
-  config.before :suite do
-    dbconfig = YAML.load(File.open("db/config.yml"))
-    ActiveRecord::Base.establish_connection(dbconfig["test"])
-  end
 
   config.before do
     DatabaseCleaner.clean_with(:truncation)

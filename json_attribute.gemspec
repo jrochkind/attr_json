@@ -42,5 +42,4 @@ existing ActiveRecord architecture as we can.}
   spec.add_development_dependency "rake", ">= 10.0"
   spec.add_development_dependency "rspec", "~> 3.5"
   spec.add_development_dependency "database_cleaner", "~> 1.5"
-  spec.add_development_dependency "standalone_migrations", "~> 5.2"
 end
