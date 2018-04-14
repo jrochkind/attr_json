@@ -26,7 +26,13 @@ require 'byebug'
 require 'json_attribute'
 
 require 'combustion'
-Combustion.initialize! :active_record
+Combustion.initialize! :active_record do
+  case "#{Rails::VERSION::MAJOR}.#{Rails::VERSION::MINOR}"
+  when "5.0"
+    # avoid deprecation notice
+    config.active_record.time_zone_aware_types = [:datetime]
+  end
+end
 
 
 
