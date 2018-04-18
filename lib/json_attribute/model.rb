@@ -5,6 +5,7 @@ require 'json_attribute/attribute_definition'
 require 'json_attribute/attribute_definition/registry'
 
 require 'json_attribute/type/model'
+require 'json_attribute/model/cocoon_compat'
 
 module JsonAttribute
 

@@ -1,0 +1,7 @@
+<div class="nested-fields" style="background-color: #eee; padding: 8px; margin: 1em 0 1em 1em">
+  <h3>Person</h3>
+  <%= f.input :given_name %>
+  <%= f.input :family_name %>
+  <%= f.input :birth_date, wrapper_html: { class: "birth-date" } %>
+  <%= link_to_remove_association "remove person", f %>
+</div>

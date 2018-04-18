@@ -3,7 +3,23 @@ source 'https://rubygems.org'
 # Specify your gem's dependencies in json_attribute.gemspec
 gemspec
 
-gem 'combustion', '~> 0.9.0', :group => :test
+# for our integration test in a real rails env, we add em in development too,
+# so we can bring up the app or a console in development to play with it.
+group :test, :development do
+  gem 'combustion', '~> 0.9.0'
+  # all of rails is NOT a dependency, just activerecord.
+  # But we use it for integration testing with combustion. Hmm, a bit annoying
+  # that now our other tests can't be sure they're depending, this might not
+  # be the way to do it.
+  gem "rails", ENV["RAILS_GEM"] && ENV["RAILS_GEM"].split(",")
+  gem "rspec-rails", "~> 3.7"
+  gem "simple_form", ">= 4.0"
+  gem 'cocoon', ">= 1.2"
+  gem 'jquery-rails'
+  gem 'capybara', "~> 3.0"
+  gem "chromedriver-helper"
+  gem "selenium-webdriver"
+end
 
 if ENV['RAILS_GEM']
   gem "activerecord", ENV['RAILS_GEM'].split(",")

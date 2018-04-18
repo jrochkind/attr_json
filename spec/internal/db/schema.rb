@@ -21,4 +21,8 @@ ActiveRecord::Schema.define do
     t.decimal  "decimal_type"
   end
 
+  create_table "documents", force: :cascade do |t|
+    t.jsonb    "json_attributes"
+  end
+
 end

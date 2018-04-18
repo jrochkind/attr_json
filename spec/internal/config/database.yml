@@ -1,6 +1,17 @@
-default: &default
-  adapter: postgresql
-  database: json_attribute_project
+# under combustion for some reason not happy with the 'default' YML thing.
+# default: &default
+#   adapter: postgresql
+#   encoding: unicode
+
+
 
 test:
-  <<: *default
+  adapter: postgresql
+  encoding: unicode
+  database: <%= ENV['RAILS_PG_DB'] || "json_attribute_project_test" %>
+
+# Warning, combustion will drop your dev database too....
+development:
+  adapter: postgresql
+  encoding: unicode
+  database: <%= ENV['RAILS_PG_DB'] || "json_attribute_project_dev_throwaway" %>

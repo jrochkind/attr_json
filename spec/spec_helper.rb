@@ -20,20 +20,49 @@ require 'bundler'
 # replace manual requires with? :
 # #Bundler.require :default, :development, :test
 
+require 'combustion'
+Combustion.initialize! :all do
+  # not really combustion config but it applies to our combustion app, so.
+  SimpleForm.browser_validations = false
+
+  case "#{Rails::VERSION::MAJOR}.#{Rails::VERSION::MINOR}"
+  when "5.0"
+    # avoid deprecation notice
+    config.active_record.time_zone_aware_types = [:datetime]
+  when "5.2"
+    config.secret_key_base = config.secret_token
+    config.secret_token = nil
+  end
+end
+
 require 'yaml'
 require "database_cleaner"
 require 'byebug'
 require 'json_attribute'
 
-require 'combustion'
-Combustion.initialize! :active_record do
-  case "#{Rails::VERSION::MAJOR}.#{Rails::VERSION::MINOR}"
-  when "5.0"
-    # avoid deprecation notice
-    config.active_record.time_zone_aware_types = [:datetime]
-  end
+require "rspec/rails"
+require "capybara/rails"
+
+# https://robots.thoughtbot.com/headless-feature-specs-with-chrome
+# on Mac, try `brew cask install chromedriver` to get what you need for this.
+require "selenium/webdriver"
+Capybara.register_driver :chrome do |app|
+  Capybara::Selenium::Driver.new(app, browser: :chrome)
 end
 
+Capybara.register_driver :headless_chrome do |app|
+  capabilities = Selenium::WebDriver::Remote::Capabilities.chrome(
+    chromeOptions: { args: %w(headless disable-gpu) }
+  )
+
+  Capybara::Selenium::Driver.new app,
+    browser: :chrome,
+    desired_capabilities: capabilities
+end
+Capybara.javascript_driver = :headless_chrome
+
+# why add puma to the gemfile, not important for what we're doing
+Capybara.server = :webrick
 
 
 RSpec.configure do |config|

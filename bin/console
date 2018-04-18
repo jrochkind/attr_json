@@ -1,5 +1,8 @@
 #!/usr/bin/env ruby
 
+# combustion defaults to RAILS_ENV=test, we don't want to here.
+ENV['RAILS_ENV'] ||= "development"
+
 require "bundler/setup"
 require "json_attribute"
 require 'yaml'
@@ -13,9 +16,6 @@ require 'yaml'
 
 require "rspec"
 require File.expand_path("../../spec/spec_helper.rb", __FILE__)
-
-dbconfig = YAML.load(File.open("db/config.yml"))
-ActiveRecord::Base.establish_connection(dbconfig["development"])
 
 require_relative '../playground_models.rb'
 
