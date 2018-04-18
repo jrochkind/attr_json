@@ -44,26 +44,32 @@ require "rspec/rails"
 require "capybara/rails"
 
 # https://robots.thoughtbot.com/headless-feature-specs-with-chrome
-# on Mac, try `brew cask install chromedriver` to get what you need for this.
+# http://quyetbui.info/chrome-headless-capybara-on-travis-ci/
+# https://www.reddit.com/r/ruby/comments/8d6vdb/capybara_rails_chromeheadless_on_travis/
+require 'chromedriver/helper'
 require "selenium/webdriver"
+
 Capybara.register_driver :chrome do |app|
   Capybara::Selenium::Driver.new(app, browser: :chrome)
 end
 
 Capybara.register_driver :headless_chrome do |app|
-  capabilities = Selenium::WebDriver::Remote::Capabilities.chrome(
-    chromeOptions: { args: %w(headless disable-gpu) }
-  )
+  options = Selenium::WebDriver::Chrome::Options.new
 
-  Capybara::Selenium::Driver.new app,
-    browser: :chrome,
-    desired_capabilities: capabilities
+  options.add_argument('--headless')
+  options.add_argument('--no-sandbox')
+  options.add_argument('--disable-popup-blocking')
+  options.add_argument('--window-size=1366,768')
+
+  driver = Capybara::Selenium::Driver.new(app, browser: :chrome, options: options)
+
+  driver
 end
+
 Capybara.javascript_driver = :headless_chrome
 
 # why add puma to the gemfile, not important for what we're doing
 Capybara.server = :webrick
-
 
 RSpec.configure do |config|
   # rspec-expectations config goes here. You can use an alternate

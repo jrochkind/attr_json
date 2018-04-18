@@ -19,6 +19,8 @@ group :test, :development do
   gem 'capybara', "~> 3.0"
   gem "chromedriver-helper"
   gem "selenium-webdriver"
+  # rails 5.1+ includes it by default, but rails 5.0 needs it:
+  gem 'rails-ujs'
 end
 
 if ENV['RAILS_GEM']
