@@ -20,7 +20,7 @@ group :test, :development do
   gem "chromedriver-helper"
   gem "selenium-webdriver"
   # rails 5.1+ includes it by default, but rails 5.0 needs it:
-  gem 'rails-ujs'
+  gem 'rails-ujs', require: false
 end
 
 if ENV['RAILS_GEM']

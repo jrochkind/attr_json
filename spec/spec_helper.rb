@@ -27,6 +27,7 @@ Combustion.initialize! :all do
 
   case "#{Rails::VERSION::MAJOR}.#{Rails::VERSION::MINOR}"
   when "5.0"
+    require 'rails-ujs' # only on rails 5 so gem it with require false
     # avoid deprecation notice
     config.active_record.time_zone_aware_types = [:datetime]
   when "5.2"
