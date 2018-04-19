@@ -25,9 +25,22 @@ module JsonAttribute
     extend ActiveSupport::Concern
 
     class_methods do
+      # Much like ActiveRecord `accepts_nested_attributes_for`, but used with embedded \
+      # JsonAttribute::Model-type attributes (single or array). See doc page on Forms support.
+      #
+      # Note some AR options are _not_ supported.
+      #
+      # * ~allow_destroy~: Not supported, effectively always true, doesn't make sense to try to gate this with our implementation.
+      # * ~update_only~: Not suppported, not really relevant to this architecture where you're embedded models have no independent existence.
+      #
       # @param define_build_method [Boolean] (keyword) Default true, provide `build_attribute_name`
       #    method that works like you expect. [Cocoon](https://github.com/nathanvda/cocoon),
       #    for example, requires this.
+      # @param reject_if [Symbol,Proc] Allows you to specify a Proc or a Symbol pointing to a method
+      #   that checks whether a record should be built for a certain attribute
+      #   hash. Much like in AR accepts_nested_attributes_for.
+      # @param limit [Integer,Proc,Symbol] Allows you to specify the maximum number of associated records that
+      #   can be processed with the nested attributes. Much like AR accepts_nested_attributes for.
       def json_attribute_accepts_nested_attributes_for(*attr_names)
         options = { define_build_method: true }
         options.update(attr_names.extract_options!)
