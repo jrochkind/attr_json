@@ -28,10 +28,10 @@
       end
 
       if type.is_a? Symbol
-        # should we be using ActiveRecord::Type instead for db-specific
-        # types? I think maybe not, we just want to serialize
-        # to a json primitive type that'll go in the json hash.
-        type = ActiveModel::Type.lookup(type)
+        # ActiveModel::Type.lookup may make more sense, but ActiveModel::Type::Date
+        # seems to have a bug with multi-param assignment. Mostly they return
+        # the same types, but ActiveRecord::Type::Date works with multi-param assignment.
+        type = ActiveRecord::Type.lookup(type)
       elsif ! type.is_a? ActiveModel::Type::Value
         raise ArgumentError, "Second argument (#{type}) must be a symbol or instance of an ActiveModel::Type::Value subclass"
       end

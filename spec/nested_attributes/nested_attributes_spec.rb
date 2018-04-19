@@ -218,6 +218,7 @@ RSpec.describe JsonAttribute::NestedAttributes do
         include JsonAttribute::Model
 
         json_attribute :embedded_datetime, :datetime
+        json_attribute :embedded_date, :date
       end
     end
 
@@ -230,6 +231,7 @@ RSpec.describe JsonAttribute::NestedAttributes do
         self.table_name = "products"
 
         json_attribute :json_datetime, :datetime
+        json_attribute :json_date, :date
 
         json_attribute :one_model, model_class_type
         json_attribute :many_models, model_class_type, array: true
@@ -293,6 +295,23 @@ RSpec.describe JsonAttribute::NestedAttributes do
       ).to be true
     end
 
-  end
+    # Date attributes have special problems, cause ActiveModel::Type::Date
+    # doesn't work with multi-param attribute setting, I think because of a bug
+    # nobody else cares about cause nobody else is using ActiveModel this way.
+    # We make these tests pass by switching to ActiveRecord::Type.lookup instead
+    # of ActiveModel::Type.lookup for symbol type args -- if tests still pass
+    # either way, you could switch back if you want.
+    describe(":date attribute") do
+      it "assigns to direct attribute" do
+        instance.assign_attributes(
+          "json_date(1i)" => year_str,
+          "json_date(2i)" => month_str,
+          "json_date(3i)" => day_str
+        )
+        expect(instance.json_date).to be_kind_of(Date)
+        expect(instance.json_date).to eq Date.new(year_str.to_i, month_str.to_i, day_str.to_i)
+      end
+    end
 
+  end
 end

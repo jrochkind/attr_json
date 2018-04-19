@@ -4,7 +4,7 @@ class Person
 
   json_attribute :given_name, :string
   json_attribute :family_name, :string
-  json_attribute :birth_date, :datetime
+  json_attribute :birth_date, :date
 
   validates_presence_of :given_name
 end
