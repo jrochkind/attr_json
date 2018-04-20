@@ -269,7 +269,7 @@ module JsonAttribute
         def matched_attribute_method(method_name)
           matches = self.class.send(:attribute_method_matchers_matching, method_name)
           matches.detect do |match|
-            registry.attribute_registered?(match.attr_name)
+            registry.has_attribute?(match.attr_name)
           end
         end
       end

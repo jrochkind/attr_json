@@ -1,0 +1,16 @@
+<div class="nested-fields" style="background-color: #aaa; padding: 8px; margin: 1em 0;">
+  <h2>
+    Person Role
+    <%= link_to_remove_association "remove #{f.object.model_name.human}",  f %>
+  </h2>
+  <%= f.input :role %>
+
+
+    <%= f.fields_for :people do |ppf| %>
+      <%= render "person_fields", f: ppf %>
+    <% end %>
+    <div class="links">
+        <%= link_to_add_association "add #{Person.model_name.human}", f, :people %>
+    </div>
+
+</div>

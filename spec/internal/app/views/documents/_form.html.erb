@@ -1,0 +1,31 @@
+
+<%= simple_form_for(@document) do |f| %>
+  <%= f.error_notification %>
+
+  <% if f.object.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= I18n.t('errors.template.header', :count => f.object.errors.size, :model => f.object.class) %></h2>
+      <ul>
+      <% f.object.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="form-inputs">
+    <%= f.input :title %>
+    <div>
+      <%= f.fields_for :person_roles do |person_roles| %>
+        <%= render "person_role_fields", f: person_roles %>
+      <% end %>
+      <div class="links">
+        <%= link_to_add_association "add #{PersonRole.model_name.human}", f, :person_roles %>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <%= f.button :submit %>
+  </div>
+<% end %>

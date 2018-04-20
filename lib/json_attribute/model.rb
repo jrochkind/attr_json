@@ -5,6 +5,7 @@ require 'json_attribute/attribute_definition'
 require 'json_attribute/attribute_definition/registry'
 
 require 'json_attribute/type/model'
+require 'json_attribute/model/cocoon_compat'
 
 module JsonAttribute
 
@@ -145,6 +146,7 @@ module JsonAttribute
       end
       return if new_attributes.empty?
 
+      # stringify keys just like https://github.com/rails/rails/blob/4f99a2186479d5f77460622f2c0f37708b3ec1bc/activemodel/lib/active_model/attribute_assignment.rb#L34
       new_attributes.stringify_keys.each do |k, v|
         setter = :"#{k}="
         if respond_to?(setter)
@@ -153,6 +155,18 @@ module JsonAttribute
           _json_attribute_write_unknown_attribute(k, v)
         end
       end
+    end
+
+    # This attribute from ActiveRecord makes SimpleForm happy, and able to detect
+    # type.
+    def type_for_attribute(attr_name)
+      self.class.json_attributes_registry.type_for_attribute(attr_name)
+    end
+
+    # This attribute from ActiveRecord make SimpleForm happy, and able to detect
+    # type.
+    def has_attribute?(str)
+      self.class.json_attributes_registry.has_attribute?(str)
     end
 
     # Override from ActiveModel::Serialization to #serialize
@@ -193,6 +207,15 @@ module JsonAttribute
     def ==(other_object)
       (other_object.is_a?(self.class) || self.is_a?(other_object.class)) &&
       other_object.attributes == self.attributes
+    end
+
+    # ActiveRecord objects [have a](https://github.com/rails/rails/blob/v5.1.5/activerecord/lib/active_record/nested_attributes.rb#L367-L374)
+    # `_destroy`, related to `marked_for_destruction?` functionality used with AR nested attributes.
+    # We don't mark for destruction, our nested attributes implementation just deletes immediately,
+    # but having this simple method always returning false makes things work more compatibly
+    # and smoothly with standard code for nested attributes deletion in form builders.
+    def _destroy
+      false
     end
 
     private

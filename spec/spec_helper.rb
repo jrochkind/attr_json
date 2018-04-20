@@ -20,21 +20,57 @@ require 'bundler'
 # replace manual requires with? :
 # #Bundler.require :default, :development, :test
 
+require 'combustion'
+Combustion.initialize! :all do
+  # not really combustion config but it applies to our combustion app, so.
+  SimpleForm.browser_validations = false
+
+  case "#{Rails::VERSION::MAJOR}.#{Rails::VERSION::MINOR}"
+  when "5.0"
+    require 'rails-ujs' # only on rails 5 so gem it with require false
+    # avoid deprecation notice
+    config.active_record.time_zone_aware_types = [:datetime]
+  when "5.2"
+    config.secret_key_base = config.secret_token
+    config.secret_token = nil
+  end
+end
+
 require 'yaml'
 require "database_cleaner"
 require 'byebug'
 require 'json_attribute'
 
-require 'combustion'
-Combustion.initialize! :active_record do
-  case "#{Rails::VERSION::MAJOR}.#{Rails::VERSION::MINOR}"
-  when "5.0"
-    # avoid deprecation notice
-    config.active_record.time_zone_aware_types = [:datetime]
-  end
+require "rspec/rails"
+require "capybara/rails"
+
+# https://robots.thoughtbot.com/headless-feature-specs-with-chrome
+# http://quyetbui.info/chrome-headless-capybara-on-travis-ci/
+# https://www.reddit.com/r/ruby/comments/8d6vdb/capybara_rails_chromeheadless_on_travis/
+require 'chromedriver/helper'
+require "selenium/webdriver"
+
+Capybara.register_driver :chrome do |app|
+  Capybara::Selenium::Driver.new(app, browser: :chrome)
 end
 
+Capybara.register_driver :headless_chrome do |app|
+  options = Selenium::WebDriver::Chrome::Options.new
 
+  options.add_argument('--headless')
+  options.add_argument('--no-sandbox')
+  options.add_argument('--disable-popup-blocking')
+  options.add_argument('--window-size=1366,768')
+
+  driver = Capybara::Selenium::Driver.new(app, browser: :chrome, options: options)
+
+  driver
+end
+
+Capybara.javascript_driver = :headless_chrome
+
+# why add puma to the gemfile, not important for what we're doing
+Capybara.server = :webrick
 
 RSpec.configure do |config|
   # rspec-expectations config goes here. You can use an alternate

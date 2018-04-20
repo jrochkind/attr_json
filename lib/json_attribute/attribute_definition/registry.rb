@@ -36,8 +36,12 @@ module JsonAttribute
         @name_to_definition[key.to_sym]
       end
 
-      def attribute_registered?(key)
+      def has_attribute?(key)
         @name_to_definition.has_key?(key.to_sym)
+      end
+
+      def type_for_attribute(key)
+        self[key].type
       end
 
       # Can return nil if none found.

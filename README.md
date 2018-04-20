@@ -282,6 +282,16 @@ other key/values in it too.
 
 (No built-in way currently to do `like` queries?)
 
+## Forms and Form Builders
+
+Use with Rails form builders is supported pretty painlessly. Including with [simple_form](https://github.com/plataformatec/simple_form) and [cocoon](https://github.com/nathanvda/cocoon) (integration-tested in CI).
+
+If you have nested JsonAttribute::Models you'd like to use in your forms much like Rails associated records: Where you would use Rails `accept_nested_attributes_for`, instead `include JsonAttribute::NestedAttributes` and `json_attiribute_nested_attributes_for`. Multiple levels of nesting are supported.
+
+To get simple_form to properly detect your attribute types, define your attributes with `rails_attribute: true`.
+
+For more info, see doc page on [Use with Forms and Form Builders](doc_src/forms.md).
+
 ## Dirty tracking
 
 Full change-tracking, ActiveRecord::Attributes::Dirty-style, is available in

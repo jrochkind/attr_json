@@ -6,5 +6,6 @@
 /doc/
 /pkg/
 /spec/reports/
+/spec/internal/tmp/cache
 /tmp/
 .byebug_history
