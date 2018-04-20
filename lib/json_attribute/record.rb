@@ -7,14 +7,17 @@ module JsonAttribute
   # We call it `Record` instead of `ActiveRecord` to avoid confusing namespace
   # shadowing errors, sorry!
   #
-  #    class SomeModel < ActiveRecord::Base
-  #      include JsonAttribute::Record
+  # @example
+  #       class SomeModel < ActiveRecord::Base
+  #         include JsonAttribute::Record
   #
-  #      json_attribute :a_number, :integer
-  #    end
+  #         json_attribute :a_number, :integer
+  #       end
   #
   module Record
     extend ActiveSupport::Concern
+
+    DEFAULT_CONTAINER_ATTRIBUTE = :json_attributes
 
     included do
       unless self < ActiveRecord::Base
@@ -23,30 +26,46 @@ module JsonAttribute
 
       class_attribute :json_attributes_registry, instance_accessor: false
       self.json_attributes_registry = JsonAttribute::AttributeDefinition::Registry.new
+
+      class_attribute :default_json_container_attribute, instance_acessor: false
+      self.default_json_container_attribute ||= DEFAULT_CONTAINER_ATTRIBUTE
     end
 
-
     class_methods do
-
-      def default_json_container_attribute
-        @default_json_container_attribute ||= AttributeDefinition::DEFAULT_CONTAINER_ATTRIBUTE
-      end
-      def default_json_container_attribute=(v)
-        @default_json_container_attribute = v.to_s
-      end
-
       # Type can be a symbol that will be looked up in `ActiveModel::Type.lookup`,
-      # or an ActiveModel:::Type::Value)
+      # or an ActiveModel:::Type::Value).
       #
-      # TODO, doc all params. Raise on bad keyword params.
+      # @param name [Symbol,String] name of attribute
       #
-      # @param rails_attribute [Boolean] (keyword) Create an actual ActiveRecord `attribute`.
-      #    not needed for our functionality, but registering thusly will let the
-      #    type be picked up by simple_form and other tools that may look for it
-      #    via ActiveRecord/ActiveModel API.
-      def json_attribute(name, type,
-                         container_attribute: self.default_json_container_attribute,
-                         **options)
+      # @param type [ActiveModel::Type::Value] An instance of an ActiveModel::Type::Value (or subclass)
+      #
+      # @option options [Boolean] :array (false) Make this attribute an array of given type.
+      #
+      # @option options [Object] :default (nil) Default value, if a Proc object it will be #call'd
+      #   for default.
+      #
+      # @option options [String,Symbol] :store_key (nil) Serialize to JSON using
+      #   given store_key, rather than name as would be usual.
+      #
+      # @option options [Symbol,String] :container_attribute (self.default_json_container_attribute) The real
+      #   json(b) ActiveRecord attribute/column to serialize as a key in. Defaults to
+      #  `self.default_json_container_attribute`, which defaults to `:json_attributes`
+      #
+      # @option options [Boolean] :validate (true) Create an ActiveRecord::Validations::AssociatedValidator so
+      #   validation errors on the attributes post up to self.
+      #
+      # @option options [Boolean] :rails_attribute (false) Create an actual ActiveRecord
+      #    `attribute` for name param. A Rails attribute isn't needed for our functionality,
+      #    but registering thusly will let the type be picked up by simple_form and
+      #    other tools that may look for it via Rails attribute APIs.
+      def json_attribute(name, type, **options)
+        options = {
+          rails_attribute: false,
+          validate: true,
+          container_attribute: self.default_json_container_attribute
+        }.merge!(options)
+        options.assert_valid_keys(AttributeDefinition::VALID_OPTIONS + [:validate, :rails_attribute])
+        container_attribute = options[:container_attribute]
 
         # TODO arg check container_attribute make sure it exists. Hard cause
         # schema isn't loaded yet when class def is loaded. Maybe not.
@@ -54,18 +73,18 @@ module JsonAttribute
         # Want to lazily add an attribute cover to the json container attribute,
         # only if it hasn't already been done. WARNING we are using internal
         # Rails API here, but only way to do this lazily, which I thought was
-        # worth it.
+        # worth it. On the other hand, I think .attribute is idempotent, maybe we don't need it...
         unless attributes_to_define_after_schema_loads[container_attribute.to_s] &&
                attributes_to_define_after_schema_loads[container_attribute.to_s].first.is_a?(JsonAttribute::Type::ContainerAttribute)
             attribute container_attribute.to_sym, JsonAttribute::Type::ContainerAttribute.new(self, container_attribute)
         end
 
         self.json_attributes_registry = json_attributes_registry.with(
-          AttributeDefinition.new(name.to_sym, type, options.merge(container_attribute: container_attribute))
+          AttributeDefinition.new(name.to_sym, type, options.except(:rails_attribute, :validate))
         )
 
         # By default, automatically validate nested models
-        if type.kind_of?(JsonAttribute::Type::Model) && options[:validate] != false
+        if type.kind_of?(JsonAttribute::Type::Model) && options[:validate]
           self.validates_with ActiveRecord::Validations::AssociatedValidator, attributes: [name.to_sym]
         end
 

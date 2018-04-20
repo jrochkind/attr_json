@@ -18,7 +18,7 @@ module JsonAttribute
   # Meant for use as an attribute of a JsonAttribute::Record. Can be nested,
   # JsonAttribute::Models can have attributes that are other JsonAttribute::Models.
   #
-  # Includes ActiveModel::Model whether you like it or not. TODO, should it?
+  # @note Includes ActiveModel::Model whether you like it or not. TODO, should it?
   #
   # You can control what happens if you set an unknown key (one that you didn't
   # register with `json_attribute`) with the class attribute `json_attribute_unknown_key`.
@@ -67,10 +67,26 @@ module JsonAttribute
 
       # Type can be an instance of an ActiveModel::Type::Value subclass, or a symbol that will
       # be looked up in `ActiveModel::Type.lookup`
-      # TODO doc options
+      #
+      # @param name [Symbol,String] name of attribute
+      #
+      # @param type [ActiveModel::Type::Value] An instance of an ActiveModel::Type::Value (or subclass)
+      #
+      # @option options [Boolean] :array (false) Make this attribute an array of given type.
+      #
+      # @option options [Object] :default (nil) Default value, if a Proc object it will be #call'd
+      #   for default.
+      #
+      # @option options [String,Symbol] :store_key (nil) Serialize to JSON using
+      #   given store_key, rather than name as would be usual.
+      #
+      # @option options [Boolean] :validate (true) Create an ActiveRecord::Validations::AssociatedValidator so
+      #   validation errors on the attributes post up to self.
       def json_attribute(name, type, **options)
+        options.assert_valid_keys(*(AttributeDefinition::VALID_OPTIONS - [:container_attribute] + [:validate]))
+
         self.json_attributes_registry = json_attributes_registry.with(
-          AttributeDefinition.new(name.to_sym, type, options)
+          AttributeDefinition.new(name.to_sym, type, options.except(:validate))
         )
 
         # By default, automatically validate nested models

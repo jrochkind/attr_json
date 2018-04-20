@@ -10,8 +10,8 @@ module JsonAttribute
     # too, so we copy and paste extract it here, from:
     # https://github.com/rails/rails/blob/42a16a4d6514f28e05f1c22a5f9125d194d9c7cb/activerecord/lib/active_record/attribute_assignment.rb
     #
-    # We only use it in our "#{attr_name}_attriubtes=" methods, that's enough to
-    # get what we need for support of this stuff in our stuff, for form submisisons
+    # We only use it in the `#{attr_name}_attributes=` methods added by {NestedAttributes},
+    # that's enough to get what we need for support of this stuff in our stuff, for form submisisons
     # using rails-style date/time inputs as used eg in simple_form. And then we don't
     # need to polute anything outside of NestedAttributes module with this crazy stuff.
     class MultiparameterAttributeWriter

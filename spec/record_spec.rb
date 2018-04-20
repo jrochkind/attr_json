@@ -691,6 +691,9 @@ RSpec.describe JsonAttribute::Record do
           expect(instance.type_for_attribute("str")).to be_kind_of(JsonAttribute::Type::Array)
           expect(instance.type_for_attribute("str").base_type).to be_kind_of(ActiveModel::Type::String)
         end
+        it "still has our custom methods on top" do
+          skip "gah, how do we test this"
+        end
       end
     end
 
