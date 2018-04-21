@@ -3,16 +3,25 @@
  module JsonAttribute
 
   # Represents a `json_attribute` definition, on either a JsonAttribute::Record
-  # or JsonAttribute::Model.
+  # or JsonAttribute::Model. Normally this class is only used by
+  # JsonAttribute::AttributeDefinition::{Registry}.
   class AttributeDefinition
-    DEFAULT_CONTAINER_ATTRIBUTE = :json_attributes
     NO_DEFAULT_PROVIDED = Object.new.freeze
+    VALID_OPTIONS = %i{container_attribute store_key default array}.freeze
 
     attr_reader :name, :type, :original_args, :container_attribute
 
-    # TODO doc keyword args please.
+    # @param name [Symbol,String]
+    # @param type [Symbol,ActiveModel::Type::Value]
+    #
+    # @option options store_key [Symbol,String]
+    # @option options container_attribute [Symbol,ActiveModel::Type::Value]
+    #   Only means something in a JsonAttribute::Record, no meaning in a JsonAttribute::Model.
+    # @option options default [Object,Symbol,Proc] (nil)
+    # @option options array [Boolean] (false)
     def initialize(name, type, options = {})
-      # reflection useful for debugging, maybe other things.
+      options.assert_valid_keys *VALID_OPTIONS
+      # saving original args for reflection useful for debugging, maybe other things.
       @original_args = [name, type, options]
 
       @name = name.to_sym

@@ -1,5 +1,7 @@
 module JsonAttribute
   module NestedAttributes
+    # Implementation of `build_` methods, called by the `build_` methods
+    # {NestedAttributes} adds.
     class Builder
       attr_reader :model, :attr_name, :attr_def
 

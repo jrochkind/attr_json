@@ -11,36 +11,34 @@ module JsonAttribute
   # The original is pretty well put together and has had very low churn history.
   #
   #
-  # But much of the AR implementation, including form builder stuff, just works,
-  # if we define `#{attribute_name}_attributes=` methods that work. That's mostly what
+  # Much of the AR implementation, copied, just works,
+  # if we define `'#{attribute_name}_attributes='` methods that work. That's mostly what
   # we have to do here.
   #
   # Unlike AR, we try to put most of our implementation in seperate
-  # Implementation instances, instead of adding a bazillion methods to the model itself.
-  #
-  # NOTES: eliminated 'update_only' option, not applicable (I think). Eliminated allow_destroy,
-  # doesn't make sense, it's always allowed, as they could do the same just by eliminating
-  # the row from the submitted params.
+  # implementation helper instances, instead of adding a bazillion methods to the model itself.
   module NestedAttributes
     extend ActiveSupport::Concern
 
     class_methods do
-      # Much like ActiveRecord `accepts_nested_attributes_for`, but used with embedded \
+      # Much like ActiveRecord `accepts_nested_attributes_for`, but used with embedded
       # JsonAttribute::Model-type attributes (single or array). See doc page on Forms support.
       #
       # Note some AR options are _not_ supported.
       #
-      # * ~allow_destroy~: Not supported, effectively always true, doesn't make sense to try to gate this with our implementation.
-      # * ~update_only~: Not suppported, not really relevant to this architecture where you're embedded models have no independent existence.
+      # * _allow_destroy_, no such option. Effectively always true, doesn't make sense to try to gate this with our implementation.
+      # * _update_only_, no such option. Not really relevant to this architecture where you're embedded models have no independent existence.
       #
-      # @param define_build_method [Boolean] (keyword) Default true, provide `build_attribute_name`
-      #    method that works like you expect. [Cocoon](https://github.com/nathanvda/cocoon),
-      #    for example, requires this.
-      # @param reject_if [Symbol,Proc] Allows you to specify a Proc or a Symbol pointing to a method
-      #   that checks whether a record should be built for a certain attribute
-      #   hash. Much like in AR accepts_nested_attributes_for.
-      # @param limit [Integer,Proc,Symbol] Allows you to specify the maximum number of associated records that
-      #   can be processed with the nested attributes. Much like AR accepts_nested_attributes for.
+      # @overload json_attribute_accepts_nested_attributes_for(define_build_method: true, reject_if: nil, limit: nil)
+      #   @param define_build_method [Boolean] Default true, provide `build_attribute_name`
+      #     method that works like you expect. [Cocoon](https://github.com/nathanvda/cocoon),
+      #     for example, requires this. When true, you will get `model.build_#{attr_name}`
+      #     methods. For array attributes, the attr_name will be singularized, as AR does.
+      #   @param reject_if [Symbol,Proc] Allows you to specify a Proc or a Symbol pointing to a method
+      #     that checks whether a record should be built for a certain attribute
+      #     hash. Much like in AR accepts_nested_attributes_for.
+      #   @param limit [Integer,Proc,Symbol] Allows you to specify the maximum number of associated records that
+      #     can be processed with the nested attributes. Much like AR accepts_nested_attributes for.
       def json_attribute_accepts_nested_attributes_for(*attr_names)
         options = { define_build_method: true }
         options.update(attr_names.extract_options!)

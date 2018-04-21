@@ -2,6 +2,8 @@ require 'json_attribute/nested_attributes/multiparameter_attribute_writer'
 
 module JsonAttribute
   module NestedAttributes
+    # Implementation of `assign_nested_attributes` methods, called by the model
+    # method of that name that {NestedAttributes} adds.
     class Writer
       attr_reader :model, :attr_name, :attr_def
 

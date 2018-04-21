@@ -1,5 +1,7 @@
 module JsonAttribute
   module Record
+    # Implementation class called by #jsonb_contains scope method. Ordinarily
+    # you don't need to use it yourself, but you can.
     class QueryBuilder
       attr_reader :relation, :input_attributes
       def initialize(relation, input_attributes)
