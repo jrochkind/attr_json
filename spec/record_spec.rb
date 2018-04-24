@@ -1,15 +1,15 @@
 require 'spec_helper'
 
-RSpec.describe JsonAttribute::Record do
+RSpec.describe AttrJson::Record do
   let(:klass) do
     Class.new(ActiveRecord::Base) do
-      include JsonAttribute::Record
+      include AttrJson::Record
 
       self.table_name = "products"
-      json_attribute :str, :string
-      json_attribute :int, :integer
-      json_attribute :int_array, :integer, array: true
-      json_attribute :int_with_default, :integer, default: 5
+      attr_json :str, :string
+      attr_json :int, :integer
+      attr_json :int_array, :integer, array: true
+      attr_json :int_with_default, :integer, default: 5
     end
   end
   let(:instance) { klass.new }
@@ -26,10 +26,10 @@ RSpec.describe JsonAttribute::Record do
     describe "for primitive type #{type}" do
       let(:klass) do
         Class.new(ActiveRecord::Base) do
-          include JsonAttribute::Record
+          include AttrJson::Record
 
           self.table_name = "products"
-          json_attribute :value, type
+          attr_json :value, type
         end
       end
       it "properly saves good #{type}" do
@@ -88,11 +88,11 @@ RSpec.describe JsonAttribute::Record do
   it "raises on re-using attribute name" do
     expect {
       Class.new(ActiveRecord::Base) do
-        include JsonAttribute::Record
+        include AttrJson::Record
 
         self.table_name = "products"
-        json_attribute :value, :string
-        json_attribute :value, :integer
+        attr_json :value, :string
+        attr_json :value, :integer
       end
     }.to raise_error(ArgumentError, /Can't add, conflict with existing attribute name `value`/)
   end
@@ -123,10 +123,10 @@ RSpec.describe JsonAttribute::Record do
   context "defaults" do
     let(:klass) do
       Class.new(ActiveRecord::Base) do
-        include JsonAttribute::Record
+        include AttrJson::Record
 
         self.table_name = "products"
-        json_attribute :str_with_default, :string, default: "DEFAULT_VALUE"
+        attr_json :str_with_default, :string, default: "DEFAULT_VALUE"
       end
     end
 
@@ -157,7 +157,7 @@ RSpec.describe JsonAttribute::Record do
     let(:klass) do
       Class.new(ActiveRecord::Base) do
         self.table_name = "products"
-        include JsonAttribute::Record
+        include AttrJson::Record
 
         # validations need a model_name, which our anon class doens't have
         def self.model_name
@@ -171,8 +171,8 @@ RSpec.describe JsonAttribute::Record do
             message: "%{value} is not a valid size"
           }
 
-        json_attribute :str, :string
-        json_attribute :str_array, :string, array: true
+        attr_json :str, :string
+        attr_json :str_array, :string, array: true
       end
     end
 
@@ -194,8 +194,8 @@ RSpec.describe JsonAttribute::Record do
     let(:klass) do
       Class.new(ActiveRecord::Base) do
         self.table_name = "products"
-        include JsonAttribute::Record
-        json_attribute :value, :string, default: "DEFAULT_VALUE", store_key: :_store_key
+        include AttrJson::Record
+        attr_json :value, :string, default: "DEFAULT_VALUE", store_key: :_store_key
       end
     end
 
@@ -231,11 +231,11 @@ RSpec.describe JsonAttribute::Record do
     it "raises on conflicting store key" do
       expect {
         Class.new(ActiveRecord::Base) do
-          include JsonAttribute::Record
+          include AttrJson::Record
 
           self.table_name = "products"
-          json_attribute :value, :string
-          json_attribute :other_thing, :string, store_key: "value"
+          attr_json :value, :string
+          attr_json :other_thing, :string, store_key: "value"
         end
       }.to raise_error(ArgumentError, /Can't add, store key `value` conflicts with existing attribute/)
     end
@@ -244,8 +244,8 @@ RSpec.describe JsonAttribute::Record do
       let(:subklass) do
         Class.new(klass) do
           self.table_name = "products"
-          include JsonAttribute::Record
-          json_attribute :new_value, :integer, default: 10101, store_key: :_new_store_key
+          include AttrJson::Record
+          attr_json :new_value, :integer, default: 10101, store_key: :_new_store_key
         end
       end
       let(:subklass_instance) { subklass.new }
@@ -274,13 +274,13 @@ RSpec.describe JsonAttribute::Record do
     let(:datetime_value) { DateTime.now.change(usec: 555555).freeze }
     let(:klass) do
       Class.new(ActiveRecord::Base) do
-        include JsonAttribute::Record
+        include AttrJson::Record
 
         self.table_name = "products"
-        json_attribute :json_datetime, :datetime
-        json_attribute :json_time, :time
-        json_attribute :json_time_array, :time, array: true
-        json_attribute :json_datetime_array, :datetime, array: true
+        attr_json :json_datetime, :datetime
+        attr_json :json_time, :time
+        attr_json :json_time_array, :time, array: true
+        attr_json :json_datetime_array, :datetime, array: true
       end
     end
 
@@ -372,7 +372,7 @@ RSpec.describe JsonAttribute::Record do
       # our date/time attributes do NOT at present use ActiveSupport::TimeWithZone,
       # like ordinary AR attributes. Not sure how big a problem this is, or if
       # it's getting timezones wrong.
-      # See https://github.com/jrochkind/json_attribute/issues/16
+      # See https://github.com/jrochkind/attr_json/issues/16
       describe "with .time_zone_aware_attributes" do
         before do
           skip "Not currently supporting :time_zone_aware_attributes in date/time json_attributes"
@@ -443,10 +443,10 @@ RSpec.describe JsonAttribute::Record do
   context "specified container_attribute" do
     let(:klass) do
       Class.new(ActiveRecord::Base) do
-        include JsonAttribute::Record
+        include AttrJson::Record
         self.table_name = "products"
 
-        json_attribute :value, :string, container_attribute: :other_attributes
+        attr_json :value, :string, container_attribute: :other_attributes
       end
     end
 
@@ -480,12 +480,12 @@ RSpec.describe JsonAttribute::Record do
     describe "change default container attribute" do
       let(:klass) do
         Class.new(ActiveRecord::Base) do
-          include JsonAttribute::Record
+          include AttrJson::Record
           self.table_name = "products"
 
           self.default_json_container_attribute = :other_attributes
 
-          json_attribute :value, :string
+          attr_json :value, :string
         end
       end
       it "saves in right place" do
@@ -518,15 +518,15 @@ RSpec.describe JsonAttribute::Record do
     describe "multiple jsonb container attributes" do
       let(:klass) do
         Class.new(ActiveRecord::Base) do
-          include JsonAttribute::Record
+          include AttrJson::Record
           self.table_name = "products"
 
           self.default_json_container_attribute = :other_attributes
-          json_attribute :foo, :string
-          json_attribute :bar, :string
+          attr_json :foo, :string
+          attr_json :bar, :string
 
-          json_attribute :value, :string, container_attribute: :json_attributes
-          json_attribute :value2, :string, container_attribute: :json_attributes
+          attr_json :value, :string, container_attribute: :json_attributes
+          attr_json :value2, :string, container_attribute: :json_attributes
         end
       end
 
@@ -596,10 +596,10 @@ RSpec.describe JsonAttribute::Record do
     describe "with store key" do
       let(:klass) do
         Class.new(ActiveRecord::Base) do
-          include JsonAttribute::Record
+          include AttrJson::Record
           self.table_name = "products"
 
-          json_attribute :value, :string, store_key: "_store_key", container_attribute: :other_attributes
+          attr_json :value, :string, store_key: "_store_key", container_attribute: :other_attributes
         end
       end
 
@@ -620,11 +620,11 @@ RSpec.describe JsonAttribute::Record do
       describe "multiple containers with same store key" do
         let(:klass) do
           Class.new(ActiveRecord::Base) do
-            include JsonAttribute::Record
+            include AttrJson::Record
             self.table_name = "products"
 
-            json_attribute :value, :string, store_key: "_store_key", container_attribute: :json_attributes
-            json_attribute :other_value, :string, store_key: "_store_key", container_attribute: :other_attributes
+            attr_json :value, :string, store_key: "_store_key", container_attribute: :json_attributes
+            attr_json :other_value, :string, store_key: "_store_key", container_attribute: :other_attributes
           end
         end
         it "is all good" do
@@ -647,11 +647,11 @@ RSpec.describe JsonAttribute::Record do
         describe "with defaults" do
           let(:klass) do
             Class.new(ActiveRecord::Base) do
-              include JsonAttribute::Record
+              include AttrJson::Record
               self.table_name = "products"
 
-              json_attribute :value, :string, default: "value default", store_key: "_store_key", container_attribute: :json_attributes
-              json_attribute :other_value, :string, default: "other value default", store_key: "_store_key", container_attribute: :other_attributes
+              attr_json :value, :string, default: "value default", store_key: "_store_key", container_attribute: :json_attributes
+              attr_json :other_value, :string, default: "other value default", store_key: "_store_key", container_attribute: :other_attributes
             end
           end
 
@@ -680,15 +680,15 @@ RSpec.describe JsonAttribute::Record do
       describe "with rails_attribute: true" do
         let(:klass) do
           Class.new(ActiveRecord::Base) do
-            include JsonAttribute::Record
+            include AttrJson::Record
 
             self.table_name = "products"
-            json_attribute :str, :string, array: true, rails_attribute: true
+            attr_json :str, :string, array: true, rails_attribute: true
           end
         end
         it "registers attribute and type" do
           expect(instance.attributes.keys).to include("str")
-          expect(instance.type_for_attribute("str")).to be_kind_of(JsonAttribute::Type::Array)
+          expect(instance.type_for_attribute("str")).to be_kind_of(AttrJson::Type::Array)
           expect(instance.type_for_attribute("str").base_type).to be_kind_of(ActiveModel::Type::String)
         end
         it "still has our custom methods on top" do
@@ -701,10 +701,10 @@ RSpec.describe JsonAttribute::Record do
     #   it "raises on decleration" do
     #     expect {
     #       Class.new(ActiveRecord::Base) do
-    #         include JsonAttribute::Record
+    #         include AttrJson::Record
     #         self.table_name = "products"
 
-    #         json_attribute :value, :string, container_attribute: :no_such_attribute
+    #         attr_json :value, :string, container_attribute: :no_such_attribute
     #       end
     #     }.to raise_error(ArgumentError, /adfadf/)
     #   end

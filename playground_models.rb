@@ -1,71 +1,71 @@
 # required by our bin/console, nothing but something to play with.
 
-require 'json_attribute'
+require 'attr_json'
 class TestModel
-  include JsonAttribute::Model
+  include AttrJson::Model
 
-  json_attribute :str, :string
-  json_attribute :int, :integer
+  attr_json :str, :string
+  attr_json :int, :integer
 end
 
 class LangAndValue
-  include JsonAttribute::Model
+  include AttrJson::Model
 
-  json_attribute :lang, :string, default: "en"
-  json_attribute :value, :string
+  attr_json :lang, :string, default: "en"
+  attr_json :value, :string
 
   # Yes, you can use ordinary validations... I think. If not, soon.
 end
 
 class SomeLabels
-  include JsonAttribute::Model
+  include AttrJson::Model
 
-  json_attribute :hello, LangAndValue.to_type, array: true
-  json_attribute :goodbye, LangAndValue.to_type, array: true
+  attr_json :hello, LangAndValue.to_type, array: true
+  attr_json :goodbye, LangAndValue.to_type, array: true
 end
 
 
 class MyModel2 < ActiveRecord::Base
   self.table_name = "products"
-   include JsonAttribute::Record
-   include JsonAttribute::Record::QueryScopes
+   include AttrJson::Record
+   include AttrJson::Record::QueryScopes
 
    # use any ActiveModel::Type types: string, integer, decimal (BigDecimal),
    # float, datetime, boolean.
-   json_attribute :my_string, :string
-   json_attribute :my_integer, :integer
-   json_attribute :my_datetime, :datetime
+   attr_json :my_string, :string
+   attr_json :my_integer, :integer
+   attr_json :my_datetime, :datetime
 
    # You can have an _array_ of those things too.
-   json_attribute :int_array, :integer, array: true
+   attr_json :int_array, :integer, array: true
 
    #and/or defaults
-   #json_attribute :int_with_default, :integer, default: 100
+   #attr_json :int_with_default, :integer, default: 100
 
-  json_attribute :special_string, :string, store_key: "__my_string"
+  attr_json :special_string, :string, store_key: "__my_string"
 
-  json_attribute :lang_and_value, LangAndValue.to_type
+  attr_json :lang_and_value, LangAndValue.to_type
   # YES, you can even have an array of them
-  json_attribute :lang_and_value_array, LangAndValue.to_type, array: true
+  attr_json :lang_and_value_array, LangAndValue.to_type, array: true
 
-  json_attribute :my_labels, SomeLabels.to_type
+  attr_json :my_labels, SomeLabels.to_type
 end
 
 class MyEmbeddedModel
-  include JsonAttribute::Model
+  include AttrJson::Model
 
-  json_attribute :str, :string
+  attr_json :str, :string
 end
 
 class MyModel < ActiveRecord::Base
   self.table_name = "products"
 
-  include JsonAttribute::Record
-  include JsonAttribute::Record::Dirty
+  include AttrJson::Record
+  include AttrJson::Record::Dirty
 
-  json_attribute :str, :string
-  json_attribute :str_array, :string, array: true
-  json_attribute :array_of_models, MyEmbeddedModel.to_type, array: true
+  attr_json :str, :string
+  attr_json :str_array, :string, array: true
+  attr_json :array_of_models, MyEmbeddedModel.to_type, array: true
 end
 
 class StaticProduct < ActiveRecord::Base
@@ -74,18 +74,18 @@ class StaticProduct < ActiveRecord::Base
 end
 
 class Product < StaticProduct
-  include JsonAttribute::Record
-  include JsonAttribute::Record::QueryScopes
-  include JsonAttribute::Record::Dirty
+  include AttrJson::Record
+  include AttrJson::Record::QueryScopes
+  include AttrJson::Record::Dirty
 
-  json_attribute :title, :string
-  json_attribute :rank, :integer
-  json_attribute :made_at, :datetime
-  json_attribute :time, :time
-  json_attribute :date, :date
-  json_attribute :dec, :decimal
-  json_attribute :int_array, :integer, array: true
-  json_attribute :model, TestModel.to_type
+  attr_json :title, :string
+  attr_json :rank, :integer
+  attr_json :made_at, :datetime
+  attr_json :time, :time
+  attr_json :date, :date
+  attr_json :dec, :decimal
+  attr_json :int_array, :integer, array: true
+  attr_json :model, TestModel.to_type
 
   #jsonb_accessor :options, title: :string, rank: :integer, made_at: :datetime
 end
@@ -94,7 +94,7 @@ end
 
 
 class ProductCategory < ActiveRecord::Base
-  include JsonAttribute::Record
+  include AttrJson::Record
 
   #jsonb_accessor :options, title: :string
   has_many :products

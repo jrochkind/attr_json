@@ -1,4 +1,4 @@
-module JsonAttribute
+module AttrJson
   module Record
     # Implementation class called by #jsonb_contains scope method. Ordinarily
     # you don't need to use it yourself, but you can.
@@ -42,7 +42,7 @@ module JsonAttribute
       def add_to_param_hash!(param_hash, key_path_str, value)
         key_path = key_path_str.to_s.split(".")
         first_key, rest_keys = key_path.first, key_path[1..-1]
-        attr_def = relation.json_attributes_registry.fetch(first_key)
+        attr_def = relation.attr_json_registry.fetch(first_key)
 
         value = if rest_keys.present?
           attr_def.type.value_for_contains_query(rest_keys, value)
@@ -69,7 +69,7 @@ module JsonAttribute
 
           input_attributes.each do |key_path, value|
             key = key_path.to_s.split(".").first
-            attr_def = relation.json_attributes_registry.fetch(key)
+            attr_def = relation.attr_json_registry.fetch(key)
             container_attribute = attr_def.container_attribute
 
             hash_by_container_attribute[container_attribute] ||= {}

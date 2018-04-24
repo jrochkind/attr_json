@@ -1,9 +1,9 @@
 class Document < ActiveRecord::Base
-  include JsonAttribute::Record
-  include JsonAttribute::NestedAttributes
+  include AttrJson::Record
+  include AttrJson::NestedAttributes
 
-  json_attribute :title, :string
+  attr_json :title, :string
 
-  json_attribute :person_roles, PersonRole.to_type, array: true
-  json_attribute_accepts_nested_attributes_for :person_roles
+  attr_json :person_roles, PersonRole.to_type, array: true
+  attr_json_accepts_nested_attributes_for :person_roles
 end

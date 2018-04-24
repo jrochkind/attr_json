@@ -1,28 +1,28 @@
 require 'spec_helper'
-require 'json_attribute/nested_attributes'
+require 'attr_json/nested_attributes'
 
-RSpec.describe JsonAttribute::NestedAttributes do
+RSpec.describe AttrJson::NestedAttributes do
   let(:model_class) do
     Class.new do
-      include JsonAttribute::Model
+      include AttrJson::Model
 
-      json_attribute :str, :string
-      json_attribute :int, :integer
+      attr_json :str, :string
+      attr_json :int, :integer
     end
   end
 
   let(:klass) do
     model_class_type = model_class.to_type
     Class.new(ActiveRecord::Base) do
-      include JsonAttribute::Record
-      include JsonAttribute::NestedAttributes
+      include AttrJson::Record
+      include AttrJson::NestedAttributes
 
       self.table_name = "products"
 
-      json_attribute :one_model, model_class_type
-      json_attribute :many_models, model_class_type, array: true
+      attr_json :one_model, model_class_type
+      attr_json :many_models, model_class_type, array: true
 
-      json_attribute_accepts_nested_attributes_for :one_model, :many_models
+      attr_json_accepts_nested_attributes_for :one_model, :many_models
     end
   end
   let(:instance) { klass.new }
@@ -30,8 +30,8 @@ RSpec.describe JsonAttribute::NestedAttributes do
   describe "on non-existing attributes" do
     it "should raise on non-existing associations" do
       expect {
-        klass.json_attribute_accepts_nested_attributes_for :nope
-      }.to raise_error(ArgumentError, "No json_attribute found for name 'nope'. Has it been defined yet?")
+        klass.attr_json_accepts_nested_attributes_for :nope
+      }.to raise_error(ArgumentError, "No attr_json found for name 'nope'. Has it been defined yet?")
     end
   end
 
@@ -97,9 +97,9 @@ RSpec.describe JsonAttribute::NestedAttributes do
 
     describe "reject_if" do
       around do |example|
-        klass.json_attribute_accepts_nested_attributes_for :one_model, reject_if: :all_blank
+        klass.attr_json_accepts_nested_attributes_for :one_model, reject_if: :all_blank
         example.run
-        klass.json_attribute_accepts_nested_attributes_for :one_model
+        klass.attr_json_accepts_nested_attributes_for :one_model
       end
 
 
@@ -139,9 +139,9 @@ RSpec.describe JsonAttribute::NestedAttributes do
 
     describe "reject_if" do
       around do |example|
-        klass.json_attribute_accepts_nested_attributes_for :many_models, reject_if: :all_blank
+        klass.attr_json_accepts_nested_attributes_for :many_models, reject_if: :all_blank
         example.run
-        klass.json_attribute_accepts_nested_attributes_for :many_models
+        klass.attr_json_accepts_nested_attributes_for :many_models
       end
 
 
@@ -170,17 +170,17 @@ RSpec.describe JsonAttribute::NestedAttributes do
     end
   end
 
-  describe "in an JsonAttribute::Model" do
+  describe "in an AttrJson::Model" do
     let(:klass) do
       model_class_type = model_class.to_type
       Class.new do
-        include JsonAttribute::Model
-        include JsonAttribute::NestedAttributes
+        include AttrJson::Model
+        include AttrJson::NestedAttributes
 
-        json_attribute :one_model, model_class_type
-        json_attribute :many_models, model_class_type, array: true
+        attr_json :one_model, model_class_type
+        attr_json :many_models, model_class_type, array: true
 
-        json_attribute_accepts_nested_attributes_for :one_model, :many_models
+        attr_json_accepts_nested_attributes_for :one_model, :many_models
       end
     end
 
@@ -215,28 +215,28 @@ RSpec.describe JsonAttribute::NestedAttributes do
   describe "multiparameter attributes" do
     let(:model_class) do
       Class.new do
-        include JsonAttribute::Model
+        include AttrJson::Model
 
-        json_attribute :embedded_datetime, :datetime
-        json_attribute :embedded_date, :date
+        attr_json :embedded_datetime, :datetime
+        attr_json :embedded_date, :date
       end
     end
 
     let(:klass) do
       model_class_type = model_class.to_type
       Class.new(ActiveRecord::Base) do
-        include JsonAttribute::Record
-        include JsonAttribute::NestedAttributes
+        include AttrJson::Record
+        include AttrJson::NestedAttributes
 
         self.table_name = "products"
 
-        json_attribute :json_datetime, :datetime
-        json_attribute :json_date, :date
+        attr_json :json_datetime, :datetime
+        attr_json :json_date, :date
 
-        json_attribute :one_model, model_class_type
-        json_attribute :many_models, model_class_type, array: true
+        attr_json :one_model, model_class_type
+        attr_json :many_models, model_class_type, array: true
 
-        json_attribute_accepts_nested_attributes_for :one_model, :many_models
+        attr_json_accepts_nested_attributes_for :one_model, :many_models
       end
     end
     let(:instance) { klass.new }

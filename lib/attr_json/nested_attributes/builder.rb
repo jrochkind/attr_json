@@ -1,4 +1,4 @@
-module JsonAttribute
+module AttrJson
   module NestedAttributes
     # Implementation of `build_` methods, called by the `build_` methods
     # {NestedAttributes} adds.
@@ -7,7 +7,7 @@ module JsonAttribute
 
       def initialize(model, attr_name)
         @model, @attr_name = model, attr_name,
-        @attr_def = model.class.json_attributes_registry[attr_name]
+        @attr_def = model.class.attr_json_registry[attr_name]
       end
 
       def build(params = {})

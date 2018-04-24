@@ -1,38 +1,38 @@
-module JsonAttribute
+module AttrJson
   module Record
     # This only works in Rails 5.1+, and only uses the 'new style' dirty
     # tracking methods, available in Rails 5.1+.
     #
-    # Add into an ActiveRecord object with JsonAttribute::Record,
-    # to track dirty changes to json_attributes, off the json_attribute_changes
+    # Add into an ActiveRecord object with AttrJson::Record,
+    # to track dirty changes to attr_jsons, off the attr_json_changes
     # object.
     #
-    #     some_model.json_attribute_changes.saved_changes
-    #     some_model.json_attribute_changes.json_attr_before_last_save
+    #     some_model.attr_json_changes.saved_changes
+    #     some_model.attr_json_changes.json_attr_before_last_save
     #
     # All methods ordinarily in ActiveRecord::Attributes::Dirty should be available,
     # including synthetic attribute-specific ones like `will_save_change_to_attribute_name?`.
     # By default, they _only_ report changes from json attributes.
     # To have a merged list also including ordinary AR changes, add on `merged`:
     #
-    #     some_model.json_attribute_changes.merged.saved_changes
-    #     some_model.json_attribute_changes.merged.ordinary_attr_before_last_save
+    #     some_model.attr_json_changes.merged.saved_changes
+    #     some_model.attr_json_changes.merged.ordinary_attr_before_last_save
     #
     # Complex nested models will show up in changes as the cast models. If you want
     # the raw json instead, use `as_json`:
     #
-    #     some_model.json_attribute_changes.as_json.saved_changes
+    #     some_model.attr_json_changes.as_json.saved_changes
     #
     # You can combine as_json and merged if you like:
     #
-    #     some_model.json_attribute_changes.as_json.merged.saved_changes
+    #     some_model.attr_json_changes.as_json.merged.saved_changes
     #
     # See more in [separate documentation guide](../../../doc_src/dirty_tracking.md)
     #
-    # See what methods are available off of the object returned by {json_attribute_changes}
+    # See what methods are available off of the object returned by {attr_json_changes}
     # in {Dirty::Implementation} -- should be the AR dirty-tracking methods you expect.
     module Dirty
-      def json_attribute_changes
+      def attr_json_changes
         Implementation.new(self)
       end
 
@@ -64,12 +64,12 @@ module JsonAttribute
         # return a copy with `merged` attribute true, so dirty tracking
         # will include ordinary AR attributes too, and you can do things like:
         #
-        #     model.json_attribute_changes.merged.saved_change_to_attribute?(ordinary_or_json_attribute)
+        #     model.attr_json_changes.merged.saved_change_to_attribute?(ordinary_or_attr_json)
         #
         # By default, the json container attributes are included too. If you
         # instead want our dirty tracking to pretend they don't exist:
         #
-        #     model.json_attribute_changes.merged(containers: false).etc
+        #     model.attr_json_changes.merged(containers: false).etc
         #
         def merged(containers: true)
           self.class.new(model, merged: true, merge_containers: containers,
@@ -78,7 +78,7 @@ module JsonAttribute
 
         # return a copy with as_json parameter set to true, so change diffs
         # will be the json structures serialized, not the cast models.
-        # for 'primitive' types will be the same, but for JsonAttribute::Models
+        # for 'primitive' types will be the same, but for AttrJson::Models
         # very different.
         def as_json
           self.class.new(model, as_json: true,
@@ -246,7 +246,7 @@ module JsonAttribute
 
         end
 
-        # Takes a hash of _our_ json_attribute changes, and possibly
+        # Takes a hash of _our_ attr_json changes, and possibly
         # merges them into the hash of all changes from the parent record,
         # depending on values of `merged?` and `merge_containers?`.
         def prepared_changes(json_attr_changes, all_changes)
@@ -262,7 +262,7 @@ module JsonAttribute
         end
 
         def registry
-          model.class.json_attributes_registry
+          model.class.attr_json_registry
         end
 
         # Override from ActiveModel::AttributeMethods

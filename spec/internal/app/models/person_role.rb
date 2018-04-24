@@ -1,10 +1,10 @@
 class PersonRole
-  include JsonAttribute::Model
-  include JsonAttribute::NestedAttributes
-  include JsonAttribute::Model::CocoonCompat
+  include AttrJson::Model
+  include AttrJson::NestedAttributes
+  include AttrJson::Model::CocoonCompat
 
-  json_attribute :role, :string
-  json_attribute :people, Person.to_type, array: true
+  attr_json :role, :string
+  attr_json :people, Person.to_type, array: true
 
-  json_attribute_accepts_nested_attributes_for :people
+  attr_json_accepts_nested_attributes_for :people
 end

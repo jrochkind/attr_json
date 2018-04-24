@@ -1,11 +1,11 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'json_attribute/version'
+require 'attr_json/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "json_attribute"
-  spec.version       = JsonAttribute::VERSION
+  spec.name          = "attr_json"
+  spec.version       = AttrJson::VERSION
   spec.authors       = ["Jonathan Rochkind"]
   spec.email         = ["jonathan@dnil.net"]
 

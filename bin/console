@@ -4,7 +4,7 @@
 ENV['RAILS_ENV'] ||= "development"
 
 require "bundler/setup"
-require "json_attribute"
+require "attr_json"
 require 'yaml'
 
 # You can add fixtures and/or initialization code here to make experimenting

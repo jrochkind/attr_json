@@ -1,4 +1,4 @@
-# JsonAttribute or Name Yet to Be Determined (suggest a name?)
+# AttrJson or Name Yet to Be Determined (suggest a name?)
 
 Typed, structured, and compound/nested attributes via ActiveRecord
 backed by [Postgres jsonb](https://www.postgresql.org/docs/9.5/static/datatype-json.html).
@@ -9,7 +9,7 @@ Or, we could say: Use Postgres as a typed object store via ActiveRecord
 in your app), in the same models right next to ordinary ActiveRecord
 column-backed attributes and associations.
 
-Your `json_attribute`s act consistently with ordinary AR column-backed
+Your `attr_json`s act consistently with ordinary AR column-backed
 attributes, with the implementation re-using as much of the existing AR architecture
 as we can.
 
@@ -25,7 +25,7 @@ think or what problems you find or additional features you desire, and also welc
 any comments on implementation and AR integration.
 - - -
 
-[![Build Status](https://travis-ci.org/jrochkind/json_attribute.svg?branch=master)](https://travis-ci.org/jrochkind/json_attribute)
+[![Build Status](https://travis-ci.org/jrochkind/attr_json.svg?branch=master)](https://travis-ci.org/jrochkind/attr_json)
 
 ## Tour of Features
 
@@ -41,19 +41,19 @@ class CreatMyModels < ActiveRecord::Migration[5.0]
 end
 
 class MyModel < ActiveRecord::Base
-   include JsonAttribute::Record
+   include AttrJson::Record
 
    # use any ActiveModel::Type types: string, integer, decimal (BigDecimal),
    # float, datetime, boolean.
-   json_attribute :my_string, :string
-   json_attribute :my_integer, :integer
-   json_attribute :my_datetime, :datetime
+   attr_json :my_string, :string
+   attr_json :my_integer, :integer
+   attr_json :my_datetime, :datetime
 
    # You can have an _array_ of those things too.
-   json_attribute :int_array, :integer, array: true
+   attr_json :int_array, :integer, array: true
 
    #and/or defaults
-   json_attribute :int_with_default, :integer, default: 100
+   attr_json :int_with_default, :integer, default: 100
 end
 ```
 
@@ -71,14 +71,14 @@ model.my_datetime = "2016-01-01 17:45"
 model.my_datetime # => a Time object representing that, just like AR would cast
 ```
 
-These are all serialized to json in the `json_attributes` column, by default.
-If you look at `model.json_attributes`, you'll see already cast values.
+These are all serialized to json in the `attr_jsons` column, by default.
+If you look at `model.attr_jsons`, you'll see already cast values.
 But one way to see something like what it's really like in the db is to
 save and then use the standard Rails `*_before_type_cast` method.
 
 ```ruby
 model.save!
-model.json_attributes_before_type_cast
+model.attr_jsons_before_type_cast
 # => string containing: {"my_integer":12,"int_array":[12],"my_datetime":"2016-01-01T17:45:00.000Z"}
 ```
 
@@ -88,16 +88,16 @@ jsonb column you like.
 
 ```ruby
 class OtherModel < ActiveRecord::Base
-  include JsonAttribute::Record
+  include AttrJson::Record
 
   # as a default for the model
   self.default_json_container_attribute = :some_other_column_name
 
   # now this is going to serialize to column 'some_other_column_name'
-  json_attribute :my_int, :integer
+  attr_json :my_int, :integer
 
   # Or on a per-attribute basis
-  json_attribute :my_int, :integer, container_attribute: "yet_another_column_name"
+  attr_json :my_int, :integer, container_attribute: "yet_another_column_name"
 end
 ```
 
@@ -106,16 +106,16 @@ should be different than the attribute name with the `store_key` argument.
 
 ```ruby
 class MyModel < ActiveRecord::Base
-  include JsonAttribute::Record
+  include AttrJson::Record
 
-  json_attribute :special_string, :string, store_key: "__my_string"
+  attr_json :special_string, :string, store_key: "__my_string"
 end
 
 model = MyModel.new
 model.special_string = "foo"
-model.json_attributes # => {"__my_string"=>"foo"}
+model.attr_jsons # => {"__my_string"=>"foo"}
 model.save!
-model.json_attributes_before_type_cast # => string containing: {"__my_string":"foo"}
+model.attr_jsons_before_type_cast # => string containing: {"__my_string":"foo"}
 ```
 
 You can of course combine `array`, `default`, `store_key`, and `container_attribute`
@@ -125,14 +125,14 @@ with `ActiveModel::Type.lookup`, or any [ActiveModel::Type::Value](https://apido
 ## Querying
 
 There is some built-in support for querying using [postgres jsonb containment](https://www.postgresql.org/docs/9.5/static/functions-json.html)
-(`@>`) operator. (or see [here](https://blog.hasura.io/the-unofficial-guide-to-jsonb-operators-in-postgres-part-1-7ad830485ddf) or [here](https://hackernoon.com/how-to-query-jsonb-beginner-sheet-cheat-4da3aa5082a3)). For now you need to additonally `include JsonAttribute::Record::QueryScopes`
+(`@>`) operator. (or see [here](https://blog.hasura.io/the-unofficial-guide-to-jsonb-operators-in-postgres-part-1-7ad830485ddf) or [here](https://hackernoon.com/how-to-query-jsonb-beginner-sheet-cheat-4da3aa5082a3)). For now you need to additonally `include AttrJson::Record::QueryScopes`
 to get this behavior.
 
 ```ruby
 model = MyModel.create(my_string: "foo", my_integer: 100)
 
 MyModel.jsonb_contains(my_string: "foo", my_integer: 100).to_sql
-# SELECT "products".* FROM "products" WHERE (products.json_attributes @> ('{"my_string":"foo","my_integer":100}')::jsonb)
+# SELECT "products".* FROM "products" WHERE (products.attr_jsons @> ('{"my_string":"foo","my_integer":100}')::jsonb)
 MyModel.jsonb_contains(my_string: "foo", my_integer: 100).first
 # Implemented with scopes, this is an ordinary relation, you can
 # combine it with whatever, just like ordinary `where`.
@@ -161,35 +161,35 @@ and explore if you have the indexes you need.
 
 ## Nested/Structured/Compound data
 
-`JsonAttribute::Model` lets you make ActiveModel objects that always
+`AttrJson::Model` lets you make ActiveModel objects that always
 represent something that can be serialized to a json hash, and they can
-be used as types for your top-level JsonAttribute::Record.
+be used as types for your top-level AttrJson::Record.
 
 That is, you can serialize complex object-oriented graphs of models into a single
 jsonb column, and get them back as they went in.
 
-`JsonAttribute::Model` has an identical `json_attribute` api to
-`JsonAttribute::Record`, with the exception that `container_attribute` is not supported.
+`AttrJson::Model` has an identical `attr_json` api to
+`AttrJson::Record`, with the exception that `container_attribute` is not supported.
 
 ```ruby
 class LangAndValue
-  include JsonAttribute::Model
+  include AttrJson::Model
 
-  json_attribute :lang, :string, default: "en"
-  json_attribute :value, :string
+  attr_json :lang, :string, default: "en"
+  attr_json :value, :string
 
   # Validations work fine, and will post up to parent record
   validates :lang, inclusion_in: I18n.config.available_locales.collect(&:to_s)
 end
 
 class MyModel < ActiveRecord::Base
-  include JsonAttribute::Record
-  include JsonAttribute::Record::QueryScopes
+  include AttrJson::Record
+  include AttrJson::Record::QueryScopes
 
-  json_attribute :lang_and_value, LangAndValue.to_type
+  attr_json :lang_and_value, LangAndValue.to_type
 
   # YES, you can even have an array of them
-  json_attribute :lang_and_value_array, LangAndValue.to_type, array: true
+  attr_json :lang_and_value_array, LangAndValue.to_type, array: true
 end
 
 # Set with a model object, in initializer or writer
@@ -198,7 +198,7 @@ m.lang_and_value = LangAndValue.new(lang: "es", value: "hola")
 m.lang_and_value
 # => #<LangAndValue:0x007fb64f12bb70 @attributes={"lang"=>"es", "value"=>"hola"}>
 m.save!
-m.json_attributes_before_type_cast
+m.attr_jsons_before_type_cast
 # => string containing: {"lang_and_value":{"lang":"es","value":"hola"}}
 
 # Or with a hash, no problem.
@@ -206,7 +206,7 @@ m.json_attributes_before_type_cast
 m = MyModel.new(lang_and_value: { lang: 'fr', value: "S'il vous plaît"})
 m.lang_and_value = { lang: 'en', value: "Hey there" }
 m.save!
-m.json_attributes_before_type_cast
+m.attr_jsons_before_type_cast
 # => string containing: {"lang_and_value":{"lang":"en","value":"Hey there"}}
 found = MyModel.find(m.id)
 m.lang_and_value
@@ -218,25 +218,25 @@ m = MyModel.new(lang_and_value_array: [{ lang: 'fr', value: "S'il vous plaît"},
 m.lang_and_value_array
 # => [#<LangAndValue:0x007f89b4f08f30 @attributes={"lang"=>"fr", "value"=>"S'il vous plaît"}>, #<LangAndValue:0x007f89b4f086e8 @attributes={"lang"=>"en", "value"=>"Hey there"}>]
 m.save!
-m.json_attributes_before_type_cast
+m.attr_jsons_before_type_cast
 # => string containing: {"lang_and_value_array":[{"lang":"fr","value":"S'il vous plaît"},{"lang":"en","value":"Hey there"}]}
 ```
 
-You can nest JsonAttribute::Model objects inside each other, as deeply as you like --
+You can nest AttrJson::Model objects inside each other, as deeply as you like --
 although very large/complex graphs _may_ have performance implications, test/investigate.
 
 ```ruby
 class SomeLabels
-  include JsonAttribute::Model
+  include AttrJson::Model
 
-  json_attribute :hello, LangAndValue.to_type, array: true
-  json_attribute :goodbye, LangAndValue.to_type, array: true
+  attr_json :hello, LangAndValue.to_type, array: true
+  attr_json :goodbye, LangAndValue.to_type, array: true
 end
 class MyModel < ActiveRecord::Base
-  include JsonAttribute::Record
-  include JsonAttribute::Record::QueryScopes
+  include AttrJson::Record
+  include AttrJson::Record::QueryScopes
 
-  json_attribute :my_labels, SomeLabels.to_type
+  attr_json :my_labels, SomeLabels.to_type
 end
 
 m = MyModel.new
@@ -248,19 +248,19 @@ m.my_labels
 # => #<SomeLabels:0x007fed2a3b1a18 @attributes={"hello"=>[#<LangAndValue:0x007fed2a0eafc8 @attributes={"lang"=>"en", "value"=>"hello"}>, #<LangAndValue:0x007fed2a0bb4d0 @attributes={"lang"=>"es", "value"=>"hola"}>]}>
 m.my_labels.hello.find { |l| l.lang == "en" }.value = "Howdy"
 m.save!
-m.json_attributes
+m.attr_jsons
 # => {"my_labels"=>#<SomeLabels:0x007fed2a714e80 @attributes={"hello"=>[#<LangAndValue:0x007fed2a714cf0 @attributes={"lang"=>"en", "value"=>"Howdy"}>, #<LangAndValue:0x007fed2a714ac0 @attributes={"lang"=>"es", "value"=>"hola"}>]}>}
-m.json_attributes_before_type_cast
+m.attr_jsons_before_type_cast
 # => string containing: {"my_labels":{"hello":[{"lang":"en","value":"Howdy"},{"lang":"es","value":"hola"}]}}
 ```
 
 **GUESS WHAT?** You can **QUERY** nested structures with `jsonb_contains`,
 using a dot-keypath notation, even through arrays as in this case. Your specific
-defined `json_attribute` types determine the query and type-casting.
+defined `attr_json` types determine the query and type-casting.
 
 ```ruby
 MyModel.jsonb_contains("my_labels.hello.lang" => "en").to_sql
-# => SELECT "products".* FROM "products" WHERE (products.json_attributes @> ('{"my_labels":{"hello":[{"lang":"en"}]}}')::jsonb)
+# => SELECT "products".* FROM "products" WHERE (products.attr_jsons @> ('{"my_labels":{"hello":[{"lang":"en"}]}}')::jsonb)
 MyModel.jsonb_contains("my_labels.hello.lang" => "en").first
 
 
@@ -268,10 +268,10 @@ MyModel.jsonb_contains("my_labels.hello.lang" => "en").first
 # be cast. Trying to make everything super consistent with no surprises.
 
 MyModel.jsonb_contains("my_labels.hello" => LangAndValue.new(lang: 'en')).to_sql
-# => SELECT "products".* FROM "products" WHERE (products.json_attributes @> ('{"my_labels":{"hello":[{"lang":"en"}]}}')::jsonb)
+# => SELECT "products".* FROM "products" WHERE (products.attr_jsons @> ('{"my_labels":{"hello":[{"lang":"en"}]}}')::jsonb)
 
 MyModel.jsonb_contains("my_labels.hello" => {"lang" => "en"}).to_sql
-# => SELECT "products".* FROM "products" WHERE (products.json_attributes @> ('{"my_labels":{"hello":[{"lang":"en"}]}}')::jsonb)
+# => SELECT "products".* FROM "products" WHERE (products.attr_jsons @> ('{"my_labels":{"hello":[{"lang":"en"}]}}')::jsonb)
 
 ```
 
@@ -286,7 +286,7 @@ other key/values in it too.
 
 Use with Rails form builders is supported pretty painlessly. Including with [simple_form](https://github.com/plataformatec/simple_form) and [cocoon](https://github.com/nathanvda/cocoon) (integration-tested in CI).
 
-If you have nested JsonAttribute::Models you'd like to use in your forms much like Rails associated records: Where you would use Rails `accept_nested_attributes_for`, instead `include JsonAttribute::NestedAttributes` and `json_attiribute_nested_attributes_for`. Multiple levels of nesting are supported.
+If you have nested AttrJson::Models you'd like to use in your forms much like Rails associated records: Where you would use Rails `accept_nested_attributes_for`, instead `include AttrJson::NestedAttributes` and use `attr_json_accepts_nested_attributes_for`. Multiple levels of nesting are supported.
 
 To get simple_form to properly detect your attribute types, define your attributes with `rails_attribute: true`.
 
@@ -295,15 +295,15 @@ For more info, see doc page on [Use with Forms and Form Builders](doc_src/forms.
 ## Dirty tracking
 
 Full change-tracking, ActiveRecord::Attributes::Dirty-style, is available in
-Rails 5.1+ on `json_attribute`s on your ActiveRecord classes that include
-`JsonAttribute::Record`, by including `JsonAttribute::Record::Dirty`.
-Change-tracking methods are available off the `json_attribute_changes` method.
+Rails 5.1+ on `attr_json`s on your ActiveRecord classes that include
+`AttrJson::Record`, by including `AttrJson::Record::Dirty`.
+Change-tracking methods are available off the `attr_json_changes` method.
 
     class MyModel < ActiveRecord::Base
-       include JsonAttribute::Record
-       include JsonAttribute::Record::Dirty
+       include AttrJson::Record
+       include AttrJson::Record::Dirty
 
-       json_attribute :str, :string
+       attr_json :str, :string
     end
 
     model = MyModel.new
@@ -314,11 +314,11 @@ Change-tracking methods are available off the `json_attribute_changes` method.
     # All and only "new" style dirty tracking methods (Raisl 5.1+)
     # are available:
 
-    model.json_attribute_changes.saved_changes
-    model.json_attribute_changes.changes_to_save
-    model.json_attribute_changes.saved_change_to_str?
-    model.json_attribute_changes.saved_change_to_str
-    model.json_attribute_changes.will_save_change_to_str?
+    model.attr_json_changes.saved_changes
+    model.attr_json_changes.changes_to_save
+    model.attr_json_changes.saved_change_to_str?
+    model.attr_json_changes.saved_change_to_str
+    model.attr_json_changes.will_save_change_to_str?
     # etc
 
 More options are available, including merging changes from 'ordinary'
@@ -365,7 +365,7 @@ Why might you _not_ want this?
 
 ## Note on Optimistic Locking
 
-When you save a record with any changes to any json_attributes, it will
+When you save a record with any changes to any attr_jsons, it will
 overwrite the _whole json structure_ in the relevant column for that row.
 Unlike ordinary AR attributes where updates just touch changed attributes.
 
@@ -404,8 +404,8 @@ that still need attending to, to really smooth off the edges.
 
 * seamless compatibility with ransack
 
-* Should we give JsonAttribute::Model a before_serialize hook that you might
-  want to use similar to AR before_save?  Should JsonAttribute::Models
+* Should we give AttrJson::Model a before_serialize hook that you might
+  want to use similar to AR before_save?  Should AttrJson::Models
   raise on trying to serialize an invalid model?
 
 * There are limits to what you can do with just jsonb_contains
@@ -449,5 +449,3 @@ that still need attending to, to really smooth off the edges.
 * Didn't actually notice existing [json_attributes](https://github.com/joel/json_attributes)
   until I was well on my way here. I think it's not updated for Rails5 or type-aware,
   haven't looked at it too much.
-
-(Btw, so many names are taken... what should I call this gem?)

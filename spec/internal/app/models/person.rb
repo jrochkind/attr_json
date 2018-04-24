@@ -1,10 +1,10 @@
 class Person
-  include JsonAttribute::Model
-  include JsonAttribute::Model::CocoonCompat
+  include AttrJson::Model
+  include AttrJson::Model::CocoonCompat
 
-  json_attribute :given_name, :string
-  json_attribute :family_name, :string
-  json_attribute :birth_date, :date
+  attr_json :given_name, :string
+  attr_json :family_name, :string
+  attr_json :birth_date, :date
 
   validates_presence_of :given_name
 end

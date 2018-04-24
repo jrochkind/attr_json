@@ -1,28 +1,28 @@
 require 'spec_helper'
-require 'json_attribute/nested_attributes'
+require 'attr_json/nested_attributes'
 
 RSpec.describe "NestedAttributes build methods" do
   let(:model_class) do
     Class.new do
-      include JsonAttribute::Model
+      include AttrJson::Model
 
-      json_attribute :str, :string
-      json_attribute :int, :integer
+      attr_json :str, :string
+      attr_json :int, :integer
     end
   end
 
   let(:klass) do
     model_class_type = model_class.to_type
     Class.new(ActiveRecord::Base) do
-      include JsonAttribute::Record
-      include JsonAttribute::NestedAttributes
+      include AttrJson::Record
+      include AttrJson::NestedAttributes
 
       self.table_name = "products"
 
-      json_attribute :one_model, model_class_type
-      json_attribute :many_models, model_class_type, array: true
+      attr_json :one_model, model_class_type
+      attr_json :many_models, model_class_type, array: true
 
-      json_attribute_accepts_nested_attributes_for :one_model, :many_models
+      attr_json_accepts_nested_attributes_for :one_model, :many_models
     end
   end
   let(:instance) { klass.new }
@@ -82,15 +82,15 @@ RSpec.describe "NestedAttributes build methods" do
     let(:klass) do
       model_class_type = model_class.to_type
       Class.new(ActiveRecord::Base) do
-        include JsonAttribute::Record
-        include JsonAttribute::NestedAttributes
+        include AttrJson::Record
+        include AttrJson::NestedAttributes
 
         self.table_name = "products"
 
-        json_attribute :one_model, model_class_type
-        json_attribute :many_models, model_class_type, array: true
+        attr_json :one_model, model_class_type
+        attr_json :many_models, model_class_type, array: true
 
-        json_attribute_accepts_nested_attributes_for :one_model, :many_models, define_build_method: false
+        attr_json_accepts_nested_attributes_for :one_model, :many_models, define_build_method: false
       end
     end
 

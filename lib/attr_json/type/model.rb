@@ -1,16 +1,16 @@
-module JsonAttribute
+module AttrJson
   module Type
-    # An ActiveModel::Type representing a particular JsonAttribute::Model
+    # An ActiveModel::Type representing a particular AttrJson::Model
     # class, supporting casting, serialization, and deserialization from/to
     # JSON-able serializable hashes.
     #
-    # You create one with JsonAttribute::Model::Type.new(json_attribute_model_class),
-    # but normally that's only done in JsonAttribute::Model.to_type, there isn't
+    # You create one with AttrJson::Model::Type.new(attr_json_model_class),
+    # but normally that's only done in AttrJson::Model.to_type, there isn't
     # an anticipated need to create from any other place.
     class Model < ::ActiveModel::Type::Value
       attr_accessor :model
       def initialize(model)
-        #TODO type check, it really better be a JsonAttribute::Model. maybe?
+        #TODO type check, it really better be a AttrJson::Model. maybe?
         @model = model
       end
 
@@ -63,7 +63,7 @@ module JsonAttribute
       # This is used only by our own keypath-chaining query stuff.
       def value_for_contains_query(key_path_arr, value)
         first_key, rest_keys = key_path_arr.first, key_path_arr[1..-1]
-        attr_def = model.json_attributes_registry.fetch(first_key)
+        attr_def = model.attr_json_registry.fetch(first_key)
         {
           attr_def.store_key => if rest_keys.present?
             attr_def.type.value_for_contains_query(rest_keys, value)

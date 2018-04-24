@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-# Specify your gem's dependencies in json_attribute.gemspec
+# Specify your gem's dependencies in attr_json.gemspec
 gemspec
 
 # for our integration test in a real rails env, we add em in development too,

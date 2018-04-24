@@ -1,13 +1,13 @@
-module JsonAttribute
+module AttrJson
   module Type
     # You can wrap any ActiveModel::Type in one of these, and it's magically
     # a type representing an Array of those things, always returning
     # an array of those things on cast, serialize, and deserialize.
     #
-    # Meant for use with JsonAttribute::Record and JsonAttribute::Model, may or
+    # Meant for use with AttrJson::Record and AttrJson::Model, may or
     # may not do something useful or without exceptions in other contexts.
     #
-    #     JsonAttribute::Type::Array.new(base_type)
+    #     AttrJson::Type::Array.new(base_type)
     class Array < ::ActiveModel::Type::Value
       attr_reader :base_type
       def initialize(base_type)

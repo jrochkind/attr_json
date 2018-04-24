@@ -1,14 +1,14 @@
 require 'spec_helper'
 
-RSpec.describe JsonAttribute::Record do
+RSpec.describe AttrJson::Record do
   let(:instance) { klass.new }
 
   describe "store_key" do
     let(:klass) do
       Class.new do
-        include JsonAttribute::Model
+        include AttrJson::Model
 
-        json_attribute :str_one, :string, store_key: "__str_one"
+        attr_json :str_one, :string, store_key: "__str_one"
       end
     end
 
@@ -34,7 +34,7 @@ RSpec.describe JsonAttribute::Record do
   describe "validation" do
     let(:klass) do
       Class.new do
-        include JsonAttribute::Model
+        include AttrJson::Model
 
         # validations need a model_name, which our anon class doens't have
         def self.model_name
@@ -48,8 +48,8 @@ RSpec.describe JsonAttribute::Record do
             message: "%{value} is not a valid size"
           }
 
-        json_attribute :str, :string
-        json_attribute :str_array, :string, array: true
+        attr_json :str, :string
+        attr_json :str_array, :string, array: true
       end
     end
 
@@ -69,9 +69,9 @@ RSpec.describe JsonAttribute::Record do
   describe "unknown keys" do
     let(:klass) do
       Class.new do
-        include JsonAttribute::Model
+        include AttrJson::Model
 
-        json_attribute :str_one, :string
+        attr_json :str_one, :string
       end
     end
     let(:attributes) { { str_one: "str", unknown_key: "foo" } }
@@ -86,7 +86,7 @@ RSpec.describe JsonAttribute::Record do
     end
     describe ":allow" do
       before do
-        klass.json_attribute_unknown_key = :allow
+        klass.attr_json_unknown_key = :allow
       end
       it "allows" do
         instance.assign_attributes(attributes)
@@ -101,7 +101,7 @@ RSpec.describe JsonAttribute::Record do
     end
     describe ":strip" do
       before do
-        klass.json_attribute_unknown_key = :strip
+        klass.attr_json_unknown_key = :strip
       end
       it "strips" do
         instance.assign_attributes(attributes)
@@ -119,19 +119,19 @@ RSpec.describe JsonAttribute::Record do
   describe "nested model with validation" do
     let(:nested_class) do
       Class.new do
-        include JsonAttribute::Model
+        include AttrJson::Model
         def self.model_name ; ActiveModel::Name.new(self, nil, "NestedClass") ; end
-        json_attribute :str, :string
+        attr_json :str, :string
         validates_presence_of :str
       end
     end
     let(:klass) do
       nested_class_type = nested_class.to_type
       Class.new do
-        include JsonAttribute::Model
+        include AttrJson::Model
         def self.model_name ; ActiveModel::Name.new(self, nil, "Klass") ; end
 
-        json_attribute :nested, nested_class_type, default: {}
+        attr_json :nested, nested_class_type, default: {}
       end
     end
 
@@ -155,19 +155,19 @@ RSpec.describe JsonAttribute::Record do
   describe "nested array of models with validation" do
     let(:nested_class) do
       Class.new do
-        include JsonAttribute::Model
+        include AttrJson::Model
         def self.model_name ; ActiveModel::Name.new(self, nil, "NestedClass") ; end
-        json_attribute :str, :string
+        attr_json :str, :string
         validates_presence_of :str
       end
     end
     let(:klass) do
       nested_class_type = nested_class.to_type
       Class.new do
-        include JsonAttribute::Model
+        include AttrJson::Model
         def self.model_name ; ActiveModel::Name.new(self, nil, "Klass") ; end
 
-        json_attribute :nested, nested_class_type, array: true, default: [{}]
+        attr_json :nested, nested_class_type, array: true, default: [{}]
       end
     end
 
