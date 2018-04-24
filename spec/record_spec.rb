@@ -483,7 +483,7 @@ RSpec.describe AttrJson::Record do
           include AttrJson::Record
           self.table_name = "products"
 
-          self.default_json_container_attribute = :other_attributes
+          self.attr_json_config(default_container_attribute: :other_attributes)
 
           attr_json :value, :string
         end
@@ -521,7 +521,7 @@ RSpec.describe AttrJson::Record do
           include AttrJson::Record
           self.table_name = "products"
 
-          self.default_json_container_attribute = :other_attributes
+          self.attr_json_config(default_container_attribute: :other_attributes)
           attr_json :foo, :string
           attr_json :bar, :string
 

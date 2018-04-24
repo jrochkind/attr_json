@@ -3,6 +3,7 @@ require "attr_json/version"
 require "active_record"
 require "active_record/connection_adapters/postgresql_adapter"
 
+require 'attr_json/config'
 require 'attr_json/record'
 require 'attr_json/model'
 require 'attr_json/nested_attributes'

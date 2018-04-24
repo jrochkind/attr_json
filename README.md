@@ -85,7 +85,7 @@ class OtherModel < ActiveRecord::Base
   include AttrJson::Record
 
   # as a default for the model
-  self.default_json_container_attribute = :some_other_column_name
+  attr_json_config(default_container_attribute: :some_other_column_name)
 
   # now this is going to serialize to column 'some_other_column_name'
   attr_json :my_int, :integer

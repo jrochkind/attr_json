@@ -17,8 +17,6 @@ module AttrJson
   module Record
     extend ActiveSupport::Concern
 
-    DEFAULT_CONTAINER_ATTRIBUTE = :json_attributes
-
     included do
       unless self < ActiveRecord::Base
         raise TypeError, "AttrJson::Record can only be used with an ActiveRecord::Base model. #{self} does not appear to be one. Are you looking for ::AttrJson::Model?"
@@ -26,12 +24,32 @@ module AttrJson
 
       class_attribute :attr_json_registry, instance_accessor: false
       self.attr_json_registry = AttrJson::AttributeDefinition::Registry.new
-
-      class_attribute :default_json_container_attribute, instance_acessor: false
-      self.default_json_container_attribute ||= DEFAULT_CONTAINER_ATTRIBUTE
     end
 
     class_methods do
+      # Access or set class-wide json_attribute_config. Inherited by sub-classes,
+      # but setting on sub-classes is unique to subclass. Similar to how
+      # rails class_attribute's are used.
+      #
+      # @example access config
+      #   SomeClass.attr_json_config
+      #
+      # @example set config variables
+      #    class SomeClass < ActiveRecordBase
+      #       include JsonAttribute::Record
+      #
+      #       attr_json_config(default_container_attribute: "some_column")
+      #    end
+      def attr_json_config(new_values = {})
+        @attr_json_config ||= Config.new(mode: :record)
+        if new_values.present?
+          @attr_json_config = @attr_json_config.merge(new_values)
+        end
+        @attr_json_config
+      end
+
+
+
       # Type can be a symbol that will be looked up in `ActiveModel::Type.lookup`,
       # or an ActiveModel:::Type::Value).
       #
@@ -47,9 +65,9 @@ module AttrJson
       # @option options [String,Symbol] :store_key (nil) Serialize to JSON using
       #   given store_key, rather than name as would be usual.
       #
-      # @option options [Symbol,String] :container_attribute (self.default_json_container_attribute) The real
+      # @option options [Symbol,String] :container_attribute (attr_json_config.default_container_attribute, normally `json_attributes`) The real
       #   json(b) ActiveRecord attribute/column to serialize as a key in. Defaults to
-      #  `self.default_json_container_attribute`, which defaults to `:attr_jsons`
+      #  `attr_json_config.default_container_attribute`, which defaults to `:json_attributes`
       #
       # @option options [Boolean] :validate (true) Create an ActiveRecord::Validations::AssociatedValidator so
       #   validation errors on the attributes post up to self.
@@ -62,7 +80,7 @@ module AttrJson
         options = {
           rails_attribute: false,
           validate: true,
-          container_attribute: self.default_json_container_attribute
+          container_attribute: self.attr_json_config.default_container_attribute
         }.merge!(options)
         options.assert_valid_keys(AttributeDefinition::VALID_OPTIONS + [:validate, :rails_attribute])
         container_attribute = options[:container_attribute]
