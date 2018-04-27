@@ -28,10 +28,10 @@ blog [posts](https://www.ombulabs.com/blog/rails/upgrades/active-record-5-1-api-
 and the initial [AR pull request](https://github.com/rails/rails/pull/25337).
 
 AttrJson supports all of these new-style dirty-tracking methods, only
-in Rails 5.1+. (**Sorry, our dirty tracking support does not work with Rails 5.0,
-or old-style dirty API in Rails 5.1. Only new-style API in Rails 5.1+**). I wasn't
+in Rails 5.1+. (*Sorry, our dirty tracking support does not work with Rails 5.0,
+or old-style dirty API in Rails 5.1. Only new-style API in Rails 5.1+*). I wasn't
 able to find a good way to get changes in the default Rails dirty tracking methods,
-so instead they are available off a separate `attr_json_changes` method,
+so instead **they are available off a separate `attr_json_changes` method**,
 which also allows customization of if host record changes are also included.
 
 To include the AttrJson dirty-tracking features, include the

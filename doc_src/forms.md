@@ -33,11 +33,11 @@ The ActionView+ActiveRecord architecture isn't really setup for an array of "pri
       <%= f.text_field(:string_array, value: str, multiple: true) %>
     <% end %>
 
-That will submit and update fine, although when you try to handle reporting validation errors, you'll probably only be able to report on the array, not the specific element.
+That will display, submit and update fine, although when you try to handle reporting validation errors, you'll probably only be able to report on the array, not the specific element.
 
 You may want to [use SimpleForm and create a custom input](https://github.com/plataformatec/simple_form#custom-inputs) to handle arrays of primitives in the way you want. Or you may want to consider an array of AttrJson::Model value types instead -- you can have a model with only one attribute! It can be handled more conventionally, see below.
 
-### Embedded AttrJson::Model attributes
+### Embedded/Nested AttrJson::Model attributes
 
 With ordinary rails associations handled in the ordinary Rails way, you use [accepts_nested_attributes_for](http://api.rubyonrails.org/classes/ActiveRecord/NestedAttributes/ClassMethods.html) for associations (to-one or to-many).
 
@@ -79,7 +79,7 @@ end
 
 It should just work as you are expecting! You have to handle strong params as normal for when dealing with Rails associations, which can be tricky, but it's just the same here.
 
-Note that the `AttrJsons::NestedAttributes` module also adds convenient rails-style `build_` methods for you.  In the case above, you get a `build_one_event` and `build_many_event` (note singularization, cause that's how Rails does) method, which you can use much like Rails' `build_to_one_association` or `to_many_assocication.build` methods. You can turn off creation of the build methods with an option to `
+Note that the `AttrJsons::NestedAttributes` module also adds convenient rails-style `build_` methods for you.  In the case above, you get a `build_one_event` and `build_many_event` (note singularization, cause that's how Rails does) method, which you can use much like Rails' `build_to_one_association` or `to_many_assocication.build` methods. You can turn off creation of the build methods by passing `define_build_method: false` to `attr_json_accepts_nested_attributes_for`.
 
 ### Nested multi-level/compound embedded models
 
@@ -121,4 +121,4 @@ If you would rather use [Reform](https://github.com/trailblazer/reform) than the
 
 You shouldn't have to use the `AttrJson::NestedAttributes` module anywhere. You will have to do a lot more work yourself, as the nature of reform.
 
-I have not tested or experimented extensively with reform+attr_jsons myself, feedback welcome.
+I have not tested or experimented extensively with reform+attr_json myself, feedback welcome.

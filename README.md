@@ -1,33 +1,19 @@
-# AttrJson or Name Yet to Be Determined (suggest a name?)
+# AttrJson
 
-Typed, structured, and compound/nested attributes via ActiveRecord
-backed by [Postgres jsonb](https://www.postgresql.org/docs/9.5/static/datatype-json.html).
-With dirty tracking support, and some query support.
+ActiveRecord attributes stored serialized in a json column, super smooth. For Rails 5.0, 5.1, or 5.2.
 
-Or, we could say: Use Postgres as a typed object store via ActiveRecord
-('schemaless' on the postgres side, but with AR-style typing and casting
-in your app), in the same models right next to ordinary ActiveRecord
-column-backed attributes and associations.
+Typed and cast like Active Record. Supporting [nested models](#nested), [dirty tracking](#dirty), some [querying](#querying) (with postgres [jsonb](https://www.postgresql.org/docs/9.5/static/datatype-json.html) contains), and [working smoothy with form builders](#forms).
 
-Your `attr_json`s act consistently with ordinary AR column-backed
-attributes, with the implementation re-using as much of the existing AR architecture
-as we can.
-
-- - -
-This is an in-progress experiment, not ready for production use, and may
-include backwards-incompat API changes at any time before 1.0.
-However, all features currently documented are fully implemented and appear to
-be solid -- the README and other docs are real, not fantasy.
-
-**Peer-review would be very appreciated**, especially but not only from those who
-understand some of the depths of ActiveRecord. I very much appreciate hearing what you
-think or what problems you find or additional features you desire, and also welcome
-any comments on implementation and AR integration.
-- - -
+Use your database as a typed object store via ActiveRecord, in the same models right next to ordinary ActiveRecord column-backed attributes and associations. Your json-serialized `attr_json` attributes use as much of the existing ActiveRecord architecture as we can.
 
 [![Build Status](https://travis-ci.org/jrochkind/attr_json.svg?branch=master)](https://travis-ci.org/jrochkind/attr_json)
 
-## Tour of Features
+AttrJson is pre-1.0. The functionality that is documented here _is_ already implemented (these docs are real, not vaporware) and seems pretty solid. It may still have backwards-incompat changes before 1.0 release. Review and feedback is very welcome.
+
+Developed for postgres, but most features should work with MySQL json columns too. Has not yet been tested.
+
+
+## Basic Use
 
 ```ruby
 # migration
@@ -35,8 +21,10 @@ class CreatMyModels < ActiveRecord::Migration[5.0]
   def change
     create_table :my_models do |t|
       t.jsonb :json_attributes
-      # an index would prob be wise here TBD
     end
+
+    # If you plan to do any querying with jsonb_contains below..
+    add_index :my_models, :json_attributes, using: :gin
   end
 end
 
@@ -57,9 +45,7 @@ class MyModel < ActiveRecord::Base
 end
 ```
 
-You can treat these as if they were attributes; they have type-casting behavior
-very much like ordinary ActiveRecord values -- even the arrays. Setting a value
-will automatically cast it.
+These attributes have type-casting behavior very much like ordinary ActiveRecord values.
 
 ```ruby
 model = MyModel.new
@@ -71,16 +57,21 @@ model.my_datetime = "2016-01-01 17:45"
 model.my_datetime # => a Time object representing that, just like AR would cast
 ```
 
-These are all serialized to json in the `attr_jsons` column, by default.
-If you look at `model.attr_jsons`, you'll see already cast values.
+You can use ordinary ActiveRecord validation methods with `attr_json` attributes.
+
+All the `attr_json` attributes are serialized to json as keys in a hash, in a database jsonb/json column. By default, in a column `json_attributes`.
+If you look at `model.json_attributes`, you'll see values already cast to their ruby representations.
+
 But one way to see something like what it's really like in the db is to
-save and then use the standard Rails `*_before_type_cast` method.
+save the record and then use the standard Rails `*_before_type_cast` method.
 
 ```ruby
 model.save!
 model.attr_jsons_before_type_cast
 # => string containing: {"my_integer":12,"int_array":[12],"my_datetime":"2016-01-01T17:45:00.000Z"}
 ```
+
+## Specifying db column to use
 
 While the default is to assume you want to serialize in a column called
 `json_attributes`, no worries, of course you can pick whatever named
@@ -100,6 +91,8 @@ class OtherModel < ActiveRecord::Base
   attr_json :my_int, :integer, container_attribute: "yet_another_column_name"
 end
 ```
+
+## store key different than attribute name
 
 You can also specify that the serialized JSON key
 should be different than the attribute name with the `store_key` argument.
@@ -122,17 +115,18 @@ You can of course combine `array`, `default`, `store_key`, and `container_attrib
 params however you like, with whatever types you like: symbols resolvable
 with `ActiveModel::Type.lookup`, or any [ActiveModel::Type::Value](https://apidock.com/rails/ActiveRecord/Attributes/ClassMethods/attribute) subclass, built-in or custom.
 
+<a name="querying"></a>
 ## Querying
 
 There is some built-in support for querying using [postgres jsonb containment](https://www.postgresql.org/docs/9.5/static/functions-json.html)
-(`@>`) operator. (or see [here](https://blog.hasura.io/the-unofficial-guide-to-jsonb-operators-in-postgres-part-1-7ad830485ddf) or [here](https://hackernoon.com/how-to-query-jsonb-beginner-sheet-cheat-4da3aa5082a3)). For now you need to additonally `include AttrJson::Record::QueryScopes`
+(`@>`) operator. (or see [here](https://blog.hasura.io/the-unofficial-guide-to-jsonb-operators-in-postgres-part-1-7ad830485ddf) or [here](https://hackernoon.com/how-to-query-jsonb-beginner-sheet-cheat-4da3aa5082a3)). For now you need to additionally `include AttrJson::Record::QueryScopes`
 to get this behavior.
 
 ```ruby
 model = MyModel.create(my_string: "foo", my_integer: 100)
 
 MyModel.jsonb_contains(my_string: "foo", my_integer: 100).to_sql
-# SELECT "products".* FROM "products" WHERE (products.attr_jsons @> ('{"my_string":"foo","my_integer":100}')::jsonb)
+# SELECT "products".* FROM "products" WHERE (products.json_attributes @> ('{"my_string":"foo","my_integer":100}')::jsonb)
 MyModel.jsonb_contains(my_string: "foo", my_integer: 100).first
 # Implemented with scopes, this is an ordinary relation, you can
 # combine it with whatever, just like ordinary `where`.
@@ -149,9 +143,9 @@ MyModel.jsonb_contains(int_array: [10, 20]) # it contains both, so still finds i
 MyModel.jsonb_contains(int_array: [10, 1000]) # nope, returns nil, has to contain ALL listed in query for array args
 ```
 
-`jsonb_contains` of course handles any `store_key` you have set (you should specify
-attribute name, it'll actually query on store_key), as well as any
-`container_attribute` (it'll look in the proper jsonb column).
+`jsonb_contains` will handlesany `store_key` you have set -- you should specify
+attribute name, it'll actually query on store_key. And properly handles any
+`container_attribute` -- it'll look in the proper jsonb column.
 
 Anything you can do with `jsonb_contains` should be handled
 by a [postgres `USING GIN` index](https://www.postgresql.org/docs/9.5/static/datatype-json.html#JSON-INDEXING)
@@ -159,11 +153,11 @@ by a [postgres `USING GIN` index](https://www.postgresql.org/docs/9.5/static/dat
 investigate: Check out `to_sql` on any query to see what jsonb SQL it generates,
 and explore if you have the indexes you need.
 
-## Nested/Structured/Compound data
+<a name="nested"></a>
+## Nested models -- Structured/compound data
 
-`AttrJson::Model` lets you make ActiveModel objects that always
-represent something that can be serialized to a json hash, and they can
-be used as types for your top-level AttrJson::Record.
+The `AttrJson::Model` mix-in lets you make ActiveModel::Model objects that can be round-trip serialized to a json hash, and they can be used as types for your top-level AttrJson::Record.
+`AttrJson::Model`s can contain other AJ::Models, singly or as arrays, nested as many levels as you like.
 
 That is, you can serialize complex object-oriented graphs of models into a single
 jsonb column, and get them back as they went in.
@@ -222,8 +216,7 @@ m.attr_jsons_before_type_cast
 # => string containing: {"lang_and_value_array":[{"lang":"fr","value":"S'il vous plaît"},{"lang":"en","value":"Hey there"}]}
 ```
 
-You can nest AttrJson::Model objects inside each other, as deeply as you like --
-although very large/complex graphs _may_ have performance implications, test/investigate.
+You can nest AttrJson::Model objects inside each other, as deeply as you like.
 
 ```ruby
 class SomeLabels
@@ -260,7 +253,7 @@ defined `attr_json` types determine the query and type-casting.
 
 ```ruby
 MyModel.jsonb_contains("my_labels.hello.lang" => "en").to_sql
-# => SELECT "products".* FROM "products" WHERE (products.attr_jsons @> ('{"my_labels":{"hello":[{"lang":"en"}]}}')::jsonb)
+# => SELECT "products".* FROM "products" WHERE (products.json_attributes @> ('{"my_labels":{"hello":[{"lang":"en"}]}}')::jsonb)
 MyModel.jsonb_contains("my_labels.hello.lang" => "en").first
 
 
@@ -268,20 +261,20 @@ MyModel.jsonb_contains("my_labels.hello.lang" => "en").first
 # be cast. Trying to make everything super consistent with no surprises.
 
 MyModel.jsonb_contains("my_labels.hello" => LangAndValue.new(lang: 'en')).to_sql
-# => SELECT "products".* FROM "products" WHERE (products.attr_jsons @> ('{"my_labels":{"hello":[{"lang":"en"}]}}')::jsonb)
+# => SELECT "products".* FROM "products" WHERE (products.json_attributes @> ('{"my_labels":{"hello":[{"lang":"en"}]}}')::jsonb)
 
 MyModel.jsonb_contains("my_labels.hello" => {"lang" => "en"}).to_sql
-# => SELECT "products".* FROM "products" WHERE (products.attr_jsons @> ('{"my_labels":{"hello":[{"lang":"en"}]}}')::jsonb)
+# => SELECT "products".* FROM "products" WHERE (products.json_attributes @> ('{"my_labels":{"hello":[{"lang":"en"}]}}')::jsonb)
 
 ```
 
 Remember, we're using a postgres containment (`@>`) operator, so queries
 always mean 'contains' -- the previous query needs a `my_labels.hello`
 which is a hash that includes the key/value, `lang: en`, it can have
-other key/values in it too.
+other key/values in it too.  String values will need to match exactly.
 
-(No built-in way currently to do `like` queries?)
 
+<a name="forms"></a>
 ## Forms and Form Builders
 
 Use with Rails form builders is supported pretty painlessly. Including with [simple_form](https://github.com/plataformatec/simple_form) and [cocoon](https://github.com/nathanvda/cocoon) (integration-tested in CI).
@@ -292,6 +285,7 @@ To get simple_form to properly detect your attribute types, define your attribut
 
 For more info, see doc page on [Use with Forms and Form Builders](doc_src/forms.md).
 
+<a name="dirty"></a>
 ## Dirty tracking
 
 Full change-tracking, ActiveRecord::Attributes::Dirty-style, is available in
@@ -375,32 +369,21 @@ to prevent overwriting other updates from processes.
 
 ## State of Code, and To Be Done
 
-Work in progress. But working pretty well. There are some known edge cases,
-or questions about the proper semantics, or proper way to interact with
-existing ActiveRecord API -- search code for "TODO".
+This is a pre-1.0 work in progress. But the functionality that is here seems pretty solid.
 
-While the _querying_ stuff relies on postgres-jsonb-specific features,
-the stuff to simply store complex nested typed data in a json column
-doesn't really have any postgres-specifics, and the design should work
-on a MySQL json column, or possibly any ActiveRecord column `serialize`d
-to a json-like hash even in a blob/text column. It would require just a
-couple tweaks and perhaps another layer of abstraction; my brain was
-too full and the code complex/abstract enough for now, but could come later.
+Backwards incompatible changes are possible before 1.0. Once I tag something 1.0, I'm pretty serious about minimizing backwards incompats.
 
-This is sort of a proof of concept at present, there are many features
-that still need attending to, to really smooth off the edges.
+I do not yet use this myself in production, and may not for a while. I generally am reluctant to release something as 1.0 with implied suitable for production when I'm not yet using it in production myself, but may with enough feedback. A couple others are already using in production.
 
+Feedback of any kind of _very welcome_, please feel free to use the issue tracker.
+
+Except for the jsonb_contains stuff using postgres jsonb contains operator, I don't believe any postgres-specific features are used. It ought to work with MySQL, testing and feedback welcome. (Or a PR to test on MySQL?).  My own interest is postgres.
+
+### Possible future features:
 
 * Polymorphic JSON attributes.
 
-* partial updates for json hashes, use postgres jsonb merge operators to only overwrite what changed
-
-* I think it's important to be able to use these, even nested/array, with
-  _Rails forms_, in a natural way. (also with simple_form) This ought to be fairly straightforward,
-  the parameter format here is actually a lot _simpler_ than
-  what Rails needs to do for normalized rdbms data, but it might
-  run into Rails' assumptions about that extra complexity,
-  need to experiment with it.
+* partial updates for json hashes would be really nice: Using postgres jsonb merge operators to only overwrite what changed. In my initial attempts, AR doesn't make it easy to customize this.
 
 * seamless compatibility with ransack
 
@@ -411,17 +394,9 @@ that still need attending to, to really smooth off the edges.
 * There are limits to what you can do with just jsonb_contains
   queries. We could support operations like `>`, `<`, `<>`
   as [jsonb_accessor](https://github.com/devmynd/jsonb_accessor),
-  even accross keypaths -- but the semantics get confusing
-  accross keypaths, especially with multiple keypaths
-  expressed. The proper postgres indexing also
-  gets confusing accross keypaths. Even with jsonb
-  contains, the semantics get confusing, it's not always
-  clear what you're asking for. Full query language support
-  for something similar to what mongodb does is probably quite
-  possible to translate to postgres jsonb, but a bunch of work to write,
-  and confusing how indexes apply. (You can always use a
-  before_safe to denormalize/renormalize copy your data into
-  ordinary AR columns/associations though.)
+  even accross keypaths. (At present, you could use a
+  before_savee to denormalize/renormalize copy your data into
+  ordinary AR columns/associations for searching. Or perhaps a postgres ts_vector for text searching. Needs to be worked out.)
 
 * We could/should probably support `jsonb_order` clauses, even
   accross key paths, like jsonb_accessor.
