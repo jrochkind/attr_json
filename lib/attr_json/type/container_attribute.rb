@@ -1,9 +1,14 @@
 module AttrJson
   module Type
     # A type that gets applied to the AR container/store jsonb attribute,
-    # to do serialization/deserialization/cast using declared attr_jsons,
-    # before calling super to original ActiveRecord::ConnectionAdapters::PostgreSQL::OID::Jsonb
-    class ContainerAttribute < ActiveRecord::ConnectionAdapters::PostgreSQL::OID::Jsonb
+    # to do serialization/deserialization/cast using declared attr_jsons, to
+    # json-able values, before calling super to original json-type, which will
+    # actually serialize/deserialize the json.
+    class ContainerAttribute < (if Gem.loaded_specs["activerecord"].version.release >= Gem::Version.new('5.2')
+      ActiveRecord::Type::Json
+    else
+      ActiveRecord::Type::Internal::AbstractJson
+    end)
       attr_reader :model, :container_attribute
       def initialize(model, container_attribute)
         @model = model
