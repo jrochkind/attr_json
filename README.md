@@ -5,15 +5,16 @@
 
 ActiveRecord attributes stored serialized in a json column, super smooth. For Rails 5.0, 5.1, or 5.2.
 
-Typed and cast like Active Record. Supporting [nested models](#nested), [dirty tracking](#dirty), some [querying](#querying) (with postgres [jsonb](https://www.postgresql.org/docs/9.5/static/datatype-json.html) contains), and [working smoothy with form builders](#forms). [Why might
-you want or not want this?](#why)
+Typed and cast like Active Record. Supporting [nested models](#nested), [dirty tracking](#dirty), some [querying](#querying) (with postgres [jsonb](https://www.postgresql.org/docs/9.5/static/datatype-json.html) contains), and [working smoothy with form builders](#forms).
 
-Use your database as a typed object store via ActiveRecord, in the same models right next to ordinary ActiveRecord column-backed attributes and associations. Your json-serialized `attr_json` attributes use as much of the existing ActiveRecord architecture as we can.
+*Use your database as a typed object store via ActiveRecord, in the same models right next to ordinary ActiveRecord column-backed attributes and associations. Your json-serialized `attr_json` attributes use as much of the existing ActiveRecord architecture as we can.*
+
+[Why might you want or not want this?](#why)
 
 AttrJson is pre-1.0. The functionality that is documented here _is_ already implemented (these docs are real, not vaporware) and seems pretty solid. It may still have backwards-incompat changes before 1.0 release. Review and feedback is very welcome.
 
-Developed for postgres, but most features should work with MySQL json columns too. Has not yet been tested.
-
+Developed for postgres, but most features should work with MySQL json columns too, although
+has not yet been tested with MySQL.
 
 ## Basic Use
 
@@ -69,7 +70,7 @@ save the record and then use the standard Rails `*_before_type_cast` method.
 
 ```ruby
 model.save!
-model.attr_jsons_before_type_cast
+model.json_attributes_before_type_cast
 # => string containing: {"my_integer":12,"int_array":[12],"my_datetime":"2016-01-01T17:45:00.000Z"}
 ```
 
@@ -77,7 +78,7 @@ model.attr_jsons_before_type_cast
 
 While the default is to assume you want to serialize in a column called
 `json_attributes`, no worries, of course you can pick whatever named
-jsonb column you like.
+jsonb column you like, class-wide or per-attribute.
 
 ```ruby
 class OtherModel < ActiveRecord::Base
@@ -94,10 +95,10 @@ class OtherModel < ActiveRecord::Base
 end
 ```
 
-## store key different than attribute name
+## Store key different than attribute name/methods
 
 You can also specify that the serialized JSON key
-should be different than the attribute name with the `store_key` argument.
+should be different than the attribute name/methods, by using the `store_key` argument.
 
 ```ruby
 class MyModel < ActiveRecord::Base
@@ -108,9 +109,9 @@ end
 
 model = MyModel.new
 model.special_string = "foo"
-model.attr_jsons # => {"__my_string"=>"foo"}
+model.json_attributes # => {"__my_string"=>"foo"}
 model.save!
-model.attr_jsons_before_type_cast # => string containing: {"__my_string":"foo"}
+model.json_attributes_before_type_cast # => string containing: {"__my_string":"foo"}
 ```
 
 You can of course combine `array`, `default`, `store_key`, and `container_attribute`
@@ -145,7 +146,7 @@ MyModel.jsonb_contains(int_array: [10, 20]) # it contains both, so still finds i
 MyModel.jsonb_contains(int_array: [10, 1000]) # nope, returns nil, has to contain ALL listed in query for array args
 ```
 
-`jsonb_contains` will handlesany `store_key` you have set -- you should specify
+`jsonb_contains` will handle any `store_key` you have set -- you should specify
 attribute name, it'll actually query on store_key. And properly handles any
 `container_attribute` -- it'll look in the proper jsonb column.
 
@@ -281,7 +282,7 @@ other key/values in it too.  String values will need to match exactly.
 
 Use with Rails form builders is supported pretty painlessly. Including with [simple_form](https://github.com/plataformatec/simple_form) and [cocoon](https://github.com/nathanvda/cocoon) (integration-tested in CI).
 
-If you have nested AttrJson::Models you'd like to use in your forms much like Rails associated records: Where you would use Rails `accept_nested_attributes_for`, instead `include AttrJson::NestedAttributes` and use `attr_json_accepts_nested_attributes_for`. Multiple levels of nesting are supported.
+If you have nested AttrJson::Models you'd like to use in your forms much like Rails associated records: Where you would use Rails `accepts_nested_attributes_for`, instead `include AttrJson::NestedAttributes` and use `attr_json_accepts_nested_attributes_for`. Multiple levels of nesting are supported.
 
 To get simple_form to properly detect your attribute types, define your attributes with `rails_attribute: true`.
 
@@ -337,7 +338,8 @@ Why might you want this?
 * A "content management system" type project, where you need complex
   structured data of various types, maybe needs to be vary depending
   on plugins or configuration, or for different article types -- but
-  doesn't need to be very queryable generally.
+  doesn't need to be very queryable generally -- or you have means of querying
+  other than a normalized rdbms schema.
 
 * You want to version your models, which is tricky with associations between models.
   Minimize associations by inlining the complex data into one table row.
