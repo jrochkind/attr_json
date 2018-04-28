@@ -7,6 +7,7 @@ Typed and cast like Active Record. Supporting [nested models](#nested), [dirty t
 Use your database as a typed object store via ActiveRecord, in the same models right next to ordinary ActiveRecord column-backed attributes and associations. Your json-serialized `attr_json` attributes use as much of the existing ActiveRecord architecture as we can.
 
 [![Build Status](https://travis-ci.org/jrochkind/attr_json.svg?branch=master)](https://travis-ci.org/jrochkind/attr_json)
+[![Gem Version](https://badge.fury.io/rb/attr_json.svg)](https://badge.fury.io/rb/attr_json)
 
 AttrJson is pre-1.0. The functionality that is documented here _is_ already implemented (these docs are real, not vaporware) and seems pretty solid. It may still have backwards-incompat changes before 1.0 release. Review and feedback is very welcome.
 
