@@ -3,18 +3,18 @@
 #
 # Our specs need to be seriously DRY'd up, prob with rspec shared examples,
 # both within files, and between model/record.
-require 'json_attribute/model'
-RSpec.describe JsonAttribute::Record do
+require 'attr_json/model'
+RSpec.describe AttrJson::Record do
   let(:datetime_value) { DateTime.now }
   let(:model_class) do
     Class.new do
-      include JsonAttribute::Model
+      include AttrJson::Model
 
-      json_attribute :str, :string
-      json_attribute :int, :integer
-      json_attribute :int_array, :integer, array: true
-      json_attribute :int_with_default, :integer, default: 5
-      json_attribute :datetime, :datetime
+      attr_json :str, :string
+      attr_json :int, :integer
+      attr_json :int_array, :integer, array: true
+      attr_json :int_with_default, :integer, default: 5
+      attr_json :datetime, :datetime
     end
   end
   let(:klass) do
@@ -22,11 +22,11 @@ RSpec.describe JsonAttribute::Record do
     # `let` for some reason, but this works.
     model_class_type = model_class.to_type
     Class.new(ActiveRecord::Base) do
-      include JsonAttribute::Record
+      include AttrJson::Record
       def self.model_name ; ActiveModel::Name.new(self, nil, "Product") ; end
       self.table_name = "products"
 
-      json_attribute :model, model_class_type
+      attr_json :model, model_class_type
     end
   end
   let(:instance) { klass.new }
@@ -158,11 +158,11 @@ RSpec.describe JsonAttribute::Record do
   describe "validating nested model" do
     let(:model_class) do
       Class.new do
-        include JsonAttribute::Model
+        include AttrJson::Model
 
         def self.model_name ; ActiveModel::Name.new(self, nil, "ModelClass") ; end
 
-        json_attribute :str, :string
+        attr_json :str, :string
         validates_presence_of :str
       end
     end
@@ -189,10 +189,10 @@ RSpec.describe JsonAttribute::Record do
       # `let` for some reason, but this works.
       model_class_type = model_class.to_type
       Class.new(ActiveRecord::Base) do
-        include JsonAttribute::Record
+        include AttrJson::Record
         self.table_name = "products"
 
-        json_attribute :models, model_class_type, array: true
+        attr_json :models, model_class_type, array: true
       end
     end
 
@@ -283,9 +283,9 @@ RSpec.describe JsonAttribute::Record do
   describe "model with store_keys" do
     let(:model_class) do
       Class.new do
-        include JsonAttribute::Model
+        include AttrJson::Model
 
-        json_attribute :str, :string, store_key: "__string__"
+        attr_json :str, :string, store_key: "__string__"
       end
     end
     it "serializes and deserializes properly" do
@@ -306,11 +306,11 @@ RSpec.describe JsonAttribute::Record do
         # `let` for some reason, but this works.
         model_class_type = model_class.to_type
         Class.new(ActiveRecord::Base) do
-          include JsonAttribute::Record
+          include AttrJson::Record
           def self.model_name ; ActiveModel::Name.new(self, nil, "Product") ; end
           self.table_name = "products"
 
-          json_attribute :model, model_class_type, default: {}
+          attr_json :model, model_class_type, default: {}
         end
       end
       it "defaults to new model" do
@@ -326,11 +326,11 @@ RSpec.describe JsonAttribute::Record do
         model_klass = model_class
         model_class_type = model_class.to_type
         Class.new(ActiveRecord::Base) do
-          include JsonAttribute::Record
+          include AttrJson::Record
           def self.model_name ; ActiveModel::Name.new(self, nil, "Product") ; end
           self.table_name = "products"
 
-          json_attribute :model, model_class_type, default: -> { model_klass.new }
+          attr_json :model, model_class_type, default: -> { model_klass.new }
         end
       end
       it "defaults to new model" do

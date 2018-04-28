@@ -1,17 +1,17 @@
 require 'spec_helper'
 
 #TODO tests could use a lot of DRYing up, maybe with shared example groups
-RSpec.describe JsonAttribute::Record::QueryScopes do
+RSpec.describe AttrJson::Record::QueryScopes do
   let(:klass) do
     Class.new(ActiveRecord::Base) do
-      include JsonAttribute::Record
-      include JsonAttribute::Record::QueryScopes
+      include AttrJson::Record
+      include AttrJson::Record::QueryScopes
 
       self.table_name = "products"
-      json_attribute :str, :string
-      json_attribute :int, :integer
-      json_attribute :int_array, :integer, array: true
-      json_attribute :int_with_default, :integer, default: 5
+      attr_json :str, :string
+      attr_json :int, :integer
+      attr_json :int_array, :integer, array: true
+      attr_json :int_with_default, :integer, default: 5
     end
   end
 
@@ -49,11 +49,11 @@ RSpec.describe JsonAttribute::Record::QueryScopes do
       describe "for primitive type #{type}" do
         let(:klass) do
           Class.new(ActiveRecord::Base) do
-            include JsonAttribute::Record
-            include JsonAttribute::Record::QueryScopes
+            include AttrJson::Record
+            include AttrJson::Record::QueryScopes
 
             self.table_name = "products"
-            json_attribute :value, type
+            attr_json :value, type
           end
         end
         it "can query with exact type" do
@@ -78,11 +78,11 @@ RSpec.describe JsonAttribute::Record::QueryScopes do
     describe "array of primitives" do
       let(:klass) do
         Class.new(ActiveRecord::Base) do
-          include JsonAttribute::Record
-          include JsonAttribute::Record::QueryScopes
+          include AttrJson::Record
+          include AttrJson::Record::QueryScopes
 
           self.table_name = "products"
-          json_attribute :value, :string, array: true
+          attr_json :value, :string, array: true
         end
       end
       before do
@@ -108,12 +108,12 @@ RSpec.describe JsonAttribute::Record::QueryScopes do
     describe "multi-column query" do
       let(:klass) do
         Class.new(ActiveRecord::Base) do
-          include JsonAttribute::Record
-          include JsonAttribute::Record::QueryScopes
+          include AttrJson::Record
+          include AttrJson::Record::QueryScopes
 
           self.table_name = "products"
-          json_attribute :str, :string
-          json_attribute :int, :integer
+          attr_json :str, :string
+          attr_json :int, :integer
         end
       end
       it "boolean and's" do
@@ -139,21 +139,21 @@ RSpec.describe JsonAttribute::Record::QueryScopes do
     # let's give em the same store key to make it really challenging?
     let(:klass) do
       Class.new(ActiveRecord::Base) do
-        include JsonAttribute::Record
-        include JsonAttribute::Record::QueryScopes
+        include AttrJson::Record
+        include AttrJson::Record::QueryScopes
 
         self.table_name = "products"
-        json_attribute :str_json_attributes, :string, store_key: "_str"
-        json_attribute :str_other_attributes, :string, store_key: "_str", container_attribute: "other_attributes"
+        attr_json :str_attr_jsons, :string, store_key: "_str"
+        attr_json :str_other_attributes, :string, store_key: "_str", container_attribute: "other_attributes"
       end
     end
     before do
-      instance.str_json_attributes = "j_value"
+      instance.str_attr_jsons = "j_value"
       instance.str_other_attributes = "o_value"
       instance.save!
     end
     it "still queries okay" do
-      query = klass.jsonb_contains(str_json_attributes: "j_value", str_other_attributes: "o_value")
+      query = klass.jsonb_contains(str_attr_jsons: "j_value", str_other_attributes: "o_value")
 
       expect(query.to_sql).to include "products.json_attributes @> ('{\"_str\":\"j_value\"}'"
       expect(query.to_sql).to include "products.other_attributes @> ('{\"_str\":\"o_value\"}'"
@@ -167,24 +167,24 @@ RSpec.describe JsonAttribute::Record::QueryScopes do
     # why not a crazy recursive one? I think we can do that.
     let(:model_class) do
       Class.new do
-        include JsonAttribute::Model
+        include AttrJson::Model
 
-        json_attribute :str, :string
-        json_attribute :model, self.to_type
-        json_attribute :int_array, :integer, array: true
-        json_attribute :int_with_default, :integer, default: 5
-        json_attribute :datetime, :datetime
+        attr_json :str, :string
+        attr_json :model, self.to_type
+        attr_json :int_array, :integer, array: true
+        attr_json :int_with_default, :integer, default: 5
+        attr_json :datetime, :datetime
       end
     end
     let(:klass) do
       model_class_type = model_class.to_type
       Class.new(ActiveRecord::Base) do
-        include JsonAttribute::Record
-        include JsonAttribute::Record::QueryScopes
+        include AttrJson::Record
+        include AttrJson::Record::QueryScopes
 
         self.table_name = "products"
-        json_attribute :model, model_class_type
-        json_attribute :int, :integer
+        attr_json :model, model_class_type
+        attr_json :int, :integer
       end
     end
     it "can create keypath query" do
@@ -215,28 +215,28 @@ RSpec.describe JsonAttribute::Record::QueryScopes do
     describe "double-nested model with array" do
       let(:lang_and_val_class) do
         Class.new do
-          include JsonAttribute::Model
+          include AttrJson::Model
 
-          json_attribute :lang, :string, default: "en"
-          json_attribute :value, :string
+          attr_json :lang, :string, default: "en"
+          attr_json :value, :string
         end
       end
       let(:some_labels_class) do
         lang_and_val_type = lang_and_val_class.to_type
         Class.new do
-          include JsonAttribute::Model
+          include AttrJson::Model
 
-          json_attribute :hello, lang_and_val_type, array: true
+          attr_json :hello, lang_and_val_type, array: true
         end
       end
       let(:klass) do
         some_labels_class_type = some_labels_class.to_type
         Class.new(ActiveRecord::Base) do
           self.table_name = "products"
-          include JsonAttribute::Record
-          include JsonAttribute::Record::QueryScopes
+          include AttrJson::Record
+          include AttrJson::Record::QueryScopes
 
-          json_attribute :my_labels, some_labels_class_type
+          attr_json :my_labels, some_labels_class_type
         end
       end
       before do

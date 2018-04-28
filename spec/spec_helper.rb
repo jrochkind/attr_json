@@ -39,7 +39,7 @@ end
 require 'yaml'
 require "database_cleaner"
 require 'byebug'
-require 'json_attribute'
+require 'attr_json'
 
 require "rspec/rails"
 require "capybara/rails"

@@ -1,6 +1,6 @@
-require 'json_attribute/nested_attributes/multiparameter_attribute_writer'
+require 'attr_json/nested_attributes/multiparameter_attribute_writer'
 
-module JsonAttribute
+module AttrJson
   module NestedAttributes
     # Implementation of `assign_nested_attributes` methods, called by the model
     # method of that name that {NestedAttributes} adds.
@@ -9,7 +9,7 @@ module JsonAttribute
 
       def initialize(model, attr_name)
         @model, @attr_name = model, attr_name
-        @attr_def = model.class.json_attributes_registry.fetch(attr_name)
+        @attr_def = model.class.attr_json_registry.fetch(attr_name)
       end
 
       delegate :nested_attributes_options, to: :model
@@ -33,7 +33,7 @@ module JsonAttribute
         # https://github.com/rails/rails/blob/a45f234b028fd4dda5338e5073a3bf2b8bf2c6fd/activerecord/lib/active_record/nested_attributes.rb#L392
         (model.class)::UNASSIGNABLE_KEYS
         else
-          # No need to mark "id" as unassignable in our JsonAttribute::Model-based nested models
+          # No need to mark "id" as unassignable in our AttrJson::Model-based nested models
           ["_destroy"]
         end
       end
@@ -51,7 +51,7 @@ module JsonAttribute
 
         if existing_record && has_destroy_flag?(attributes)
           # We don't have mark_for_destroy like in AR we just
-          # set it to nil to eliminate it in the  JsonAttribute, that's it.
+          # set it to nil to eliminate it in the  AttrJson, that's it.
           model_send("#{attr_def.name}=", nil)
 
           return model
@@ -198,7 +198,7 @@ module JsonAttribute
       # mutates attributes passsed in to remove multiparameter attributes,
       # and returns multiparam in their own hash. Based on:
       # https://github.com/rails/rails/blob/42a16a4d6514f28e05f1c22a5f9125d194d9c7cb/activerecord/lib/active_record/attribute_assignment.rb#L15-L25
-      # See JsonAttribute::NestedAttributes::MultiparameterAttributeWriter
+      # See AttrJson::NestedAttributes::MultiparameterAttributeWriter
       def extract_multi_parameter_attributes(attributes)
         multi_parameter_attributes  = {}
 

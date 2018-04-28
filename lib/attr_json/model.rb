@@ -1,27 +1,27 @@
 require 'active_support/concern'
 require 'active_model/type'
 
-require 'json_attribute/attribute_definition'
-require 'json_attribute/attribute_definition/registry'
+require 'attr_json/attribute_definition'
+require 'attr_json/attribute_definition/registry'
 
-require 'json_attribute/type/model'
-require 'json_attribute/model/cocoon_compat'
+require 'attr_json/type/model'
+require 'attr_json/model/cocoon_compat'
 
-module JsonAttribute
+module AttrJson
 
   # Meant for use in a plain class, turns it into an ActiveModel::Model
-  # with json_attribute support. NOT for use in an ActiveRecord::Base model,
+  # with attr_json support. NOT for use in an ActiveRecord::Base model,
   # see `Record` for ActiveRecord use.
   #
   # Creates an ActiveModel object with _typed_ attributes, easily serializable
   # to json, and with a corresponding ActiveModel::Type representing the class.
-  # Meant for use as an attribute of a JsonAttribute::Record. Can be nested,
-  # JsonAttribute::Models can have attributes that are other JsonAttribute::Models.
+  # Meant for use as an attribute of a AttrJson::Record. Can be nested,
+  # AttrJson::Models can have attributes that are other AttrJson::Models.
   #
   # @note Includes ActiveModel::Model whether you like it or not. TODO, should it?
   #
   # You can control what happens if you set an unknown key (one that you didn't
-  # register with `json_attribute`) with the class attribute `json_attribute_unknown_key`.
+  # register with `attr_json`) with the class attribute `attr_json_unknown_key`.
   # * :raise (default) raise ActiveModel::UnknownAttributeError
   # * :strip Ignore the unknown key and do not include it, without raising.
   # * :allow Allow the unknown key and it's value to be in the serialized hash,
@@ -36,15 +36,15 @@ module JsonAttribute
 
     included do
       if self < ActiveRecord::Base
-        raise TypeError, "JsonAttribute::Model is not for an ActiveRecord::Base model. #{self} appears to be one. Are you looking for ::JsonAttribute::Record?"
+        raise TypeError, "AttrJson::Model is not for an ActiveRecord::Base model. #{self} appears to be one. Are you looking for ::AttrJson::Record?"
       end
 
-      class_attribute :json_attributes_registry, instance_accessor: false
-      self.json_attributes_registry = ::JsonAttribute::AttributeDefinition::Registry.new
+      class_attribute :attr_json_registry, instance_accessor: false
+      self.attr_json_registry = ::AttrJson::AttributeDefinition::Registry.new
 
       # :raise, :strip, :allow. :raise is default. Is there some way to enforce this.
-      class_attribute :json_attribute_unknown_key
-      self.json_attribute_unknown_key ||= :raise
+      class_attribute :attr_json_unknown_key
+      self.attr_json_unknown_key ||= :raise
     end
 
     class_methods do
@@ -52,7 +52,7 @@ module JsonAttribute
       def new_from_serializable(attributes = {})
         attributes = attributes.transform_keys do |key|
           # store keys in arguments get translated to attribute names on initialize.
-          if attribute_def = self.json_attributes_registry.store_key_lookup("", key.to_s)
+          if attribute_def = self.attr_json_registry.store_key_lookup("", key.to_s)
             attribute_def.name.to_s
           else
             key
@@ -62,7 +62,7 @@ module JsonAttribute
       end
 
       def to_type
-        @type ||= JsonAttribute::Type::Model.new(self)
+        @type ||= AttrJson::Type::Model.new(self)
       end
 
       # Type can be an instance of an ActiveModel::Type::Value subclass, or a symbol that will
@@ -82,23 +82,23 @@ module JsonAttribute
       #
       # @option options [Boolean] :validate (true) Create an ActiveRecord::Validations::AssociatedValidator so
       #   validation errors on the attributes post up to self.
-      def json_attribute(name, type, **options)
+      def attr_json(name, type, **options)
         options.assert_valid_keys(*(AttributeDefinition::VALID_OPTIONS - [:container_attribute] + [:validate]))
 
-        self.json_attributes_registry = json_attributes_registry.with(
+        self.attr_json_registry = attr_json_registry.with(
           AttributeDefinition.new(name.to_sym, type, options.except(:validate))
         )
 
         # By default, automatically validate nested models
-        if type.kind_of?(JsonAttribute::Type::Model) && options[:validate] != false
+        if type.kind_of?(AttrJson::Type::Model) && options[:validate] != false
           # Yes. we're passing an ActiveRecord::Validations validator, but
           # it works fine for ActiveModel. If this changes in the future, tests will catch.
           self.validates_with ActiveRecord::Validations::AssociatedValidator, attributes: [name.to_sym]
         end
 
-        _json_attributes_module.module_eval do
+        _attr_jsons_module.module_eval do
           define_method("#{name}=") do |value|
-            _json_attribute_write(name.to_s, value)
+            _attr_json_write(name.to_s, value)
           end
 
           define_method("#{name}") do
@@ -114,7 +114,7 @@ module JsonAttribute
         # Only if we need to mutate it to add defaults, we'll dup it first. deep_dup not neccesary
         # since we're only modifying top-level here.
         duped = false
-        json_attributes_registry.definitions.each do |definition|
+        attr_json_registry.definitions.each do |definition|
           if definition.has_default? && ! (hash.has_key?(definition.store_key.to_s) || hash.has_key?(definition.store_key.to_sym))
             unless duped
               hash = hash.dup
@@ -133,8 +133,8 @@ module JsonAttribute
       # Define an anonymous module and include it, so can still be easily
       # overridden by concrete class. Design cribbed from ActiveRecord::Store
       # https://github.com/rails/rails/blob/4590d7729e241cb7f66e018a2a9759cb3baa36e5/activerecord/lib/active_record/store.rb
-      def _json_attributes_module # :nodoc:
-        @_json_attributes_module ||= begin
+      def _attr_jsons_module # :nodoc:
+        @_attr_jsons_module ||= begin
           mod = Module.new
           include mod
           mod
@@ -168,7 +168,7 @@ module JsonAttribute
         if respond_to?(setter)
           public_send(setter, v)
         else
-          _json_attribute_write_unknown_attribute(k, v)
+          _attr_json_write_unknown_attribute(k, v)
         end
       end
     end
@@ -176,13 +176,13 @@ module JsonAttribute
     # This attribute from ActiveRecord makes SimpleForm happy, and able to detect
     # type.
     def type_for_attribute(attr_name)
-      self.class.json_attributes_registry.type_for_attribute(attr_name)
+      self.class.attr_json_registry.type_for_attribute(attr_name)
     end
 
     # This attribute from ActiveRecord make SimpleForm happy, and able to detect
     # type.
     def has_attribute?(str)
-      self.class.json_attributes_registry.has_attribute?(str)
+      self.class.attr_json_registry.has_attribute?(str)
     end
 
     # Override from ActiveModel::Serialization to #serialize
@@ -190,7 +190,7 @@ module JsonAttribute
     # get properly type-serialized.
     def serializable_hash(*options)
       super.collect do |key, value|
-        if attribute_def = self.class.json_attributes_registry[key.to_sym]
+        if attribute_def = self.class.attr_json_registry[key.to_sym]
           key = attribute_def.store_key
           if value.kind_of?(Time) || value.kind_of?(DateTime)
             value = value.utc.change(usec: 0)
@@ -216,7 +216,7 @@ module JsonAttribute
       attributes.deep_dup
     end
 
-    # Two JsonAttribute::Model objects are equal if they are the same class
+    # Two AttrJson::Model objects are equal if they are the same class
     # or one is a subclass of the other, AND their #attributes are equal.
     # TODO: Should we allow subclasses to be equal, or should they have to be the
     # exact same class?
@@ -236,8 +236,8 @@ module JsonAttribute
 
     private
 
-    def _json_attribute_write(key, value)
-      if attribute_def = self.class.json_attributes_registry[key.to_sym]
+    def _attr_json_write(key, value)
+      if attribute_def = self.class.attr_json_registry[key.to_sym]
         attributes[key.to_s] = attribute_def.cast(value)
       else
         # TODO, strict mode, ignore, raise, allow.
@@ -246,13 +246,13 @@ module JsonAttribute
     end
 
 
-    def _json_attribute_write_unknown_attribute(key, value)
-      case json_attribute_unknown_key
+    def _attr_json_write_unknown_attribute(key, value)
+      case attr_json_unknown_key
       when :strip
         # drop it, no-op
       when :allow
         # just put it in the hash and let standard JSON casting have it
-        _json_attribute_write(key, value)
+        _attr_json_write(key, value)
       else
         # default, :raise
         raise ActiveModel::UnknownAttributeError.new(self, key)

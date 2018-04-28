@@ -1,10 +1,10 @@
- require 'json_attribute/type/array'
+ require 'attr_json/type/array'
 
- module JsonAttribute
+ module AttrJson
 
-  # Represents a `json_attribute` definition, on either a JsonAttribute::Record
-  # or JsonAttribute::Model. Normally this class is only used by
-  # JsonAttribute::AttributeDefinition::{Registry}.
+  # Represents a `attr_json` definition, on either a AttrJson::Record
+  # or AttrJson::Model. Normally this class is only used by
+  # AttrJson::AttributeDefinition::{Registry}.
   class AttributeDefinition
     NO_DEFAULT_PROVIDED = Object.new.freeze
     VALID_OPTIONS = %i{container_attribute store_key default array}.freeze
@@ -16,7 +16,7 @@
     #
     # @option options store_key [Symbol,String]
     # @option options container_attribute [Symbol,ActiveModel::Type::Value]
-    #   Only means something in a JsonAttribute::Record, no meaning in a JsonAttribute::Model.
+    #   Only means something in a AttrJson::Record, no meaning in a AttrJson::Model.
     # @option options default [Object,Symbol,Proc] (nil)
     # @option options array [Boolean] (false)
     def initialize(name, type, options = {})
@@ -44,7 +44,7 @@
       elsif ! type.is_a? ActiveModel::Type::Value
         raise ArgumentError, "Second argument (#{type}) must be a symbol or instance of an ActiveModel::Type::Value subclass"
       end
-      @type = (options[:array] == true ? JsonAttribute::Type::Array.new(type) : type)
+      @type = (options[:array] == true ? AttrJson::Type::Array.new(type) : type)
     end
 
     def cast(value)
@@ -87,7 +87,7 @@
     end
 
     def array_type?
-      type.is_a? JsonAttribute::Type::Array
+      type.is_a? AttrJson::Type::Array
     end
   end
 end

@@ -8,10 +8,10 @@
 test:
   adapter: postgresql
   encoding: unicode
-  database: <%= ENV['RAILS_PG_DB'] || "json_attribute_project_test" %>
+  database: <%= ENV['RAILS_PG_DB'] || "attr_json_project_test" %>
 
 # Warning, combustion will drop your dev database too....
 development:
   adapter: postgresql
   encoding: unicode
-  database: <%= ENV['RAILS_PG_DB'] || "json_attribute_project_dev_throwaway" %>
+  database: <%= ENV['RAILS_PG_DB'] || "attr_json_project_dev_throwaway" %>

@@ -1,11 +1,11 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'json_attribute/version'
+require 'attr_json/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "json_attribute"
-  spec.version       = JsonAttribute::VERSION
+  spec.name          = "attr_json"
+  spec.version       = AttrJson::VERSION
   spec.authors       = ["Jonathan Rochkind"]
   spec.email         = ["jonathan@dnil.net"]
 
@@ -36,8 +36,6 @@ existing ActiveRecord architecture as we can.}
   spec.require_paths = ["lib"]
 
   spec.add_runtime_dependency "activerecord", ">= 5.0.0", "< 5.3"
-  spec.add_runtime_dependency "pg", ">= 0.18.1"
-
   spec.add_development_dependency "bundler", "~> 1.14"
   spec.add_development_dependency "rake", ">= 10.0"
   spec.add_development_dependency "rspec", "~> 3.5"

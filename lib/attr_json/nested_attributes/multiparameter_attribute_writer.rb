@@ -1,4 +1,4 @@
-module JsonAttribute
+module AttrJson
   module NestedAttributes
     # Rails has a weird "multiparameter attribute" thing, that is used for simple_form's
     # date/time html entry (datetime may be ALL it's ever been used for in Rails!),
@@ -6,7 +6,7 @@ module JsonAttribute
     # It is weird code, and I do NOT really understand the implementation, but it's also
     # very low-churn, hasn't changed much in recent Rails history.
     #
-    # In Rails at present it's only on ActiveRecord, we need it used on our JsonAttribute::Models
+    # In Rails at present it's only on ActiveRecord, we need it used on our AttrJson::Models
     # too, so we copy and paste extract it here, from:
     # https://github.com/rails/rails/blob/42a16a4d6514f28e05f1c22a5f9125d194d9c7cb/activerecord/lib/active_record/attribute_assignment.rb
     #

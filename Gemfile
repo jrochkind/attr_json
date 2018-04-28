@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-# Specify your gem's dependencies in json_attribute.gemspec
+# Specify your gem's dependencies in attr_json.gemspec
 gemspec
 
 # for our integration test in a real rails env, we add em in development too,
@@ -12,6 +12,12 @@ group :test, :development do
   # that now our other tests can't be sure they're depending, this might not
   # be the way to do it.
   gem "rails", ENV["RAILS_GEM"] && ENV["RAILS_GEM"].split(",")
+
+  # Rails 5.0 won't work with pg 1.0, but that isn't actually in it's gemspec.
+  # So we specify a compatible PG_GEM spec when testing with rails 5.
+  ENV['PG_GEM'] ||= ">= 0.18.1"
+  gem "pg", ENV['PG_GEM']
+
   gem "rspec-rails", "~> 3.7"
   gem "simple_form", ">= 4.0"
   gem 'cocoon', ">= 1.2"
@@ -31,12 +37,6 @@ if ENV['RAILS_GEM']
   # RAILS_REQ is for 5.2.0.rc2. If in the future you delete this and everything
   # still passes, feel free to remove.
   gem "railties", ENV['RAILS_GEM'].split(",")
-end
-
-# Rails 5.0 won't work with pg 1.0, but that isn't actually in it's gemspec,
-# workaround, specify PG_GEM too with RAILS_GEM including 5.0.
-if ENV['PG_GEM']
-  gem "pg", ENV['PG_GEM']
 end
 
 gem "byebug"

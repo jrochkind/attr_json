@@ -2,13 +2,13 @@
 # work.
 
 if Gem.loaded_specs["activerecord"].version.release >= Gem::Version.new('5.1')
-  RSpec.describe JsonAttribute::Record::Dirty do
+  RSpec.describe AttrJson::Record::Dirty do
     let(:model_class) do
       Class.new do
-        include JsonAttribute::Model
+        include AttrJson::Model
 
-        json_attribute :str, :string
-        json_attribute :int, :integer
+        attr_json :str, :string
+        attr_json :int, :integer
       end
     end
 
@@ -18,18 +18,18 @@ if Gem.loaded_specs["activerecord"].version.release >= Gem::Version.new('5.1')
       model_class_type = model_class.to_type
 
       Class.new(ActiveRecord::Base) do
-        include JsonAttribute::Record
-        include JsonAttribute::Record::Dirty
+        include AttrJson::Record
+        include AttrJson::Record::Dirty
 
         self.table_name = "products"
-        json_attribute :str, :string
-        json_attribute :int, :integer
-        json_attribute :str_array, :string, array: true
-        json_attribute :embedded, model_class_type
+        attr_json :str, :string
+        attr_json :int, :integer
+        attr_json :str_array, :string, array: true
+        attr_json :embedded, model_class_type
       end
     end
     let(:instance) { klass.new }
-    let(:changes) { instance.json_attribute_changes }
+    let(:changes) { instance.attr_json_changes }
 
     describe "simple" do
       describe "new untouched object" do
@@ -209,7 +209,7 @@ if Gem.loaded_specs["activerecord"].version.release >= Gem::Version.new('5.1')
         end
       end
       describe "with merged" do
-        let(:changes) { instance.json_attribute_changes.merged }
+        let(:changes) { instance.attr_json_changes.merged }
         it "can see changes to ordinary attr" do
           expect(changes.saved_change_to_attribute(:string_type)).to eq [nil, "old"]
           expect(changes.saved_change_to_attribute?(:string_type)).to be true
@@ -235,7 +235,7 @@ if Gem.loaded_specs["activerecord"].version.release >= Gem::Version.new('5.1')
             i.string_type = "new_ordinary"
           end
         end
-        let(:changes) { instance.json_attribute_changes.merged(containers: false) }
+        let(:changes) { instance.attr_json_changes.merged(containers: false) }
 
         it "has the right changes" do
           expect(changes.saved_change_to_attribute(:string_type)).to eq [nil, "old_ordinary"]
@@ -285,7 +285,7 @@ if Gem.loaded_specs["activerecord"].version.release >= Gem::Version.new('5.1')
     end
 
     describe "with as_json" do
-      let(:changes) { instance.json_attribute_changes.as_json }
+      let(:changes) { instance.attr_json_changes.as_json }
       let(:instance) do
         klass.new(embedded: {str: "oldstr", int: 0}).tap do |i|
           i.save
