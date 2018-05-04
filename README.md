@@ -221,6 +221,9 @@ m.attr_jsons_before_type_cast
 
 You can nest AttrJson::Model objects inside each other, as deeply as you like.
 
+There is some support for "polymorphic" attributes that can hetereogenously contain instances of different AttrJson::Model classes, see comment docs at [AttrJson::Type::PolymorphicModel](./lib/attr_json/type/polymorphic_model.rb).
+
+
 ```ruby
 class SomeLabels
   include AttrJson::Model
@@ -385,8 +388,6 @@ Feedback of any kind of _very welcome_, please feel free to use the issue tracke
 Except for the jsonb_contains stuff using postgres jsonb contains operator, I don't believe any postgres-specific features are used. It ought to work with MySQL, testing and feedback welcome. (Or a PR to test on MySQL?).  My own interest is postgres.
 
 ### Possible future features:
-
-* Polymorphic JSON attributes.
 
 * partial updates for json hashes would be really nice: Using postgres jsonb merge operators to only overwrite what changed. In my initial attempts, AR doesn't make it easy to customize this.
 
