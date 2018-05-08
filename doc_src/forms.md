@@ -17,7 +17,7 @@ You can look at our [stub app used for integration tests](../spec/internal) as a
 Use with form builder just as you would anything else.
 
     f.text_field :some_string
-    f.datetimme_field :some_datetime
+    f.datetime_field :some_datetime
 
 It _will_ work with the weird rails multi-param setting used for date fields.
 
