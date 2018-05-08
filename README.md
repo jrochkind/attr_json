@@ -410,6 +410,16 @@ Except for the jsonb_contains stuff using postgres jsonb contains operator, I do
 * Could we make these attributes work in ordinary AR where, same
   as they do in jsonb_contains? Maybe.
 
+## Development
+
+While `attr_json` depends only on `active_record`, we run integration tests in the context of a full Rails app, in order to test working with simple_form and cocoon, among other things.  (Via [combustion](https://github.com/pat/combustion), with app skeleton at [./spec/internal](./spec/internal)).
+
+At present this does mean that all our automated tests are run in a full Rails environment, which is not great (any suggestions or PR's to fix this while still running integration tests under CI with full Rails app).
+
+Tests are in rspec, run tests simply with `./bin/rspec`.
+
+There is a `./bin/console` that will give you a console in the context of attr_json and all it's dependencies, including the combustion rails app, and the models defined there.
+
 ## Acknowledements and Prior Art
 
 * The excellent work [Sean Griffin](https://twitter.com/sgrif) did on ActiveModel::Type
