@@ -74,6 +74,9 @@ module AttrJson
         # only if it hasn't already been done. WARNING we are using internal
         # Rails API here, but only way to do this lazily, which I thought was
         # worth it. On the other hand, I think .attribute is idempotent, maybe we don't need it...
+        #
+        # We set default to empty hash, because that 'tricks' AR into knowing any
+        # application of defaults is a change that needs to be saved.
         unless attributes_to_define_after_schema_loads[container_attribute.to_s] &&
                attributes_to_define_after_schema_loads[container_attribute.to_s].first.is_a?(AttrJson::Type::ContainerAttribute)
             attribute container_attribute.to_sym, AttrJson::Type::ContainerAttribute.new(self, container_attribute)

@@ -655,6 +655,12 @@ RSpec.describe AttrJson::Record do
             end
           end
 
+          it "registers container as changed because of defaults" do
+            # even though we made no changes, we want defaults to count as changes? We think?
+            # https://github.com/jrochkind/attr_json/issues/26
+            expect(instance.json_attributes_changed?).to be true
+          end
+
           it "is all good" do
             expect(instance.value).to eq("value default")
             expect(instance.json_attributes).to eq("_store_key" => "value default")
