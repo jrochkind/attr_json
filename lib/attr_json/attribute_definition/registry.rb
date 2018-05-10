@@ -23,7 +23,7 @@ module AttrJson
     # All references in code to "definition" are to a AttrJson::AttributeDefinition instance.
     class Registry
       def initialize(hash = {})
-        @name_to_definition = hash
+        @name_to_definition = hash.dup
         @store_key_to_definition = {}
         definitions.each { |d| store_key_index!(d) }
       end
