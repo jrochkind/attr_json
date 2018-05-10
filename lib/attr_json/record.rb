@@ -79,7 +79,7 @@ module AttrJson
         # application of defaults is a change that needs to be saved.
         unless attributes_to_define_after_schema_loads[container_attribute.to_s] &&
                attributes_to_define_after_schema_loads[container_attribute.to_s].first.is_a?(AttrJson::Type::ContainerAttribute)
-            attribute container_attribute.to_sym, AttrJson::Type::ContainerAttribute.new(self, container_attribute)
+            attribute container_attribute.to_sym, AttrJson::Type::ContainerAttribute.new(self, container_attribute), default: -> {}
         end
 
         self.attr_json_registry = attr_json_registry.with(

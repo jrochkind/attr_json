@@ -137,20 +137,20 @@ module AttrJson
         end
 
         def saved_changes
-          saved_changes = model.saved_changes
-          return {} if saved_changes == {}
+          original_saved_changes = model.saved_changes
+          return {} if original_saved_changes == {}
 
           json_attr_changes = registry.definitions.collect do |definition|
-            if container_change = saved_changes[definition.container_attribute]
-              old_v = container_change[0][definition.store_key]
-              new_v = container_change[1][definition.store_key]
+            if container_change = original_saved_changes[definition.container_attribute]
+              old_v = container_change.dig(0, definition.store_key)
+              new_v = container_change.dig(1, definition.store_key)
               if old_v != new_v
                 [ definition.name.to_s, formatted_before_after(old_v, new_v, definition) ]
               end
             end
           end.compact.to_h
 
-          prepared_changes(json_attr_changes, saved_changes)
+          prepared_changes(json_attr_changes, original_saved_changes)
         end
 
         def saved_changes?
@@ -198,21 +198,21 @@ module AttrJson
         end
 
         def changes_to_save
-          changes_to_save = model.changes_to_save
+          original_changes_to_save = model.changes_to_save
 
-          return {} if changes_to_save == {}
+          return {} if original_changes_to_save == {}
 
           json_attr_changes = registry.definitions.collect do |definition|
-            if container_change = changes_to_save[definition.container_attribute]
-              old_v = container_change[0][definition.store_key]
-              new_v = container_change[1][definition.store_key]
+            if container_change = original_changes_to_save[definition.container_attribute]
+              old_v = container_change.dig(0, definition.store_key)
+              new_v = container_change.dig(1, definition.store_key)
               if old_v != new_v
                 [ definition.name.to_s, formatted_before_after(old_v, new_v, definition) ]
               end
             end
           end.compact.to_h
 
-          prepared_changes(json_attr_changes, changes_to_save)
+          prepared_changes(json_attr_changes, original_changes_to_save)
         end
 
         def has_changes_to_save?
