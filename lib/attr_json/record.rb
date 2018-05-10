@@ -40,12 +40,25 @@ module AttrJson
       #
       #       attr_json_config(default_container_attribute: "some_column")
       #    end
+      # TODO make Model match please.
       def attr_json_config(new_values = {})
-        @attr_json_config ||= Config.new(mode: :record)
         if new_values.present?
-          @attr_json_config = @attr_json_config.merge(new_values)
+          # get one without new values, then merge new values into it, and
+          # set it locally for this class.
+          @attr_json_config = attr_json_config.merge(new_values)
+        else
+          if instance_variable_defined?("@attr_json_config")
+            # we have a custom one for this class, return it.
+            @attr_json_config
+          elsif superclass.respond_to?(:attr_json_config)
+            # return superclass without setting it locally, so changes in superclass
+            # will continue effecting us.
+            superclass.attr_json_config
+          else
+            # no superclass, no nothing, set it to blank one.
+            @attr_json_config = Config.new(mode: :record)
+          end
         end
-        @attr_json_config
       end
 
 
