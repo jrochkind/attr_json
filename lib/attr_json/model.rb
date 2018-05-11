@@ -21,12 +21,18 @@ module AttrJson
   # @note Includes ActiveModel::Model whether you like it or not. TODO, should it?
   #
   # You can control what happens if you set an unknown key (one that you didn't
-  # register with `attr_json`) with the class attribute `attr_json_unknown_key`.
+  # register with `attr_json`) with the config attribute `attr_json_config(unknown_key:)`.
   # * :raise (default) raise ActiveModel::UnknownAttributeError
   # * :strip Ignore the unknown key and do not include it, without raising.
   # * :allow Allow the unknown key and it's value to be in the serialized hash,
   #     and written to the database. May be useful for legacy data or columns
   #     that other software touches, to let unknown keys just flow through.
+  #
+  #        class Something
+  #          include AttrJson::Model
+  #          attr_json_config(unknown_key: :ignore)
+  #          #...
+  #        end
   module Model
     extend ActiveSupport::Concern
 
@@ -41,13 +47,30 @@ module AttrJson
 
       class_attribute :attr_json_registry, instance_accessor: false
       self.attr_json_registry = ::AttrJson::AttributeDefinition::Registry.new
-
-      # :raise, :strip, :allow. :raise is default. Is there some way to enforce this.
-      class_attribute :attr_json_unknown_key
-      self.attr_json_unknown_key ||= :raise
     end
 
     class_methods do
+      def attr_json_config(new_values = {})
+        if new_values.present?
+          # get one without new values, then merge new values into it, and
+          # set it locally for this class.
+          @attr_json_config = attr_json_config.merge(new_values)
+        else
+          if instance_variable_defined?("@attr_json_config")
+            # we have a custom one for this class, return it.
+            @attr_json_config
+          elsif superclass.respond_to?(:attr_json_config)
+            # return superclass without setting it locally, so changes in superclass
+            # will continue effecting us.
+            superclass.attr_json_config
+          else
+            # no superclass, no nothing, set it to blank one.
+            @attr_json_config = Config.new(mode: :model)
+          end
+        end
+      end
+
+
       # Like `.new`, but translate store keys in hash
       def new_from_serializable(attributes = {})
         attributes = attributes.transform_keys do |key|
@@ -247,7 +270,7 @@ module AttrJson
 
 
     def _attr_json_write_unknown_attribute(key, value)
-      case attr_json_unknown_key
+      case self.class.attr_json_config.unknown_key
       when :strip
         # drop it, no-op
       when :allow
