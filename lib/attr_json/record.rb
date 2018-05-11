@@ -113,7 +113,7 @@ module AttrJson
                attributes_to_define_after_schema_loads[container_attribute.to_s].first.model == self
            # If this is already defined, but was for superclass, we need to define it again for
            # this class.
-           attribute container_attribute.to_sym, AttrJson::Type::ContainerAttribute.new(self, container_attribute), default: -> {}
+           attribute container_attribute.to_sym, AttrJson::Type::ContainerAttribute.new(self, container_attribute), default: -> { {} }
         end
 
         self.attr_json_registry = attr_json_registry.with(
