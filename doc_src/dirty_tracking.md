@@ -133,7 +133,7 @@ model.attr_json_changes.merged.changes_to_save
 #    and attr_jsons, as applicable for changes.
 ```
 
-This will ordinarily include your json container attributes (eg `attr_jsons`)
+This will ordinarily include your json container attributes (eg `json_attributes`)
 too, as they will show up in ordinary AR dirty tracking since they are just AR
 columns.
 
