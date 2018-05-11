@@ -138,7 +138,7 @@ module AttrJson
 
         def saved_changes
           original_saved_changes = model.saved_changes
-          return {} if original_saved_changes == {}
+          return {} if original_saved_changes.blank?
 
           json_attr_changes = registry.definitions.collect do |definition|
             if container_change = original_saved_changes[definition.container_attribute]
@@ -200,7 +200,7 @@ module AttrJson
         def changes_to_save
           original_changes_to_save = model.changes_to_save
 
-          return {} if original_changes_to_save == {}
+          return {} if original_changes_to_save.blank?
 
           json_attr_changes = registry.definitions.collect do |definition|
             if container_change = original_changes_to_save[definition.container_attribute]
