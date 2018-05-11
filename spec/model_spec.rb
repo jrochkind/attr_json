@@ -86,7 +86,7 @@ RSpec.describe AttrJson::Record do
     end
     describe ":allow" do
       before do
-        klass.attr_json_unknown_key = :allow
+        klass.attr_json_config(unknown_key: :allow)
       end
       it "allows" do
         instance.assign_attributes(attributes)
@@ -101,7 +101,7 @@ RSpec.describe AttrJson::Record do
     end
     describe ":strip" do
       before do
-        klass.attr_json_unknown_key = :strip
+        klass.attr_json_config(unknown_key: :strip)
       end
       it "strips" do
         instance.assign_attributes(attributes)
