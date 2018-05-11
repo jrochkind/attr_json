@@ -106,12 +106,14 @@ module AttrJson
         # Rails API here, but only way to do this lazily, which I thought was
         # worth it. On the other hand, I think .attribute is idempotent, maybe we don't need it...
         #
-        # If this is already defined, but was for superclass, we need to define it again for
-        # this class.
+        # We set default to empty hash, because that 'tricks' AR into knowing any
+        # application of defaults is a change that needs to be saved.
         unless attributes_to_define_after_schema_loads[container_attribute.to_s] &&
                attributes_to_define_after_schema_loads[container_attribute.to_s].first.is_a?(AttrJson::Type::ContainerAttribute) &&
                attributes_to_define_after_schema_loads[container_attribute.to_s].first.model == self
-            attribute container_attribute.to_sym, AttrJson::Type::ContainerAttribute.new(self, container_attribute)
+           # If this is already defined, but was for superclass, we need to define it again for
+           # this class.
+           attribute container_attribute.to_sym, AttrJson::Type::ContainerAttribute.new(self, container_attribute), default: -> { {} }
         end
 
         self.attr_json_registry = attr_json_registry.with(

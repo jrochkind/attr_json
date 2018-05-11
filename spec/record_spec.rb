@@ -655,6 +655,12 @@ RSpec.describe AttrJson::Record do
             end
           end
 
+          it "registers container as changed because of defaults" do
+            # even though we made no changes, we want defaults to count as changes? We think?
+            # https://github.com/jrochkind/attr_json/issues/26
+            expect(instance.json_attributes_changed?).to be true
+          end
+
           it "is all good" do
             expect(instance.value).to eq("value default")
             expect(instance.json_attributes).to eq("_store_key" => "value default")
@@ -668,6 +674,16 @@ RSpec.describe AttrJson::Record do
 
             instance.other_attributes = {}
             expect(instance.other_attributes).to eq("_store_key" => "other value default")
+          end
+
+          it "saves defaults when they are the only changes" do
+            instance.save!
+            # better way to get what's really in the db skipping model?
+            saved_data = ActiveRecord::Base.connection.execute("select * from products where id = #{instance.id}").to_a.first
+            expect(saved_data["json_attributes"]).to be_present
+            expect(JSON.parse(saved_data["json_attributes"])).to eq("_store_key"=>"value default")
+            expect(saved_data["other_attributes"]).to be_present
+            expect(JSON.parse(saved_data["other_attributes"])).to eq("_store_key"=>"other value default")
           end
         end
       end
