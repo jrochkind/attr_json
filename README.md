@@ -116,7 +116,13 @@ model.json_attributes_before_type_cast # => string containing: {"__my_string":"f
 
 You can of course combine `array`, `default`, `store_key`, and `container_attribute`
 params however you like, with whatever types you like: symbols resolvable
-with `ActiveModel::Type.lookup`, or any [ActiveModel::Type::Value](https://apidock.com/rails/ActiveRecord/Attributes/ClassMethods/attribute) subclass, built-in or custom.
+with `ActiveRecord::Type.lookup`, or any [ActiveModel::Type::Value](https://apidock.com/rails/ActiveRecord/Attributes/ClassMethods/attribute) subclass, built-in or custom.
+
+You can register your custom `ActiveModel::Type::Value` in a Rails initializer or early on in your app boot sequence:
+
+```ruby
+ActiveRecord::Type.register(:my_type, MyActiveModelTypeSubclass)
+```
 
 <a name="querying"></a>
 ## Querying
