@@ -30,7 +30,7 @@ RSpec.describe AttrJson::Record do
   [
     [:integer, 12, "12"],
     [:string, "12", 12],
-    [:decimal, BigDecimal.new("10.01"), "10.0100"],
+    [:decimal, BigDecimal("10.01"), "10.0100"],
     [:boolean, true, "t"],
     [:date, Date.parse("2017-04-28"), "2017-04-28"],
     [:datetime, DateTime.parse("2017-04-04 04:45:00").to_time, "2017-04-04T04:45:00Z"],
