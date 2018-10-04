@@ -47,6 +47,38 @@ RSpec.describe AttrJson::Record do
       expect(subclass_inst.int_array).to eq([1,2,3])
       expect(subclass_inst.parent_str).to eq("parent_str")
     end
+
+    describe "double sub-class" do
+      let(:double_subclass) do
+        # Rails STI needs a class name, so an anonymous class won't do, but
+        # this will.
+        stub_const(
+          "TestDoubleSubclass",
+          Class.new(subclass) do
+            attr_json :double_str, :string
+            attr_json :double_int_array, :integer, array: true
+          end
+        )
+      end
+      let(:subclass_inst) { double_subclass.new }
+
+      it "persists data" do
+        subclass_inst.double_str = "foo"
+        subclass_inst.double_int_array = [1,2,3]
+        subclass_inst.parent_str = "parent_str"
+        subclass_inst.save!
+
+        expect(subclass_inst.double_str).to eq("foo")
+        expect(subclass_inst.double_int_array).to eq([1,2,3])
+        expect(subclass_inst.parent_str).to eq("parent_str")
+
+        subclass_inst.reload
+
+        expect(subclass_inst.double_str).to eq("foo")
+        expect(subclass_inst.double_int_array).to eq([1,2,3])
+        expect(subclass_inst.parent_str).to eq("parent_str")
+      end
+    end
   end
 end
 
