@@ -13,6 +13,19 @@ RSpec.describe AttrJson::Record do
     end
   end
   let(:instance) { klass.new }
+  
+  let(:custom_type) do
+    Class.new(ActiveModel::Type::Value)
+  end
+  let(:klass_with_custom) do
+    Class.new(ActiveRecord::Base) do
+      include AttrJson::Record
+
+      self.table_name = "products"
+      attr_json :custom, :type_raw
+    end
+  end
+  let(:instance_custom) { klass_with_custom.new }
 
   [
     [:integer, 12, "12"],
@@ -81,6 +94,20 @@ RSpec.describe AttrJson::Record do
     instance.save!
     instance.reload
     expect(instance.int_array).to eq([1])
+  end
+
+  it 'supports custom ActiveRecord registered types' do
+    expect { instance_custom }.to raise_error ArgumentError
+
+    ActiveRecord::Type.register(:type_raw, custom_type)
+    expect { instance_custom }.to_not raise_error
+
+    instance_custom.custom = 'foo'
+    expect(instance_custom.json_attributes).to eq('custom' => 'foo')
+    
+    instance_custom.save!
+    instance_custom.reload
+    expect(instance_custom.custom).to eq 'foo'
   end
 
   # TODO: Should it LET you redefine instead, and spec for that? Have to pay
