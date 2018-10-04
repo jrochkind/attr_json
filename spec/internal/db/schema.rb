@@ -25,4 +25,9 @@ ActiveRecord::Schema.define do
     t.jsonb    "json_attributes"
   end
 
+  create_table "st_inherit_widgets" do |t|
+    t.jsonb "json_attributes"
+    t.string "title"
+    t.string "type"
+  end
 end
