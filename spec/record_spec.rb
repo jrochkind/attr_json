@@ -13,7 +13,7 @@ RSpec.describe AttrJson::Record do
     end
   end
   let(:instance) { klass.new }
-  
+
   let(:custom_type) do
     Class.new(ActiveModel::Type::Value)
   end
@@ -104,7 +104,7 @@ RSpec.describe AttrJson::Record do
 
     instance_custom.custom = 'foo'
     expect(instance_custom.json_attributes).to eq('custom' => 'foo')
-    
+
     instance_custom.save!
     instance_custom.reload
     expect(instance_custom.custom).to eq 'foo'
@@ -496,7 +496,7 @@ RSpec.describe AttrJson::Record do
       expect(instance.other_attributes).to eq("value" => "Y")
       expect(instance.json_attributes).to be_blank
 
-      instance.update_attributes!({ value: "Z" })
+      instance.update!({ value: "Z" })
       instance.reload
       expect(instance.value).to eq("Z")
       expect(instance.other_attributes).to eq("value" => "Z")
@@ -534,7 +534,7 @@ RSpec.describe AttrJson::Record do
         expect(instance.other_attributes).to eq("value" => "Y")
         expect(instance.json_attributes).to be_blank
 
-        instance.update_attributes!({ value: "Z" })
+        instance.update!({ value: "Z" })
         instance.reload
         expect(instance.value).to eq("Z")
         expect(instance.other_attributes).to eq("value" => "Z")
@@ -580,7 +580,7 @@ RSpec.describe AttrJson::Record do
         expect(instance.json_attributes).to eq("value" => "A", "value2" => "B")
         expect(instance.other_attributes).to be_blank
 
-        instance.update_attributes!({ json_attributes: { value: "C", value2: "D" } })
+        instance.update!({ json_attributes: { value: "C", value2: "D" } })
         instance.reload
         expect(instance.value).to eq("C")
         expect(instance.value2).to eq("D")
@@ -609,7 +609,7 @@ RSpec.describe AttrJson::Record do
         expect(instance.json_attributes).to eq("value" => "C", "value2" => "D")
         expect(instance.other_attributes).to eq("foo" => "A", "bar" => "B")
 
-        instance.update_attributes!({ json_attributes: { value: "K", value2: "L" }, other_attributes: { foo: "M", bar: "N"} })
+        instance.update!({ json_attributes: { value: "K", value2: "L" }, other_attributes: { foo: "M", bar: "N"} })
         instance.reload
         expect(instance.foo).to eq("M")
         expect(instance.bar).to eq("N")
