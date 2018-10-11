@@ -9,3 +9,4 @@
 /spec/internal/tmp/cache
 /tmp/
 .byebug_history
+/gemfiles/*.lock

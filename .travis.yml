@@ -9,10 +9,13 @@ cache: bundler
 rvm:
   - 2.4
   - 2.5.0
-env:
-  - RAILS_GEM="~> 5.0.0" PG_GEM="~> 0.18"
-  - RAILS_GEM="~> 5.1.0"
-  - RAILS_GEM=">= 5.2.0.rc2,< 5.3.0"
-  - RAILS_GEM="edge"
+gemfile:
+  - gemfiles/rails_5_0.gemfile
+  - gemfiles/rails_5_1.gemfile
+  - gemfiles/rails_5_2.gemfile
+  - gemfiles/rails_edge_6.gemfile
 before_install:
   - gem install bundler -v 1.14.6
+matrix:
+  allow_failures:
+  - gemfile: gemfiles/rails_edge_6.gemfile
