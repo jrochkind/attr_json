@@ -99,7 +99,7 @@ Remember to add `include AttrJson::NestedAttributes` to all your AttrJson::Model
 
 One of the nice parts about [simple_form](https://github.com/plataformatec/simple_form) is how you can just give it `f.input`, and it figures out the right input for you.
 
-AttrJson by default, on an ActiveRecord::Base, doesn't register it's `attr_jsons` in the right way for simple_form to reflect and figure out their types. However, you can ask it to with `rails_attribute: true`.
+AttrJson by default registers it's attributes with `ActiveRecord.attribute`; therefore simple_form can reflect and figure out their types.
 
 ```ruby
 class SomeRecord < ActiveRecord::Base

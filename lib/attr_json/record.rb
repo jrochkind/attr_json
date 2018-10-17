@@ -85,13 +85,13 @@ module AttrJson
       # @option options [Boolean] :validate (true) Create an ActiveRecord::Validations::AssociatedValidator so
       #   validation errors on the attributes post up to self.
       #
-      # @option options [Boolean] :rails_attribute (false) Create an actual ActiveRecord
+      # @option options [Boolean] :rails_attribute (true) Create an actual ActiveRecord
       #    `attribute` for name param. A Rails attribute isn't needed for our functionality,
       #    but registering thusly will let the type be picked up by simple_form and
-      #    other tools that may look for it via Rails attribute APIs.
+      #    other tools that may look for it via Rails attribute APIs. By default we do this.
       def attr_json(name, type, **options)
         options = {
-          rails_attribute: false,
+          rails_attribute: true,
           validate: true,
           container_attribute: self.attr_json_config.default_container_attribute
         }.merge!(options)
@@ -126,7 +126,8 @@ module AttrJson
         end
 
         # We don't actually use this for anything, we provide our own covers. But registering
-        # it with usual system will let simple_form and maybe others find it.
+        # it with usual system will let simple_form and maybe others find it, so we do it
+        # by default, as it keeps things sensible.
         if options[:rails_attribute]
           self.attribute name.to_sym, self.attr_json_registry.fetch(name).type
         end

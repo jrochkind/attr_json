@@ -717,25 +717,38 @@ RSpec.describe AttrJson::Record do
     end
 
     describe "rails_attribute" do
-      it "does not register rails attribute by default" do
-        expect(instance.attributes.keys).not_to include("str")
-      end
-      describe "with rails_attribute: true" do
+      describe "with default value for rails_attribute" do
         let(:klass) do
           Class.new(ActiveRecord::Base) do
             include AttrJson::Record
 
             self.table_name = "products"
-            attr_json :str, :string, array: true, rails_attribute: true
+            attr_json :str, :string, array: true
           end
         end
+
         it "registers attribute and type" do
           expect(instance.attributes.keys).to include("str")
           expect(instance.type_for_attribute("str")).to be_kind_of(AttrJson::Type::Array)
           expect(instance.type_for_attribute("str").base_type).to be_kind_of(ActiveModel::Type::String)
         end
+
         it "still has our custom methods on top" do
           skip "gah, how do we test this"
+        end
+      end
+
+      describe "with rails_attribute:false" do
+        let(:klass) do
+          Class.new(ActiveRecord::Base) do
+            include AttrJson::Record
+
+            self.table_name = "products"
+            attr_json :str, :string, array: true, rails_attribute: false
+          end
+        end
+        it "does not register rails attribute" do
+          expect(instance.attributes.keys).not_to include("str")
         end
       end
     end
