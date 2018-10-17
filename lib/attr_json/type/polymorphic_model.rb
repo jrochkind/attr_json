@@ -112,6 +112,8 @@ module AttrJson
       end
 
       def serialize(v)
+        return nil if v.nil?
+
         model_name = v.class.name
         type = type_for_model_name(model_name)
 
