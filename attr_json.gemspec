@@ -42,11 +42,16 @@ attributes use as much of the existing ActiveRecord architecture as we can.}
 
   spec.required_ruby_version = '>= 2.4.0'
 
-  spec.add_runtime_dependency "activerecord", ">= 5.0.0", "< 5.3"
+  # Only to get CI to work on versions of Rails other than we release with,
+  # should never release a gem with RAILS_GEM set!
+  unless ENV['APPRAISAL_INITIALIZED'] || ENV["TRAVIS"]
+    spec.add_runtime_dependency "activerecord", ">= 5.0.0", "< 5.3"
+  end
 
   spec.add_development_dependency "bundler", "~> 1.14"
   spec.add_development_dependency "rake", ">= 10.0"
   spec.add_development_dependency "rspec", "~> 3.7"
   spec.add_development_dependency "database_cleaner", "~> 1.5"
   spec.add_development_dependency "yard-activesupport-concern"
+  spec.add_development_dependency "appraisal", "~> 2.2"
 end

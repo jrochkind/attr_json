@@ -424,6 +424,8 @@ At present this does mean that all our automated tests are run in a full Rails e
 
 Tests are in rspec, run tests simply with `./bin/rspec`.
 
+We use [appraisal](https://github.com/thoughtbot/appraisal) to test with multiple rails versions, including on travis. Locally you can run `bundle exec appraisal rspec` to run tests multiple times for each rails version, or eg `bundle exec appraisal rails-5-1 rspec`. If the `Gemfile` _or_ `Appraisal` file changes, you may need to re-run `bundle exec appraisal install` and commit changes. (Try to put dev dependencies in gemspec instead of Gemfile, but sometimes it gets weird.)
+
 There is a `./bin/console` that will give you a console in the context of attr_json and all it's dependencies, including the combustion rails app, and the models defined there.
 
 ## Acknowledements and Prior Art
