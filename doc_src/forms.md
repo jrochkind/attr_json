@@ -33,6 +33,14 @@ The ActionView+ActiveRecord architecture isn't really setup for an array of "pri
       <%= f.text_field(:string_array, value: str, multiple: true) %>
     <% end %>
 
+Or with simple_form, perhaps:
+
+    <%= f.input :string_array do %>
+        <% f.object.string_array.each do |str| %>
+            <%= f.text_field(:string_array, value: str, class: "form-control", multiple: true) %>
+        <% end %>
+    <% end %>
+
 That will display, submit and update fine, although when you try to handle reporting validation errors, you'll probably only be able to report on the array, not the specific element.
 
 You may want to [use SimpleForm and create a custom input](https://github.com/plataformatec/simple_form#custom-inputs) to handle arrays of primitives in the way you want. Or you may want to consider an array of AttrJson::Model value types instead -- you can have a model with only one attribute! It can be handled more conventionally, see below.
