@@ -23,27 +23,6 @@ It _will_ work with the weird rails multi-param setting used for date fields.
 
 Don't forget you gotta handle strong params same as you would for any ordinary attribute.
 
-### Arrays of simple attributes
-
-    attr_json :string_array, :string, array: true
-
-The ActionView+ActiveRecord architecture isn't really setup for an array of "primitives", but you can make it work:
-
-    <% f.object.string_array.each do |str| %>
-      <%= f.text_field(:string_array, value: str, multiple: true) %>
-    <% end %>
-
-Or with simple_form, perhaps:
-
-    <%= f.input :string_array do %>
-        <% f.object.string_array.each do |str| %>
-            <%= f.text_field(:string_array, value: str, class: "form-control", multiple: true) %>
-        <% end %>
-    <% end %>
-
-That will display, submit and update fine, although when you try to handle reporting validation errors, you'll probably only be able to report on the array, not the specific element.
-
-You may want to [use SimpleForm and create a custom input](https://github.com/plataformatec/simple_form#custom-inputs) to handle arrays of primitives in the way you want. Or you may want to consider an array of AttrJson::Model value types instead -- you can have a model with only one attribute! It can be handled more conventionally, see below.
 
 ### Embedded/Nested AttrJson::Model attributes
 
@@ -112,6 +91,50 @@ end
 This will use the [ActiveRecord::Base.attribute](http://api.rubyonrails.org/classes/ActiveRecord/Attributes/ClassMethods.html) method to register the attribute and type, and SimpleForm will now be able to automatically look up attribute type just as you expect. (Q: Should we make this default on?)
 
 You don't need to do this in your nested AttrJson::Model classes, SimpleForm will already be able to reflect on their attribute types just fine as is.
+
+### Arrays of simple attributes
+
+    attr_json :string_array, :string, array: true
+
+The ActionView+ActiveRecord architecture isn't really setup for an array of "primitives", but we can kind of make it work:
+
+    <% f.object.string_array.each do |str| %>
+      <%= f.text_field(:string_array, value: str, multiple: true) %>
+    <% end %>
+
+Or with simple_form, perhaps:
+
+    <%= f.input :string_array do %>
+        <% f.object.string_array.each do |str| %>
+            <%= f.text_field(:string_array, value: str, class: "form-control", multiple: true) %>
+        <% end %>
+    <% end %>
+
+That will display, submit and update fine, although when you try to handle reporting validation errors, you'll probably only be able to report on the array, not the specific element.
+
+The bigger problem is that if you use some javascript to allow people to add/remove elements,
+and they remove _all_ elements, Rails params get no input for this attribute, and instead of setting it to empty array, doesn't touch it as in-memory. This is similar to the problem
+with Rails collection checkboxes, and we can use a similar solution, of a hidden input value
+making sure there's always at least one value.
+
+    <%= f.hidden_field "string_array[]", "" %>
+    <%= f.input :string_array do %>
+        <% f.object.string_array.each do |str| %>
+            <%= f.text_field(:string_array, value: str, class: "form-control", multiple: true) %>
+        <% end %>
+    <% end %>
+
+But now we'll get an extra empty string added on to our array on every submit! We need to filter
+out empty strings. `attr_json_accepts_nested_attributes_for` has an `_attributes=` method implementation when it recognizes an array of primitives, that simply filteres out empty strings. So! With `attr_json_accepts_nested_attributes_for :string_array`:
+
+    <%= f.hidden_field "string_array_attributes[]", "" %>
+    <%= f.input :string_array do %>
+        <% f.object.string_array.each do |str| %>
+            <%= f.text_field(:string_array_attributes, value: str, class: "form-control", multiple: true) %>
+        <% end %>
+    <% end %>
+
+This is definitely getting a bit obtuse. You may want to consider an array of AttrJson::Model value types instead -- you can have a model with only one attribute! It can be handled somewhat more conventionally, as above.
 
 ## Cocoon
 

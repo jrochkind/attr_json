@@ -41,6 +41,12 @@ module AttrJson
         ]
       end
 
+      # Hacky, hard-coded classes, but used in our weird primitive implementation in NestedAttributes,
+      # better than putting the conditionals there
+      def base_type_primitive?
+        !(base_type.is_a?(AttrJson::Type::Model) || base_type.is_a?(AttrJson::Type::PolymorphicModel))
+      end
+
       protected
       def convert_to_array(value)
         if value.kind_of?(Hash)

@@ -21,8 +21,9 @@ RSpec.describe AttrJson::NestedAttributes do
 
       attr_json :one_model, model_class_type
       attr_json :many_models, model_class_type, array: true
+      attr_json :array_of_strings, :string, array: true
 
-      attr_json_accepts_nested_attributes_for :one_model, :many_models
+      attr_json_accepts_nested_attributes_for :one_model, :many_models, :array_of_strings
     end
   end
   let(:instance) { klass.new }
@@ -167,6 +168,34 @@ RSpec.describe AttrJson::NestedAttributes do
         )
         expect(instance.many_models).to eq [model_class.new(str: "yep")]
       end
+    end
+  end
+
+  describe "array of primitives" do
+    let(:setter) { :array_of_strings= }
+
+    it "should_define_an_attribute_writer_method" do
+      expect(instance).to respond_to setter
+    end
+
+    it "assign an array of strings on update" do
+      instance.update({ array_of_strings_attributes: ["one", "two", "three"] })
+
+      expect(instance.array_of_strings).to be_present
+      expect(instance.array_of_strings).to eq(["one", "two", "three"])
+    end
+
+    it "removes nils and empty strings on update" do
+      instance.update({ array_of_strings_attributes: ["", "one", nil, "two", "", "", "three"] })
+
+      expect(instance.array_of_strings).to be_present
+      expect(instance.array_of_strings).to eq(["one", "two", "three"])
+    end
+
+    it "assign an empty array" do
+      instance.update({ array_of_strings_attributes: [] })
+
+      expect(instance.array_of_strings).to eq([])
     end
   end
 

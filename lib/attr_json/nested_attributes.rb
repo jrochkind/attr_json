@@ -29,6 +29,11 @@ module AttrJson
       # * _allow_destroy_, no such option. Effectively always true, doesn't make sense to try to gate this with our implementation.
       # * _update_only_, no such option. Not really relevant to this architecture where you're embedded models have no independent existence.
       #
+      # If called on an array of 'primitive' (not AttrJson::Model) objects, it will do a kind of weird
+      # thing where it creates an `#{attribute_name}_attributes=` method that does nothing
+      # but filter out empty strings and nil values. This can be convenient in hackily form
+      # handling array of primitives, see guide doc on forms.
+      #
       # @overload attr_json_accepts_nested_attributes_for(define_build_method: true, reject_if: nil, limit: nil)
       #   @param define_build_method [Boolean] Default true, provide `build_attribute_name`
       #     method that works like you expect. [Cocoon](https://github.com/nathanvda/cocoon),
@@ -74,7 +79,8 @@ module AttrJson
             end
           end
 
-          if options[:define_build_method]
+          # No build method for our wacky array of primitive type.
+          if options[:define_build_method] && !(attr_def.array_type? && attr_def.type.base_type_primitive?)
             _attr_jsons_module.module_eval do
               build_method_name = "build_#{attr_name.to_s.singularize}"
               if method_defined?(build_method_name)
