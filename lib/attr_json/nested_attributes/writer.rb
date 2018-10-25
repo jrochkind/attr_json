@@ -16,7 +16,11 @@ module AttrJson
 
       def assign_nested_attributes(attributes)
         if attr_def.array_type?
-          assign_nested_attributes_for_model_array(attributes)
+          if attr_def.type.base_type_primitive?
+            assign_nested_attributes_for_primitive_array(attributes)
+          else
+            assign_nested_attributes_for_model_array(attributes)
+          end
         else
           assign_nested_attributes_for_single_model(attributes)
         end
@@ -36,6 +40,27 @@ module AttrJson
           # No need to mark "id" as unassignable in our AttrJson::Model-based nested models
           ["_destroy"]
         end
+      end
+
+
+      # Implementation for an `#{attribute_name}_attributes=` method, when the attr_json
+      # attribute in question is recognized as an array of primitive values (not nested models)
+      #
+      # Really just exists to filter out blank/empty strings with reject_if.
+      #
+      # It will insist on filtering out empty strings and nils from arrays (ignores reject_if argument),
+      # since that's the only reason to use it. It will respect limit argument.
+      #
+      # Filtering out empty strings can be convenient for using a hidden field in a form to
+      # make sure an empty array gets set if all individual fields are removed from form using
+      # cocoon-like javascript.
+      def assign_nested_attributes_for_primitive_array(attributes_array)
+        options = nested_attributes_options[attr_name]
+        check_record_limit!(options[:limit], attributes_array)
+
+        attributes_array = attributes_array.reject { |value| value.blank? }
+
+        model_send("#{attr_name}=", attributes_array)
       end
 
       # Copied with signficant modifications from:
