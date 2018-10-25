@@ -341,6 +341,36 @@ RSpec.describe AttrJson::NestedAttributes do
         expect(instance.json_date).to eq Date.new(year_str.to_i, month_str.to_i, day_str.to_i)
       end
     end
+  end
 
+  describe "defaults" do
+    let(:klass) do
+      model_class_type = model_class.to_type
+      Class.new(ActiveRecord::Base) do
+        include AttrJson::Record
+        include AttrJson::NestedAttributes
+
+        attr_json_config(default_accepts_nested_attributes: { reject_if: :all_blank })
+
+        self.table_name = "products"
+
+        attr_json :one_model, model_class_type, accepts_nested_attributes: false
+        attr_json :many_models, model_class_type, array: true
+      end
+    end
+
+    it "applies default" do
+      expect(instance).to respond_to(:many_models_attributes=)
+
+      instance.many_models_attributes = [{}]
+      expect(instance.many_models).to eq([])
+
+      instance.many_models_attributes = [{str: "one"}]
+      expect(instance.many_models.first.str).to eq("one")
+    end
+
+    it "overrides false" do
+      expect(instance).not_to respond_to(:one_model_attributes=)
+    end
   end
 end
