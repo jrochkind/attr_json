@@ -93,9 +93,10 @@ module AttrJson
         options = {
           rails_attribute: false,
           validate: true,
-          container_attribute: self.attr_json_config.default_container_attribute
+          container_attribute: self.attr_json_config.default_container_attribute,
+          accepts_nested_attributes: self.attr_json_config.default_accepts_nested_attributes
         }.merge!(options)
-        options.assert_valid_keys(AttributeDefinition::VALID_OPTIONS + [:validate, :rails_attribute])
+        options.assert_valid_keys(AttributeDefinition::VALID_OPTIONS + [:validate, :rails_attribute, :accepts_nested_attributes])
         container_attribute = options[:container_attribute]
 
         # TODO arg check container_attribute make sure it exists. Hard cause
@@ -117,7 +118,7 @@ module AttrJson
         end
 
         self.attr_json_registry = attr_json_registry.with(
-          AttributeDefinition.new(name.to_sym, type, options.except(:rails_attribute, :validate))
+          AttributeDefinition.new(name.to_sym, type, options.except(:rails_attribute, :validate, :accepts_nested_attributes))
         )
 
         # By default, automatically validate nested models
@@ -157,6 +158,12 @@ module AttrJson
             # https://github.com/rails/rails/blob/74c3e43fba458b9b863d27f0c45fd2d8dc603cbc/activerecord/lib/active_record/store.rb#L90-L96
             read_store_attribute(attribute_def.container_attribute, attribute_def.store_key)
           end
+        end
+
+        # Default attr_json_accepts_nested_attributes_for values
+        if options[:accepts_nested_attributes]
+          options = options[:accepts_nested_attributes] == true ? {} : options[:accepts_nested_attributes]
+          self.attr_json_accepts_nested_attributes_for name, **options
         end
       end
 

@@ -68,6 +68,37 @@ It should just work as you are expecting! You have to handle strong params as no
 
 Note that the `AttrJsons::NestedAttributes` module also adds convenient rails-style `build_` methods for you.  In the case above, you get a `build_one_event` and `build_many_event` (note singularization, cause that's how Rails does) method, which you can use much like Rails' `build_to_one_association` or `to_many_assocication.build` methods. You can turn off creation of the build methods by passing `define_build_method: false` to `attr_json_accepts_nested_attributes_for`.
 
+### Shortcuts for attr_json_accepts_nested_attributes_for
+
+You can automatically add the 'accepts nested attributes' call when you define your attribute, including with additional arguments like `reject_if`.
+
+```ruby
+class SomeRecord < ApplicationRecord
+  include AttrJson::Record
+  include AttrJson::NestedAttributes
+
+  attr_json :one_event, Event.to_type, accepts_nested_attributes: true
+  attr_json :many_events, Event.to_type, array: true, accepts_nested_attributes: { reject_if: :all_blank }
+end
+```
+
+You can also set defaults for the whole class:
+
+```ruby
+class SomeRecord < ApplicationRecord
+  include AttrJson::Record
+  include AttrJson::NestedAttributes
+
+  attr_json_config(default_accepts_nested_attributes_for: { reject_if: :all_blank })
+
+  attr_json :one_event, Event.to_type, accepts_nested_attributes: false # override default
+  attr_json :many_events, Event.to_type, array: true
+end
+```
+
+If you're doing a lot of rails-style nested attributes form handling, the above probably makes sense. More convenient than having to do it each time, or repeat every param in another
+long call.
+
 ### Nested multi-level/compound embedded models
 
 A model inside a model inside a model?  Some single and some array? No problem, should just work.
