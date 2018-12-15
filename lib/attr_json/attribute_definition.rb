@@ -12,7 +12,9 @@
     attr_reader :name, :type, :original_args, :container_attribute
 
     # @param name [Symbol,String]
-    # @param type [Symbol,ActiveModel::Type::Value]
+    # @param type [Symbol,ActiveModel::Type::Value] Symbol is looked up in
+    #   ActiveRecord::Type.lookup, but with `adapter: nil` for no custom
+    #   adapter-specific lookup.
     #
     # @option options store_key [Symbol,String]
     # @option options container_attribute [Symbol,ActiveModel::Type::Value]
@@ -40,7 +42,12 @@
         # ActiveModel::Type.lookup may make more sense, but ActiveModel::Type::Date
         # seems to have a bug with multi-param assignment. Mostly they return
         # the same types, but ActiveRecord::Type::Date works with multi-param assignment.
-        type = ActiveRecord::Type.lookup(type)
+        #
+        # We pass `adapter: nil` to avoid triggering a db connection.
+        # See: https://github.com/jrochkind/attr_json/issues/41
+        # This is at the "cost" of not using any adapter-specific types... which
+        # maybe preferable anyway?
+        type = ActiveRecord::Type.lookup(type, adapter: nil)
       elsif ! type.is_a? ActiveModel::Type::Value
         raise ArgumentError, "Second argument (#{type}) must be a symbol or instance of an ActiveModel::Type::Value subclass"
       end
