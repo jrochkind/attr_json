@@ -124,6 +124,17 @@ RSpec.describe AttrJson::Record do
     }.to raise_error(ArgumentError, /Can't add, conflict with existing attribute name `value`/)
   end
 
+  it "can define without triggering a db connection" do
+    expect(ActiveRecord::Base).not_to receive(:connection)
+
+    Class.new(ActiveRecord::Base) do
+      include AttrJson::Record
+
+      self.table_name = "products"
+      attr_json :value, :string
+    end
+  end
+
   context "initialize" do
     it "casts and fills in defaults" do
       o = klass.new(int: "12", str: 12, int_array: "12")
