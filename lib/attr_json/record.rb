@@ -18,7 +18,7 @@ module AttrJson
     extend ActiveSupport::Concern
 
     included do
-      unless self < ActiveRecord::Base
+      unless self <= ActiveRecord::Base
         raise TypeError, "AttrJson::Record can only be used with an ActiveRecord::Base model. #{self} does not appear to be one. Are you looking for ::AttrJson::Model?"
       end
 
