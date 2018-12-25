@@ -140,18 +140,11 @@ RSpec.describe AttrJson::Record do
   end
 
   describe "with weird input" do
-    it "ignores input" do
+    it "raises" do
       # this SEEMS to be consistent with what other ActiveModel::Types do...
-      instance.model = "this is not a model"
-      expect(instance.model).to be nil
-
-      # i'd be fine if it set key to nil, but current implementation
-      # seems to not set key at all, which is also fine.
-      expect(instance.json_attributes).to eq({})
-
-      instance.save!
-
-      expect(instance.json_attributes_before_type_cast).to eq("{}")
+      expect {
+        instance.model = "this is not a model"
+      }.to raise_error(AttrJson::Type::Model::BadCast)
     end
   end
 

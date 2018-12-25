@@ -8,6 +8,8 @@ module AttrJson
     # but normally that's only done in AttrJson::Model.to_type, there isn't
     # an anticipated need to create from any other place.
     class Model < ::ActiveModel::Type::Value
+      class BadCast < ArgumentError ; end
+
       attr_accessor :model
       def initialize(model)
         #TODO type check, it really better be a AttrJson::Model. maybe?
@@ -34,10 +36,11 @@ module AttrJson
           # TODO Maybe we ought not to do this on #to_h?
           model.new_from_serializable(v.to_h)
         else
-          # Bad input? Most existing ActiveModel::Types seem to decide
-          # either nil, or a base value like the empty string. They don't
-          # raise. So we won't either, just nil.
-          nil
+          # Bad input. Originally we were trying to return nil, to be like
+          # existing ActiveRecord which kind of silently does a basic value
+          # with null input. But that ended up making things confusing, let's
+          # just raise.
+          raise BadCast.new("Can not cast from #{v.inspect} to #{self.type}")
         end
       end
 
