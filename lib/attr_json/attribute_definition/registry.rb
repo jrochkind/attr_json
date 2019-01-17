@@ -54,6 +54,11 @@ module AttrJson
         @name_to_definition.values
       end
 
+      # Returns all registered attributes as an array of symbols
+      def attribute_names
+        @name_to_definition.keys
+      end
+
       def container_attributes
         @store_key_to_definition.keys.collect(&:to_s)
       end
