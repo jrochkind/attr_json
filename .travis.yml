@@ -7,8 +7,8 @@ addons:
 language: ruby
 cache: bundler
 rvm:
-  - 2.4
-  - 2.5.1
+  - 2.4.5
+  - 2.5.3
 gemfile:
   - gemfiles/rails_5_0.gemfile
   - gemfiles/rails_5_1.gemfile
@@ -19,3 +19,7 @@ before_install:
 matrix:
   allow_failures:
   - gemfile: gemfiles/rails_edge_6.gemfile
+  fast_finish: true
+  exclude:
+    - gemfile: gemfiles/rails_edge_6.gemfile
+      rvm: 2.4.5
