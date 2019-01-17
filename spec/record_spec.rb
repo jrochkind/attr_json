@@ -135,6 +135,10 @@ RSpec.describe AttrJson::Record do
     end
   end
 
+  it "has registered attributes on registry" do
+    expect(klass.attr_json_registry.attribute_names).to match([:str, :int, :int_array, :int_with_default])
+  end
+
   context "initialize" do
     it "casts and fills in defaults" do
       o = klass.new(int: "12", str: 12, int_array: "12")

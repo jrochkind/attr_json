@@ -188,5 +188,20 @@ RSpec.describe AttrJson::Record do
     end
   end
 
+  describe "registered attributes" do
+    let(:klass) do
+      Class.new do
+        include AttrJson::Model
+
+        attr_json :str_one, :string
+        attr_json "int_one", :integer
+      end
+    end
+
+    it "available" do
+      expect(klass.attr_json_registry.attribute_names).to match([:str_one, :int_one])
+    end
+  end
+
 
 end
