@@ -3,7 +3,7 @@
 [![Gem Version](https://badge.fury.io/rb/attr_json.svg)](https://badge.fury.io/rb/attr_json)
 
 
-ActiveRecord attributes stored serialized in a json column, super smooth. For Rails 5.0, 5.1, or 5.2. Ruby 2.4+.
+ActiveRecord attributes stored serialized in a json column, super smooth. For Rails 5.0, 5.1, 5.2, or 6.0. Ruby 2.4+.
 
 Typed and cast like Active Record. Supporting [nested models](#nested), [dirty tracking](#dirty), some [querying](#querying) (with postgres [jsonb](https://www.postgresql.org/docs/9.5/static/datatype-json.html) contains), and [working smoothy with form builders](#forms).
 
