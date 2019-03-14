@@ -450,3 +450,5 @@ There is a `./bin/console` that will give you a console in the context of attr_j
 * Didn't actually notice existing [json_attributes](https://github.com/joel/json_attributes)
   until I was well on my way here. I think it's not updated for Rails5 or type-aware,
   haven't looked at it too much.
+
+* [store_model](https://github.com/DmitryTsepelev/store_model) was created after `attr_json`, and has some overlapping functionality.
