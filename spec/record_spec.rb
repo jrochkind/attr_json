@@ -1,5 +1,7 @@
 require 'spec_helper'
 
+require 'pry'
+
 RSpec.describe AttrJson::Record do
   let(:klass) do
     Class.new(ActiveRecord::Base) do
@@ -34,7 +36,8 @@ RSpec.describe AttrJson::Record do
     [:boolean, true, "t"],
     [:date, Date.parse("2017-04-28"), "2017-04-28"],
     [:datetime, DateTime.parse("2017-04-04 04:45:00").to_time, "2017-04-04T04:45:00Z"],
-    [:float, 45.45, "45.45"]
+    [:float, 45.45, "45.45"],
+    [:json, {"a" => "b", "b" => {"c" => "d"}}, {a: "b", b: {"c" => "d"}}]
   ].each do |type, cast_value, uncast_value|
     describe "for primitive type #{type}" do
       let(:klass) do
