@@ -1,7 +1,5 @@
 require 'spec_helper'
 
-require 'pry'
-
 RSpec.describe AttrJson::Record do
   let(:klass) do
     Class.new(ActiveRecord::Base) do
