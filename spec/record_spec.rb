@@ -96,6 +96,21 @@ RSpec.describe AttrJson::Record do
     expect(instance.int_array).to eq([1])
   end
 
+  it "has right ActiveRecord changed? even back and forth" do
+    instance.str = "original"
+    instance.save!
+
+    expect(instance.changed?).to be(false)
+
+    instance.str = "new"
+    expect(instance.changed?).to be(true)
+    expect(instance.json_attributes_changed?).to be(true)
+
+    instance.str = "original"
+    expect(instance.changed?).to be(false)
+    expect(instance.json_attributes_changed?).to be(false)
+  end
+
   it 'supports custom ActiveRecord registered types' do
     expect { instance_custom }.to raise_error ArgumentError
 
@@ -299,6 +314,8 @@ RSpec.describe AttrJson::Record do
       end
     end
   end
+
+
 
   # time-like objects get super weird on edge cases, so they get their own
   # spec context.
