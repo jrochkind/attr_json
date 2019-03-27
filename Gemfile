@@ -30,7 +30,7 @@ gem 'cocoon', ">= 1.2"
 gem 'jquery-rails'
 
 gem 'capybara', "~> 3.0"
-gem "chromedriver-helper"
+gem 'webdrivers', '~> 3.0'
 gem "selenium-webdriver"
 
 gem "byebug"
