@@ -124,6 +124,21 @@ You can register your custom `ActiveModel::Type::Value` in a Rails initializer o
 ActiveRecord::Type.register(:my_type, MyActiveModelTypeSubclass)
 ```
 
+## Storing arbitrary depth hashes
+
+Arbitrary depth hashes can be stored within attributes by using the rails built in ActiveModel::Type::Value as the attribute type. This type performs a no-op on serialize/deserialize (to and from the database).
+
+Please note this will not perform any validations, and should be used with care with data from the outside world.
+
+```
+class MyModel < ActiveRecord::Base
+  include AttrJson::Record
+
+  attr_json :arbitrary_hash, ActiveModel::Type::Value.new
+end
+
+```
+
 <a name="querying"></a>
 ## Querying
 
