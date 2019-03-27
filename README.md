@@ -126,7 +126,7 @@ ActiveRecord::Type.register(:my_type, MyActiveModelTypeSubclass)
 
 ## Storing arbitrary depth hashes
 
-Arbitrary depth hashes can be stored within attributes by using the rails built in ActiveModel::Type::Value as the attribute type. This type performs a no-op on serialize/deserialize (to and from the database).
+Arbitrary depth hashes can be stored within attributes by using the rails built in `ActiveModel::Type::Value` as the attribute type. This type performs a no-op on serialize/deserialize (to and from the database).
 
 Please note this will not perform any validations, and should be used with care with data from the outside world.
 
