@@ -7,11 +7,15 @@
 
 test:
   adapter: postgresql
+  host: <%= ENV['PG_HOST'] || 'localhost' %>
+  username: <%= ENV['PG_USER'] || 'postgres' %>
   encoding: unicode
   database: <%= ENV['RAILS_PG_DB'] || "attr_json_project_test" %>
 
 # Warning, combustion will drop your dev database too....
 development:
   adapter: postgresql
+  host: <%= ENV['PG_HOST'] || 'localhost' %>
+  username: <%= ENV['PG_USER'] || 'postgres' %>
   encoding: unicode
   database: <%= ENV['RAILS_PG_DB'] || "attr_json_project_dev_throwaway" %>

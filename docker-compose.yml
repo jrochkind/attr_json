@@ -1,0 +1,19 @@
+version: "2.4"
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - PG_HOST=postgres
+    volumes:
+      - bundle_cache:/usr/local/bundle
+      - .:/app
+    links:
+      - postgres
+
+  postgres:
+    image: postgres:9.6
+
+volumes:
+  bundle_cache:
