@@ -26,6 +26,32 @@ module AttrJson
       self.attr_json_registry = AttrJson::AttributeDefinition::Registry.new
     end
 
+    protected
+
+    # adapted from ActiveRecord query_attribute method
+    # https://github.com/rails/rails/blob/v5.2.3/activerecord/lib/active_record/attribute_methods/query.rb#L12
+    def query_store_attribute(container_attribute, store_key)
+      value = read_store_attribute(container_attribute, store_key)
+
+      case value
+      when true        then true
+      when false, nil  then false
+      else
+        if !type_for_attribute(attr_name) { false }
+          if Numeric === value || value !~ /[^0-9]/
+            !value.to_i.zero?
+          else
+            return false if ActiveModel::Type::Boolean::FALSE_VALUES.include?(value)
+            !value.blank?
+          end
+        elsif value.respond_to?(:zero?)
+          !value.zero?
+        else
+          !value.blank?
+        end
+      end
+    end
+
     class_methods do
       # Access or set class-wide json_attribute_config. Inherited by sub-classes,
       # but setting on sub-classes is unique to subclass. Similar to how
@@ -157,6 +183,13 @@ module AttrJson
             # use of `read_store_attribute` is copied from Rails store_accessor implementation.
             # https://github.com/rails/rails/blob/74c3e43fba458b9b863d27f0c45fd2d8dc603cbc/activerecord/lib/active_record/store.rb#L90-L96
             read_store_attribute(attribute_def.container_attribute, attribute_def.store_key)
+          end
+
+          define_method("#{name}?") do
+            attribute_def = self.class.attr_json_registry.fetch(name.to_sym)
+
+            # implementation of `query_store_attribute` is based on Rails `query_attribute` implementation
+            query_store_attribute(attribute_def.container_attribute, attribute_def.store_key)
           end
         end
 
