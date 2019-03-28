@@ -37,7 +37,7 @@ module AttrJson
       when true        then true
       when false, nil  then false
       else
-        if !type_for_attribute(attr_name) { false }
+        if !self.class.attr_json_registry.type_for_attribute(store_key) { false }
           if Numeric === value || value !~ /[^0-9]/
             !value.to_i.zero?
           else

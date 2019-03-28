@@ -28,14 +28,14 @@ RSpec.describe AttrJson::Record do
   let(:instance_custom) { klass_with_custom.new }
 
   [
-    [:integer, 12, "12"],
-    [:string, "12", 12],
-    [:decimal, BigDecimal("10.01"), "10.0100"],
-    [:boolean, true, "t"],
-    [:date, Date.parse("2017-04-28"), "2017-04-28"],
-    [:datetime, DateTime.parse("2017-04-04 04:45:00").to_time, "2017-04-04T04:45:00Z"],
-    [:float, 45.45, "45.45"]
-  ].each do |type, cast_value, uncast_value|
+    [:integer, 12, "12", 0],
+    [:string, "12", 12, ""],
+    [:decimal, BigDecimal("10.01"), "10.0100", 0],
+    [:boolean, true, "t", false],
+    [:date, Date.parse("2017-04-28"), "2017-04-28", nil],
+    [:datetime, DateTime.parse("2017-04-04 04:45:00").to_time, "2017-04-04T04:45:00Z", nil],
+    [:float, 45.45, "45.45", 0]
+  ].each do |type, cast_value, uncast_value, falsey_value|
     describe "for primitive type #{type}" do
       let(:klass) do
         Class.new(ActiveRecord::Base) do
@@ -66,6 +66,12 @@ RSpec.describe AttrJson::Record do
 
         expect(instance.value).to eq(cast_value)
         expect(instance.json_attributes["value"]).to eq(cast_value)
+      end
+      it "generates a query method #{type}?" do
+        instance.value = cast_value
+        expect(instance.value?).to be(true)
+        instance.value = falsey_value
+        expect(instance.value?).to be(false)
       end
     end
   end
