@@ -133,30 +133,22 @@ module AttrJson
         end
 
         _attr_jsons_module.module_eval do
+          # For getter and setter, we used to use read_store_attribute/write_store_attribute
+          # copied from Rails store_accessor implementation.
+          # https://github.com/rails/rails/blob/74c3e43fba458b9b863d27f0c45fd2d8dc603cbc/activerecord/lib/active_record/store.rb#L90-L96
+          #
+          # But in fact just getting/setting in the hash provided to us by ActiveRecord json type
+          # container works BETTER for dirty tracking. We had a test that only passed doing it
+          # this simple way.
+
           define_method("#{name}=") do |value|
             attribute_def = self.class.attr_json_registry.fetch(name.to_sym)
-            # write_store_attribute copied from Rails store_accessor implementation.
-            # https://github.com/rails/rails/blob/74c3e43fba458b9b863d27f0c45fd2d8dc603cbc/activerecord/lib/active_record/store.rb#L90-L96
-
-            # special handling for nil, sorry, because if name key was previously
-            # not present, write_store_attribute by default will decide there was
-            # no change and refuse to make the change. TODO messy.
-            if value.nil? && !public_send(attribute_def.container_attribute).has_key?(attribute_def.store_key)
-               public_send :"#{attribute_def.container_attribute}_will_change!"
-               public_send(attribute_def.container_attribute)[attribute_def.store_key] = nil
-            else
-              # use of `write_store_attribute` is copied from Rails store_accessor implementation.
-              # https://github.com/rails/rails/blob/74c3e43fba458b9b863d27f0c45fd2d8dc603cbc/activerecord/lib/active_record/store.rb#L90-L96
-              write_store_attribute(attribute_def.container_attribute, attribute_def.store_key, attribute_def.cast(value))
-            end
+            public_send(attribute_def.container_attribute)[attribute_def.store_key] = attribute_def.cast(value)
           end
 
           define_method("#{name}") do
             attribute_def = self.class.attr_json_registry.fetch(name.to_sym)
-
-            # use of `read_store_attribute` is copied from Rails store_accessor implementation.
-            # https://github.com/rails/rails/blob/74c3e43fba458b9b863d27f0c45fd2d8dc603cbc/activerecord/lib/active_record/store.rb#L90-L96
-            read_store_attribute(attribute_def.container_attribute, attribute_def.store_key)
+            public_send(attribute_def.container_attribute)[attribute_def.store_key]
           end
         end
 
