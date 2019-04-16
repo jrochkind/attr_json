@@ -285,6 +285,20 @@ always mean 'contains' -- the previous query needs a `my_labels.hello`
 which is a hash that includes the key/value, `lang: en`, it can have
 other key/values in it too.  String values will need to match exactly.
 
+<a name="arbitrary-json-data"></a>
+## Storing Arbitrary JSON data
+
+Arbitrary JSON data (hashes, arrays, primitives of any depth) can be stored within attributes by using the rails built in `ActiveModel::Type::Value` as the attribute type. This is basically a "no-op" value type -- JSON alone will be used to serialize/deserialize whatever values you put there, because of the json type on the container field.
+
+```ruby
+class MyModel < ActiveRecord::Base
+  include AttrJson::Record
+
+  attr_json :arbitrary_hash, ActiveModel::Type::Value.new
+end
+
+```
+
 
 <a name="forms"></a>
 ## Forms and Form Builders
