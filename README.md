@@ -124,21 +124,6 @@ You can register your custom `ActiveModel::Type::Value` in a Rails initializer o
 ActiveRecord::Type.register(:my_type, MyActiveModelTypeSubclass)
 ```
 
-## Storing arbitrary depth hashes
-
-Arbitrary depth hashes can be stored within attributes by using the rails built in `ActiveModel::Type::Value` as the attribute type. This type performs a no-op on serialize/deserialize (to and from the database).
-
-Please note this will not perform any validations, and should be used with care with data from the outside world.
-
-```
-class MyModel < ActiveRecord::Base
-  include AttrJson::Record
-
-  attr_json :arbitrary_hash, ActiveModel::Type::Value.new
-end
-
-```
-
 <a name="querying"></a>
 ## Querying
 
@@ -299,6 +284,20 @@ Remember, we're using a postgres containment (`@>`) operator, so queries
 always mean 'contains' -- the previous query needs a `my_labels.hello`
 which is a hash that includes the key/value, `lang: en`, it can have
 other key/values in it too.  String values will need to match exactly.
+
+<a name="arbitrary-json-data"></a>
+## Storing Arbitrary JSON data
+
+Arbitrary JSON data (hashes, arrays, primitives of any depth) can be stored within attributes by using the rails built in `ActiveModel::Type::Value` as the attribute type. This is basically a "no-op" value type -- JSON alone will be used to serialize/deserialize whatever values you put there, because of the json type on the container field.
+
+```ruby
+class MyModel < ActiveRecord::Base
+  include AttrJson::Record
+
+  attr_json :arbitrary_hash, ActiveModel::Type::Value.new
+end
+
+```
 
 
 <a name="forms"></a>
