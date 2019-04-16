@@ -30,8 +30,16 @@ module AttrJson
 
     # adapted from ActiveRecord query_attribute method
     # https://github.com/rails/rails/blob/v5.2.3/activerecord/lib/active_record/attribute_methods/query.rb#L12
-    def query_attr_json(attribute)
-      value = send(attribute)
+    #
+    # Sadly we could not re-use Rails code here, becuase the built-in method assumes attribute
+    # can be obtained with `self[attr_name]`, which you can not with attr_json (is that bad?), as
+    # well as `self.class.columns_hash[attr_name]` which you definitely can not (which is probably not bad),
+    # and has no way to use the value-translation semantics independently of that. May be a problem if
+    # ActiveRecord changes it's query method semantics in the future, will have to be sync'd here.
+    #
+    # Used to implement query methods on attr_json attributes, like `attr_json :foo, :string`, method `#foo?`
+    def self.attr_json_query_method(record, attribute)
+      value = record.send(attribute)
 
       case value
       when true
@@ -176,7 +184,7 @@ module AttrJson
 
           define_method("#{name}?") do
             # implementation of `query_store_attribute` is based on Rails `query_attribute` implementation
-            query_attr_json(name)
+            AttrJson::Record.attr_json_query_method(self, name)
           end
         end
 
