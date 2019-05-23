@@ -196,7 +196,7 @@ module AttrJson
             end
 
             # see lib/attr_json/record/dirty.rb
-            attr_json_changes.changes_to_save[name.to_s].present?
+            attr_json_changes.send("will_save_change_to_#{name}?")
           end
         end
 
