@@ -68,11 +68,20 @@ RSpec.describe AttrJson::Record do
         expect(instance.value).to eq(cast_value)
         expect(instance.json_attributes["value"]).to eq(cast_value)
       end
-      it "generates a query method #{type}?" do
+      it "generates a query method value?" do
         instance.value = cast_value
         expect(instance.value?).to be(true)
         instance.value = falsey_value
         expect(instance.value?).to be(false)
+      end
+      it "generates a dirty tracking method value_changed?" do
+        expect { instance.value_changed? }.to raise_error(NotImplementedError)
+        klass.include AttrJson::Record::Dirty
+        expect(instance.value_changed?).to be(false)
+        instance.value = cast_value
+        expect(instance.value_changed?).to be(true)
+        instance.value = nil
+        expect(instance.value_changed?).to be(false)
       end
     end
   end

@@ -186,6 +186,18 @@ module AttrJson
             # implementation of `query_store_attribute` is based on Rails `query_attribute` implementation
             AttrJson::Record.attr_json_query_method(self, name)
           end
+
+          define_method("#{name}_changed?") do
+            if !defined?(attr_json_changes)
+              raise NotImplementedError, <<~TXT
+                Please add the following line to #{self.class}:
+                include AttrJson::Record::Dirty
+              TXT
+            end
+
+            # see lib/attr_json/record/dirty.rb
+            attr_json_changes.changes_to_save[name.to_s].present?
+          end
         end
 
         # Default attr_json_accepts_nested_attributes_for values
