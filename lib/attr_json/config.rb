@@ -1,4 +1,20 @@
 module AttrJson
+  DEFAULTS = {
+    default_container_attribute: "json_attributes",
+    unknown_key: :raise
+  }
+  @@config = DEFAULTS
+
+  def self.config
+    @@config = yield(@@config) if block_given?
+    @@config
+  end
+
+  def self.reset
+    @@config = DEFAULTS
+  end
+
+
   # Intentionally non-mutable, to avoid problems with subclass inheritance
   # and rails class_attribute. Instead, you set to new Config object
   # changed with {#merge}.
@@ -26,7 +42,7 @@ module AttrJson
       valid_keys = mode == :record ? RECORD_ALLOWED_KEYS : MODEL_ALLOWED_KEYS
       options.assert_valid_keys(valid_keys)
 
-      options.reverse_merge!(DEFAULTS.slice(*valid_keys))
+      options.reverse_merge!(AttrJson.config.slice(*valid_keys))
 
       @attributes = options
     end

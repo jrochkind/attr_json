@@ -564,40 +564,60 @@ RSpec.describe AttrJson::Record do
     end
 
     describe "change default container attribute" do
-      let(:klass) do
-        Class.new(ActiveRecord::Base) do
-          include AttrJson::Record
-          self.table_name = "products"
+      shared_examples 'change_default_container' do
+        it "saves in right place" do
+          instance.value = "X"
+          expect(instance.value).to eq("X")
+          expect(instance.other_attributes).to eq("value" => "X")
+          expect(instance.json_attributes).to be_blank
 
-          self.attr_json_config(default_container_attribute: :other_attributes)
+          instance.save!
+          instance.reload
+          expect(instance.value).to eq("X")
+          expect(instance.other_attributes).to eq("value" => "X")
+          expect(instance.json_attributes).to be_blank
 
-          attr_json :value, :string
+          instance.other_attributes = { value: "Y" }
+          instance.save!
+          instance.reload
+          expect(instance.value).to eq("Y")
+          expect(instance.other_attributes).to eq("value" => "Y")
+          expect(instance.json_attributes).to be_blank
+
+          instance.update!({ value: "Z" })
+          instance.reload
+          expect(instance.value).to eq("Z")
+          expect(instance.other_attributes).to eq("value" => "Z")
+          expect(instance.json_attributes).to be_blank
         end
       end
-      it "saves in right place" do
-        instance.value = "X"
-        expect(instance.value).to eq("X")
-        expect(instance.other_attributes).to eq("value" => "X")
-        expect(instance.json_attributes).to be_blank
 
-        instance.save!
-        instance.reload
-        expect(instance.value).to eq("X")
-        expect(instance.other_attributes).to eq("value" => "X")
-        expect(instance.json_attributes).to be_blank
+      describe 'via AttrJson.config' do
+        before do
+          AttrJson.config do |c|
+            c.merge(default_container_attribute: :other_attributes)
+          end
+        end
+        let(:klass) do
+          Class.new(ActiveRecord::Base) do
+            include AttrJson::Record
+            self.table_name = "products"
+            attr_json :value, :string
+          end
+        end
+        include_examples 'change_default_container'
+      end
 
-        instance.other_attributes = { value: "Y" }
-        instance.save!
-        instance.reload
-        expect(instance.value).to eq("Y")
-        expect(instance.other_attributes).to eq("value" => "Y")
-        expect(instance.json_attributes).to be_blank
-
-        instance.update!({ value: "Z" })
-        instance.reload
-        expect(instance.value).to eq("Z")
-        expect(instance.other_attributes).to eq("value" => "Z")
-        expect(instance.json_attributes).to be_blank
+      describe 'via attr_json_config' do
+        let(:klass) do
+          Class.new(ActiveRecord::Base) do
+            include AttrJson::Record
+            self.table_name = "products"
+            self.attr_json_config(default_container_attribute: :other_attributes)
+            attr_json :value, :string
+          end
+        end
+        include_examples 'change_default_container'
       end
     end
 

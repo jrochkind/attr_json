@@ -257,6 +257,9 @@ module AttrJson
       false
     end
 
+
+    # TODO: write an #inspect that pretty prints the attribute names and values.
+
     private
 
     def _attr_json_write(key, value)
