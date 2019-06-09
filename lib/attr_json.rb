@@ -16,5 +16,4 @@ if Gem.loaded_specs["activerecord"].version.release >= Gem::Version.new('5.1')
 end
 
 module AttrJson
-
 end

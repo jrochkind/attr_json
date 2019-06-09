@@ -1,5 +1,6 @@
 require 'attr_json/attribute_definition'
 require 'attr_json/attribute_definition/registry'
+require 'attr_json/type/merger'
 require 'attr_json/type/container_attribute'
 
 module AttrJson
