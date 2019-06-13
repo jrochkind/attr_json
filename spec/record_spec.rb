@@ -785,16 +785,23 @@ RSpec.describe AttrJson::Record do
             include AttrJson::Record
 
             self.table_name = "products"
-            attr_json :str, :string, array: true, rails_attribute: true
+            attr_json :str, :string, array: true, rails_attribute: true, default: 'foo'
           end
         end
         it "registers attribute and type" do
           expect(instance.attributes.keys).to include("str")
+          expect(instance.attributes["str"]).to eq ['foo']
           expect(instance.type_for_attribute("str")).to be_kind_of(AttrJson::Type::Array)
           expect(instance.type_for_attribute("str").base_type).to be_kind_of(ActiveModel::Type::String)
         end
         it "still has our custom methods on top" do
           skip "gah, how do we test this"
+        end
+
+        it 'syncs Rails attributes and default values after find' do
+          instance.save
+          found_record = klass.find(instance.id)
+          expect(found_record.attributes["str"]).to eq ['foo']
         end
       end
     end

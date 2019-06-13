@@ -122,7 +122,7 @@ module AttrJson
       #    other tools that may look for it via Rails attribute APIs.
       def attr_json(name, type, **options)
         options = {
-          rails_attribute: false,
+          rails_attribute: self.attr_json_config.default_rails_attribute,
           validate: true,
           container_attribute: self.attr_json_config.default_container_attribute,
           accepts_nested_attributes: self.attr_json_config.default_accepts_nested_attributes
@@ -161,6 +161,23 @@ module AttrJson
         # it with usual system will let simple_form and maybe others find it.
         if options[:rails_attribute]
           self.attribute name.to_sym, self.attr_json_registry.fetch(name).type
+
+          distribute_container_keys_to_attributes = proc {
+            config = self.class.attr_json_config
+            registry = self.class.attr_json_registry
+            cattr = config.default_container_attribute
+            next unless has_attribute?(cattr)
+            public_send(cattr).each do |key, value|
+              attr_name = registry.store_key_lookup(cattr, key).try(:name)
+              write_attribute(attr_name, value) if attr_name
+            end
+          }
+
+          # Ensure the `attributes` are updated after a record is found.
+          after_find(&distribute_container_keys_to_attributes)
+
+          # Ensure the `attributes` are updated after a record is initialized.
+          after_initialize(&distribute_container_keys_to_attributes)
         end
 
         _attr_jsons_module.module_eval do
@@ -173,6 +190,7 @@ module AttrJson
           # this simple way.
 
           define_method("#{name}=") do |value|
+            super(value) if defined?(super)
             attribute_def = self.class.attr_json_registry.fetch(name.to_sym)
             public_send(attribute_def.container_attribute)[attribute_def.store_key] = attribute_def.cast(value)
           end
