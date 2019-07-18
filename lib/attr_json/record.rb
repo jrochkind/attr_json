@@ -162,22 +162,32 @@ module AttrJson
         if options[:rails_attribute]
           self.attribute name.to_sym, self.attr_json_registry.fetch(name).type
 
-          distribute_container_keys_to_attributes = proc {
+          # Ensure the `attributes` are set to container attribute values after a
+          # record is found.
+          after_find do
             config = self.class.attr_json_config
             registry = self.class.attr_json_registry
             cattr = config.default_container_attribute
             next unless has_attribute?(cattr)
             public_send(cattr).each do |key, value|
-              attr_name = registry.store_key_lookup(cattr, key).try(:name)
-              write_attribute(attr_name, value) if attr_name
+              defn = registry.store_key_lookup(cattr, key)
+              attr_name = defn.try(:name)
+              self.send("#{attr_name}=", value) if attr_name
             end
-          }
+            to_be_cleared = public_send(cattr).keys + [cattr.to_s]
+            to_be_cleared.select! { |k| has_attribute?(k) }
+            self.send(:clear_attribute_changes, to_be_cleared)
+          end
 
-          # Ensure the `attributes` are updated after a record is found.
-          after_find(&distribute_container_keys_to_attributes)
-
-          # Ensure the `attributes` are updated after a record is initialized.
-          after_initialize(&distribute_container_keys_to_attributes)
+          # Ensure the `attributes` are set to default values after initialization.
+          after_initialize do
+            registry = self.class.attr_json_registry
+            registry.definitions.each do |defn|
+              next unless defn.has_default?
+              default = defn.instance_variable_get("@default")
+              write_attribute(defn.name, default)
+            end
+          end
         end
 
         _attr_jsons_module.module_eval do
