@@ -48,6 +48,9 @@ require "capybara/rails"
 require 'webdrivers'
 require "selenium/webdriver"
 
+# Avoid webdrivers deprecation warning. https://github.com/titusfortner/webdrivers/issues/118
+Webdrivers.cache_time = 86_400
+
 Capybara.register_driver :chrome do |app|
   Capybara::Selenium::Driver.new(app, browser: :chrome)
 end
