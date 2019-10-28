@@ -9,6 +9,7 @@ cache: bundler
 rvm:
   - 2.4.5
   - 2.5.3
+  - 2.6.5
 gemfile:
   - gemfiles/rails_5_0.gemfile
   - gemfiles/rails_5_1.gemfile
@@ -24,5 +25,12 @@ matrix:
   exclude:
     - gemfile: gemfiles/rails_edge_6.gemfile
       rvm: 2.4.5
+    - gemfile: gemfiles/rails_edge_6.gemfile
+      rvm: 2.5.3
     - gemfile: gemfiles/rails_6_0.gemfile
       rvm: 2.4.5
+    - gemfile: gemfiles/rails_5_1.gemfile
+      rvm: 2.6.5
+    - gemfile: gemfiles/rails_5_0.gemfile
+      rvm: 2.6.5
+
