@@ -11,8 +11,6 @@ Typed and cast like Active Record. Supporting [nested models](#nested), [dirty t
 
 [Why might you want or not want this?](#why)
 
-AttrJson is pre-1.0. The functionality that is documented here _is_ already implemented (these docs are real, not vaporware) and seems pretty solid. It may still have backwards-incompat changes before 1.0 release. Review and feedback is very welcome.
-
 Developed for postgres, but most features should work with MySQL json columns too, although
 has not yet been tested with MySQL.
 
@@ -397,15 +395,15 @@ to prevent overwriting other updates from processes.
 
 ## State of Code, and To Be Done
 
-This is a pre-1.0 work in progress. But the functionality that is here seems pretty solid.
+The functionality that is here seems pretty solid, and is being used by jrochkind in a production app.
 
-Backwards incompatible changes are possible before 1.0. Once I tag something 1.0, I'm pretty serious about minimizing backwards incompats.
-
-I do not yet use this myself in production, and may not for a while. I generally am reluctant to release something as 1.0 with implied suitable for production when I'm not yet using it in production myself, but may with enough feedback. A couple others are already using in production.
+We are committed to [semantic versioning](https://semver.org/) and will endeavor to release no backwards breaking changes without a major version. We are also serious about minimizing backwards incompat releases altogether (ie minimiing major version releases).
 
 Feedback of any kind of _very welcome_, please feel free to use the issue tracker.
 
 Except for the jsonb_contains stuff using postgres jsonb contains operator, I don't believe any postgres-specific features are used. It ought to work with MySQL, testing and feedback welcome. (Or a PR to test on MySQL?).  My own interest is postgres.
+
+This is still mostly a single-maintainer operation, so has all the sustainability risks of that. Although there are other people using and contributing to it, check out the Github Issues and Pull Request tabs yourself to get a sense.
 
 ### Possible future features:
 
