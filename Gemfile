@@ -10,7 +10,7 @@ gemspec
 # We also have these development dependencies here in the Gemfile instead of the
 # gemspec so appraisal can override them from our Appraisal file.
 
-gem 'combustion', '~> 0.9.0'
+gem 'combustion', '~> 1.1'
 
 # all of rails is NOT a dependency, just activerecord.
 # But we use it for integration testing with combustion. Hmm, a bit annoying
