@@ -17,7 +17,7 @@ cache: bundler
 #   - gemfiles/rails_5_1.gemfile
 #   - gemfiles/rails_5_2.gemfile
 #   - gemfiles/rails_6_0.gemfile
-#   - gemfiles/rails_edge_6.gemfile
+#   - gemfiles/rails_edge.gemfile
 
 before_install:
   - gem install bundler -v "~> 2.0"
@@ -55,10 +55,10 @@ matrix:
       gemfile: gemfiles/rails_6_0.gemfile
 
     - rvm: 2.7.0
-      gemfile: gemfiles/rails_edge_6.gemfile
+      gemfile: gemfiles/rails_edge.gemfile
 
   allow_failures:
-  - gemfile: gemfiles/rails_edge_6.gemfile
+  - gemfile: gemfiles/rails_edge.gemfile
   fast_finish: true
 
 
