@@ -47,7 +47,7 @@ module AttrJson
       when false, nil, ActiveModel::Type::Boolean::FALSE_VALUES
         false
       else
-        if value.respond_to?(:to_i) && ( Numeric === value || value !~ /[^0-9]/ )
+        if value.respond_to?(:to_i) && ( Numeric === value || value.to_s !~ /[^0-9]/ )
           !value.to_i.zero?
         elsif value.respond_to?(:zero?)
           !value.zero?
