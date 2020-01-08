@@ -18,7 +18,7 @@ gemfile:
   - gemfiles/rails_6_0.gemfile
   - gemfiles/rails_edge_6.gemfile
 before_install:
-  - gem install bundler -v 1.14.6
+  - gem install bundler -v "~> 2.0"
 matrix:
   allow_failures:
   - gemfile: gemfiles/rails_edge_6.gemfile
