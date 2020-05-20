@@ -139,7 +139,7 @@ RSpec.describe AttrJson::Record::QueryScopes do
     it 'generates a negated query' do
       query = klass.jsonb_contains_not(str: 'foo')
 
-      expect(query.to_sql).to include %q{WHERE NOT (products.json_attributes @> ('{"str":"foo"}')::jsonb)}
+      expect(query.to_sql).to match /WHERE \(?NOT \(products.json_attributes @> \('{"str":"foo"}'\)::jsonb\)/
     end
   end
 
