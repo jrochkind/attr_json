@@ -24,7 +24,7 @@ gem 'rails'
 gem 'railties'
 
 gem "pg"
-gem "rspec-rails", "~> 3.7"
+gem "rspec-rails", "~> 4.0"
 gem "simple_form", ">= 4.0"
 gem 'cocoon', ">= 1.2"
 gem 'jquery-rails'
