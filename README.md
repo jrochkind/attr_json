@@ -138,6 +138,9 @@ MyModel.jsonb_contains(my_string: "foo", my_integer: 100).first
 # Implemented with scopes, this is an ordinary relation, you can
 # combine it with whatever, just like ordinary `where`.
 
+MyModel.jsonb_contains_not(my:string: "foo", my_integer: 100).to_sql
+# SELECT "products".* FROM "products" WHERE NOT (products.json_attributes @> ('{"my_string":"foo","my_integer":100}')::jsonb)
+
 # typecasts much like ActiveRecord on query too:
 MyModel.jsonb_contains(my_string: "foo", my_integer: "100")
 # no problem

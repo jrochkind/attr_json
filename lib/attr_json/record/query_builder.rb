@@ -10,6 +10,20 @@ module AttrJson
       end
 
       def contains_relation
+        contains_relation_impl do |relation, query, params|
+          relation.where(query, params)
+        end
+      end
+
+      def contains_not_relation
+        contains_relation_impl do |relation, query, params|
+          relation.where.not(query, params)
+        end
+      end
+
+      protected
+
+      def contains_relation_impl
         result_relation = relation
 
         group_attributes_by_container.each do |container_attribute, attributes|
@@ -18,13 +32,11 @@ module AttrJson
           attributes.each do |key, value|
             add_to_param_hash!(param_hash, key, value)
           end
-          result_relation = result_relation.where("#{relation.table_name}.#{container_attribute} @> (?)::jsonb", param_hash.to_json)
+          result_relation = yield(result_relation, "#{relation.table_name}.#{container_attribute} @> (?)::jsonb", param_hash.to_json)
         end
 
         result_relation
       end
-
-      protected
 
       def merge_param_hash!(original, new)
         original.deep_merge!(new) do |key, old_val, new_val|
