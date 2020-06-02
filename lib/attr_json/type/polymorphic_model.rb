@@ -51,7 +51,7 @@ module AttrJson
     #      MyRecord.jsonb_contains(author: { name: "foo", type: "Corporation"})
     #      MyRecord.jsonb_contains(author: Corporation.new(name: "foo"))
     #
-    # Additionally, there is jsonb_contains_not, which creates the same query terms like jsonb_contains, but negated.
+    # Additionally, there is not_jsonb_contains, which creates the same query terms like jsonb_contains, but negated.
     #
     class PolymorphicModel < ActiveModel::Type::Value
       class TypeError < ::TypeError ; end
