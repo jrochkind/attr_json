@@ -10,4 +10,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-* jsonb_contains_not query method, like `jsonb_contains` but negated. https://github.com/jrochkind/attr_json/pull/85
+* not_jsonb_contains query method, like `jsonb_contains` but negated. https://github.com/jrochkind/attr_json/pull/85
