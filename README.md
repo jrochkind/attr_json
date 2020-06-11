@@ -286,6 +286,34 @@ always mean 'contains' -- the previous query needs a `my_labels.hello`
 which is a hash that includes the key/value, `lang: en`, it can have
 other key/values in it too.  String values will need to match exactly.
 
+## Single AttrJson::Model serialized to an entire json column
+
+The main use case of the gem is set up to let you combine multiple primitives and nested models
+under different keys combined in a single json or jsonb column.
+
+But you may also want to have one AttrJson::Model class that serializes to cover
+an entire json column on it's own.
+
+You can also use the standard [ActiveRecord serialization](https://api.rubyonrails.org/classes/ActiveRecord/AttributeMethods/Serialization/ClassMethods.html)
+feature with AttrJson::Model#to_type to easily do that.
+
+```ruby
+class MyModel
+  include AttrJson::Model
+
+  attr_json :some_string, :string
+  attr_json :some_int, :int
+end
+
+class MyTable < ApplicationRecord
+  serialize :some_json_column, MyModel.to_type
+end
+
+MyTable.create(some_json_column: MyModel.new(some_string: "string"))
+MyTable.create(some_json_column: { some_int: 12 })
+# etc
+```
+
 <a name="arbitrary-json-data"></a>
 ## Storing Arbitrary JSON data
 
