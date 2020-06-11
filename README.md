@@ -291,8 +291,8 @@ other key/values in it too.  String values will need to match exactly.
 The main use case of the gem is set up to let you combine multiple primitives and nested models
 under different keys combined in a single json or jsonb column.
 
-But you may also want to have one AttrJson::Model class that serializes to cover
-an entire json column on it's own.
+But you may also want to have one AttrJson::Model class that serializes to map one model class, as
+a hash, to an entire json column on it's own.
 
 You can also use the standard [ActiveRecord serialization](https://api.rubyonrails.org/classes/ActiveRecord/AttributeMethods/Serialization/ClassMethods.html)
 feature with AttrJson::Model#to_type to easily do that.
@@ -310,7 +310,10 @@ class MyTable < ApplicationRecord
 end
 
 MyTable.create(some_json_column: MyModel.new(some_string: "string"))
+
+# will cast from hash for you
 MyTable.create(some_json_column: { some_int: 12 })
+
 # etc
 ```
 
