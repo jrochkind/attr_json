@@ -8,21 +8,6 @@ module AttrJson
     # but normally that's only done in AttrJson::Model.to_type, there isn't
     # an anticipated need to create from any other place.
     #
-    # ## ActiveRecord `serialize`
-    #
-    # This class also provides #dump and #load methods, so it can be used
-    # with ActiveRecord `serialize` feature, to map a single AttrJson::Model
-    # to a json/jsonb column.
-    # https://api.rubyonrails.org/classes/ActiveRecord/AttributeMethods/Serialization/ClassMethods.html
-    #
-    # class ValueModel
-    #   include AttrJson::Model
-    #   attr_json :some_string, :string
-    # end
-    #
-    # class SomeModel < ApplicationRecord
-    #   serialize :some_json_column, ValueModel.to_type
-    # end
     class Model < ::ActiveModel::Type::Value
       class BadCast < ArgumentError ; end
 
@@ -90,18 +75,6 @@ module AttrJson
             attr_def.serialize(attr_def.cast value)
           end
         }
-      end
-
-      # Dump and load methods to support ActiveRecord Serialization
-      # too. https://api.rubyonrails.org/classes/ActiveRecord/AttributeMethods/Serialization/ClassMethods.html
-      def dump(value)
-        serialize(value)
-      end
-
-      # Dump and load methods to support ActiveRecord Serialization
-      # too. https://api.rubyonrails.org/classes/ActiveRecord/AttributeMethods/Serialization/ClassMethods.html
-      def load(value)
-        deserialize(value)
       end
     end
   end

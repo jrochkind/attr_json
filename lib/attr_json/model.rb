@@ -7,6 +7,8 @@ require 'attr_json/attribute_definition/registry'
 require 'attr_json/type/model'
 require 'attr_json/model/cocoon_compat'
 
+require 'attr_json/serialization_coder_from_type'
+
 module AttrJson
 
   # Meant for use in a plain class, turns it into an ActiveModel::Model
@@ -33,6 +35,25 @@ module AttrJson
   #          attr_json_config(unknown_key: :ignore)
   #          #...
   #        end
+  #
+  # ## ActiveRecord `serialize`
+  #
+  # If you want to map a single AttrJson::Model to a json/jsonb column, you
+  # can use ActiveRecord `serialize` feature.
+  #
+  # https://api.rubyonrails.org/classes/ActiveRecord/AttributeMethods/Serialization/ClassMethods.html
+  #
+  # We provide a simple shim to give you the right API for a "coder" for AR serialize:
+  #
+  # class ValueModel
+  #   include AttrJson::Model
+  #   attr_json :some_string, :string
+  # end
+  #
+  # class SomeModel < ApplicationRecord
+  #   serialize :some_json_column, ValueModel.to_serialize_coder
+  # end
+  #
   module Model
     extend ActiveSupport::Concern
 
@@ -86,6 +107,10 @@ module AttrJson
 
       def to_type
         @type ||= AttrJson::Type::Model.new(self)
+      end
+
+      def to_serialization_coder
+        @serialization_coder ||= AttrJson::SerializationCoderFromType.new(to_type)
       end
 
       # Type can be an instance of an ActiveModel::Type::Value subclass, or a symbol that will

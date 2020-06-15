@@ -14,7 +14,7 @@ RSpec.describe "AttrJson::Model with ActiveRecord serialize to one column" do
 
 
   let(:record_class) do
-    type_as_serializer = embedded_model_class.to_type
+    type_as_serializer = embedded_model_class.to_serialization_coder
 
     Class.new(ActiveRecord::Base) do
       self.table_name = "products"
@@ -84,7 +84,7 @@ RSpec.describe "AttrJson::Model with ActiveRecord serialize to one column" do
   end
 
 
-  xit "for non-castable primitive" do
+  it "for non-castable primitive", pending: "hard to get this working performantly" do
     expect {
       record_instance.other_attributes = 4
     }.to raise_error
