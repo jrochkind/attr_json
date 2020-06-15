@@ -228,6 +228,25 @@ m.attr_jsons_before_type_cast
 
 You can nest AttrJson::Model objects inside each other, as deeply as you like.
 
+### Model-type defaults
+
+If you want to set a default for an AttrJson::Model type, you should use a proc argument for
+the default, to avoid accidentally re-using a shared global default value, similar to issues
+people have with ruby Hash default.
+
+```ruby
+  attr_json :lang_and_value, LangAndValue.to_type, default: -> { LangAndValue.new(lang: "en", value: "default") }
+```
+
+You can also use a Hash value that will be cast to your model, no need for proc argument
+in this case.
+
+```ruby
+  attr_json :lang_and_value, LangAndValue.to_type, default: { lang: "en", value: "default" }
+```
+
+### Polymorphic model types
+
 There is some support for "polymorphic" attributes that can hetereogenously contain instances of different AttrJson::Model classes, see comment docs at [AttrJson::Type::PolymorphicModel](./lib/attr_json/type/polymorphic_model.rb).
 
 
