@@ -81,6 +81,15 @@ RSpec.describe "AttrJson::Model with ActiveRecord serialize to one column" do
       record_instance.reload
       expect(record_instance.other_attributes).to be_nil
     end
+
+    it "registers in-place changes" do
+      record_instance.save!
+      expect(record_instance.other_attributes_changed?).to eq(false)
+
+      record_instance.other_attributes.str = "new value set in place"
+
+      expect(record_instance.other_attributes_changed?).to eq(true)
+    end
   end
 
 
