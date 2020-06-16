@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 * Documented and tested support for using ActiveRecord serialize to map one AttrJson::Model
-to an entire column on it's own. https://github.com/jrochkind/attr_json/pull/89
+to an entire column on it's own. https://github.com/jrochkind/attr_json/pull/89 and
+https://github.com/jrochkind/attr_json/pull/93
 
 ### Changed
 

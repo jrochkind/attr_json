@@ -313,8 +313,8 @@ under different keys combined in a single json or jsonb column.
 But you may also want to have one AttrJson::Model class that serializes to map one model class, as
 a hash, to an entire json column on it's own.
 
-You can also use the standard [ActiveRecord serialization](https://api.rubyonrails.org/classes/ActiveRecord/AttributeMethods/Serialization/ClassMethods.html)
-feature with AttrJson::Model#to_type to easily do that.
+`AttrJson::Model` can supply a simple coder for the [ActiveRecord serialization](https://api.rubyonrails.org/classes/ActiveRecord/AttributeMethods/Serialization/ClassMethods.html)
+feature  to easily do that.
 
 ```ruby
 class MyModel
@@ -325,7 +325,7 @@ class MyModel
 end
 
 class MyTable < ApplicationRecord
-  serialize :some_json_column, MyModel.to_type
+  serialize :some_json_column, MyModel.to_serialization_coder
 end
 
 MyTable.create(some_json_column: MyModel.new(some_string: "string"))
