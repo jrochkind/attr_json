@@ -135,6 +135,14 @@ RSpec.describe AttrJson::Record::QueryScopes do
     end
   end
 
+  describe "#not_jsonb_contains" do
+    it 'generates a negated query' do
+      query = klass.not_jsonb_contains(str: 'foo')
+
+      expect(query.to_sql).to match(/WHERE \(?NOT \(products.json_attributes @> \('{"str":"foo"}'\)::jsonb\)/)
+    end
+  end
+
   describe "multiple container attributes" do
     # let's give em the same store key to make it really challenging?
     let(:klass) do

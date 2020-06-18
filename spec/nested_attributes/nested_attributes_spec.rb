@@ -94,8 +94,6 @@ RSpec.describe AttrJson::NestedAttributes do
       end
     end
 
-
-
     describe "reject_if" do
       around do |example|
         klass.attr_json_accepts_nested_attributes_for :one_model, reject_if: :all_blank
@@ -121,7 +119,6 @@ RSpec.describe AttrJson::NestedAttributes do
     end
   end
 
-
   describe "model array attribute" do
     let(:setter) { :many_models_attributes= }
 
@@ -144,7 +141,6 @@ RSpec.describe AttrJson::NestedAttributes do
         example.run
         klass.attr_json_accepts_nested_attributes_for :many_models
       end
-
 
       it "respect all_blank" do
         instance.update(

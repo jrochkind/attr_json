@@ -17,6 +17,8 @@ module AttrJson
     #
     #      some_model.jsonb_contains(a_string: "foo").first
     #
+    #      some_model.not_jsonb_contains(a_string: "bar").first
+    #
     # See more in {file:README} docs.
     module QueryScopes
       extend ActiveSupport::Concern
@@ -28,6 +30,10 @@ module AttrJson
 
         scope(:jsonb_contains, lambda do |attributes|
           QueryBuilder.new(self, attributes).contains_relation
+        end)
+
+        scope(:not_jsonb_contains, lambda do |attributes|
+          QueryBuilder.new(self, attributes).contains_not_relation
         end)
       end
     end

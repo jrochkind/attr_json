@@ -240,12 +240,9 @@ module AttrJson
     end
 
     # Two AttrJson::Model objects are equal if they are the same class
-    # or one is a subclass of the other, AND their #attributes are equal.
-    # TODO: Should we allow subclasses to be equal, or should they have to be the
-    # exact same class?
+    # AND their #attributes are equal.
     def ==(other_object)
-      (other_object.is_a?(self.class) || self.is_a?(other_object.class)) &&
-      other_object.attributes == self.attributes
+      other_object.class == self.class && other_object.attributes == self.attributes
     end
 
     # ActiveRecord objects [have a](https://github.com/rails/rails/blob/v5.1.5/activerecord/lib/active_record/nested_attributes.rb#L367-L374)

@@ -203,5 +203,26 @@ RSpec.describe AttrJson::Record do
     end
   end
 
+  describe "#==" do
+    let(:klass) do
+      Class.new do
+        include AttrJson::Model
 
+        attr_json :str_one, :string
+      end
+    end
+
+    it "does not equal with different values" do
+      expect(instance == klass.new(str_one: "different")).to eq(false)
+    end
+
+    it "does equal with same values" do
+      expect(instance == klass.new).to eq(true)
+      expect(klass.new(str_one: "value") == klass.new(str_one: "value")).to eq(true)
+    end
+
+    it "does not equal some random object" do
+      expect(instance == Object.new).to eq(false)
+    end
+  end
 end

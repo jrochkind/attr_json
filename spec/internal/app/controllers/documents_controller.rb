@@ -1,4 +1,4 @@
-class DocumentsController < ActionController::Base
+class DocumentsController < ApplicationController
   before_action :set_document, only: [:show, :edit, :update, :destroy]
   layout 'application'
 

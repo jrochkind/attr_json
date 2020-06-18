@@ -182,4 +182,19 @@ RSpec.describe AttrJson::Type::PolymorphicModel do
       expect(sql).to include "products.json_attributes @> ('{\"one_poly\":{\"bool\":true,\"type\":\"Model2\"}}')"
     end
   end
+
+  describe "not_jsonb_contains" do
+    it "can create keypath query" do
+      sql = klass.not_jsonb_contains("one_poly.bool" => true).to_sql
+      expect(sql).to match(/WHERE \(?NOT \(products.json_attributes @> \('{\"one_poly\":{\"bool\":true}}'\)/)
+    end
+    it "can create keypath query with type" do
+      sql = klass.not_jsonb_contains("one_poly" => {"bool" => true, "type" => "Model2"}).to_sql
+      expect(sql).to match(/WHERE \(?NOT \(products.json_attributes @> \('{\"one_poly\":{\"bool\":true,\"type\":\"Model2\"}}'\)/)
+    end
+    it "can create keypath query with model arg" do
+      sql = klass.not_jsonb_contains("one_poly" => model2.new(bool: true)).to_sql
+      expect(sql).to match(/WHERE \(?NOT \(products.json_attributes @> \('{\"one_poly\":{\"bool\":true,\"type\":\"Model2\"}}'\)/)
+    end
+  end
 end

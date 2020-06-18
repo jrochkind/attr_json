@@ -138,6 +138,9 @@ MyModel.jsonb_contains(my_string: "foo", my_integer: 100).first
 # Implemented with scopes, this is an ordinary relation, you can
 # combine it with whatever, just like ordinary `where`.
 
+MyModel.not_jsonb_contains(my:string: "foo", my_integer: 100).to_sql
+# SELECT "products".* FROM "products" WHERE NOT (products.json_attributes @> ('{"my_string":"foo","my_integer":100}')::jsonb)
+
 # typecasts much like ActiveRecord on query too:
 MyModel.jsonb_contains(my_string: "foo", my_integer: "100")
 # no problem
@@ -225,6 +228,25 @@ m.attr_jsons_before_type_cast
 
 You can nest AttrJson::Model objects inside each other, as deeply as you like.
 
+### Model-type defaults
+
+If you want to set a default for an AttrJson::Model type, you should use a proc argument for
+the default, to avoid accidentally re-using a shared global default value, similar to issues
+people have with ruby Hash default.
+
+```ruby
+  attr_json :lang_and_value, LangAndValue.to_type, default: -> { LangAndValue.new(lang: "en", value: "default") }
+```
+
+You can also use a Hash value that will be cast to your model, no need for proc argument
+in this case.
+
+```ruby
+  attr_json :lang_and_value, LangAndValue.to_type, default: { lang: "en", value: "default" }
+```
+
+### Polymorphic model types
+
 There is some support for "polymorphic" attributes that can hetereogenously contain instances of different AttrJson::Model classes, see comment docs at [AttrJson::Type::PolymorphicModel](./lib/attr_json/type/polymorphic_model.rb).
 
 
@@ -282,6 +304,37 @@ Remember, we're using a postgres containment (`@>`) operator, so queries
 always mean 'contains' -- the previous query needs a `my_labels.hello`
 which is a hash that includes the key/value, `lang: en`, it can have
 other key/values in it too.  String values will need to match exactly.
+
+## Single AttrJson::Model serialized to an entire json column
+
+The main use case of the gem is set up to let you combine multiple primitives and nested models
+under different keys combined in a single json or jsonb column.
+
+But you may also want to have one AttrJson::Model class that serializes to map one model class, as
+a hash, to an entire json column on it's own.
+
+You can also use the standard [ActiveRecord serialization](https://api.rubyonrails.org/classes/ActiveRecord/AttributeMethods/Serialization/ClassMethods.html)
+feature with AttrJson::Model#to_type to easily do that.
+
+```ruby
+class MyModel
+  include AttrJson::Model
+
+  attr_json :some_string, :string
+  attr_json :some_int, :int
+end
+
+class MyTable < ApplicationRecord
+  serialize :some_json_column, MyModel.to_type
+end
+
+MyTable.create(some_json_column: MyModel.new(some_string: "string"))
+
+# will cast from hash for you
+MyTable.create(some_json_column: { some_int: 12 })
+
+# etc
+```
 
 <a name="arbitrary-json-data"></a>
 ## Storing Arbitrary JSON data
