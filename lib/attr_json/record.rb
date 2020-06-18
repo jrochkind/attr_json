@@ -165,27 +165,23 @@ module AttrJson
           # Ensure the `attributes` are set to container attribute values after a
           # record is found.
           after_find do
-            config = self.class.attr_json_config
             registry = self.class.attr_json_registry
-            cattr = config.default_container_attribute
-            next unless has_attribute?(cattr)
-            public_send(cattr).each do |key, value|
-              defn = registry.store_key_lookup(cattr, key)
-              attr_name = defn.try(:name)
-              self.send("#{attr_name}=", value) if attr_name
+            registry.definitions.each do |defn|
+              value = public_send(defn.name)
+              next unless value
+              write_attribute(defn.name, value)
+              self.send(:clear_attribute_changes, [defn.name]) if has_attribute?(defn.name)
             end
-            to_be_cleared = public_send(cattr).keys + [cattr.to_s]
-            to_be_cleared.select! { |k| has_attribute?(k) }
-            self.send(:clear_attribute_changes, to_be_cleared)
           end
 
           # Ensure the `attributes` are set to default values after initialization.
           after_initialize do
             registry = self.class.attr_json_registry
             registry.definitions.each do |defn|
-              next unless defn.has_default?
-              default = defn.instance_variable_get("@default")
-              write_attribute(defn.name, default)
+              value = public_send(defn.name)
+              next unless value
+              write_attribute(defn.name, value)
+              self.send(:clear_attribute_changes, [defn.name]) if has_attribute?(defn.name)
             end
           end
         end
