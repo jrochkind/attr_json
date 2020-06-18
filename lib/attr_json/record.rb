@@ -160,22 +160,13 @@ module AttrJson
         # We don't actually use this for anything, we provide our own covers. But registering
         # it with usual system will let simple_form and maybe others find it.
         if options[:rails_attribute]
-          self.attribute name.to_sym, self.attr_json_registry.fetch(name).type
+          defn = attr_json_registry[name]
+          attribute_args = defn.has_default? ? { default: defn.default_argument } : {}
+          self.attribute name.to_sym, self.attr_json_registry.fetch(name).type, **attribute_args
 
           # Ensure the `attributes` are set to container attribute values after a
           # record is found.
           after_find do
-            registry = self.class.attr_json_registry
-            registry.definitions.each do |defn|
-              value = public_send(defn.name)
-              next unless value
-              write_attribute(defn.name, value)
-              self.send(:clear_attribute_changes, [defn.name]) if has_attribute?(defn.name)
-            end
-          end
-
-          # Ensure the `attributes` are set to default values after initialization.
-          after_initialize do
             registry = self.class.attr_json_registry
             registry.definitions.each do |defn|
               value = public_send(defn.name)

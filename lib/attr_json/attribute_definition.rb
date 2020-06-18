@@ -78,6 +78,12 @@
       @default != NO_DEFAULT_PROVIDED
     end
 
+    # Can be value or proc!
+    def default_argument
+      return nil unless has_default?
+      @default
+    end
+
     def provide_default!
       unless has_default?
         raise ArgumentError.new("This #{self.class.name} does not have a default defined!")
