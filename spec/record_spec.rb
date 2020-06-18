@@ -802,6 +802,7 @@ RSpec.describe AttrJson::Record do
           instance.save
           found_record = klass.find(instance.id)
           expect(found_record.attributes["str"]).to eq ['foo']
+          expect(found_record.str_changed?).to be(false)
         end
       end
     end
