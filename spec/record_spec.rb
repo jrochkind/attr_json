@@ -793,7 +793,9 @@ RSpec.describe AttrJson::Record do
           expect(instance.attributes["str"]).to eq ['foo']
           expect(instance.type_for_attribute("str")).to be_kind_of(AttrJson::Type::Array)
           expect(instance.type_for_attribute("str").base_type).to be_kind_of(ActiveModel::Type::String)
+          expect(instance.str_changed?).to be(false)
         end
+
         it "still has our custom methods on top" do
           skip "gah, how do we test this"
         end
