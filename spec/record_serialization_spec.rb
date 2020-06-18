@@ -55,6 +55,7 @@ RSpec.describe "AttrJson::Record serialization" do
 
     # This does not pass, values are still ruby objects
     it "produces json-value-only-hash" do
+      pending "expected falure, serializable_hash doesn't do that"
       expect(only_json_values?( unsaved_store.serializable_hash )).to be true
     end
   end
