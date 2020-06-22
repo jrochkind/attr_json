@@ -333,4 +333,24 @@ RSpec.describe AttrJson::Record do
       end
     end
   end
+
+  describe "bad_cast :as_nil" do
+    let(:model_class) do
+      Class.new do
+        include AttrJson::Model
+
+        attr_json_config(bad_cast: :as_nil)
+
+        attr_json :str, :string
+      end
+    end
+
+    it "casts bad input as nil on access" do
+      instance.model = "not a hash"
+      expect(instance.model).to eq(nil)
+      instance.save!
+      instance.reload
+      expect(instance.model).to eq(nil)
+    end
+  end
 end
