@@ -53,7 +53,7 @@ module AttrJson
         elsif v.kind_of?(model)
           v.serializable_hash
         else
-          cast(v).serializable_hash
+          (cast_v = cast(v)) && cast_v.serializable_hash
         end
       end
 

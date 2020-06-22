@@ -92,10 +92,34 @@ RSpec.describe "AttrJson::Model with ActiveRecord serialize to one column" do
     end
   end
 
-
   it "for non-castable primitive", pending: "hard to get this working performantly" do
     expect {
       record_instance.other_attributes = 4
-    }.to raise_error
+    }.to raise_error(StandardError)
+  end
+
+  describe "with nullify on bad cast settings" do
+    let(:embedded_model_class) do
+      Class.new do
+        include AttrJson::Model
+
+        attr_json_config(bad_cast: :as_nil, unknown_key: :strip)
+
+        attr_json :str, :string
+        attr_json :int, :integer
+      end
+    end
+
+    it "for a non-castable type" do
+      record_instance.other_attributes = 4
+      expect(record_instance.other_attributes).to eq(nil)
+      record_instance.save!
+    end
+
+    it "for unrecognized keys" do
+      record_instance.other_attributes = { no_such_key: "something" }
+      expect(record_instance.other_attributes).to eq(embedded_model_class.new)
+      record_instance.save!
+    end
   end
 end

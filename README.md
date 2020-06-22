@@ -245,6 +245,7 @@ in this case.
   attr_json :lang_and_value, LangAndValue.to_type, default: { lang: "en", value: "default" }
 ```
 
+
 ### Polymorphic model types
 
 There is some support for "polymorphic" attributes that can hetereogenously contain instances of different AttrJson::Model classes, see comment docs at [AttrJson::Type::PolymorphicModel](./lib/attr_json/type/polymorphic_model.rb).
@@ -335,6 +336,32 @@ MyTable.create(some_json_column: { some_int: 12 })
 
 # etc
 ```
+
+To avoid errors raised at inconvenient times, we recommend you set these settings to make 'bad'
+data turn into `nil`, consistent with most ActiveRecord types:
+
+```ruby
+class MyModel
+  include AttrJson::Model
+
+  attr_json_config(bad_cast: :as_nil, unknown_key: :strip)
+  # ...
+end
+```
+
+And/or define a setter method to cast, and raise early on data problems:
+
+```ruby
+class MyTable < ApplicationRecord
+  serialize :some_json_column, MyModel.to_serialization_coder
+
+  def some_json_column=(val)
+    super(   )
+  end
+end
+```
+
+Serializing a model to an entire json column is a relatively recent feature, please let us know how it's working for you.
 
 <a name="arbitrary-json-data"></a>
 ## Storing Arbitrary JSON data
