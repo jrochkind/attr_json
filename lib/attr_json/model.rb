@@ -30,7 +30,7 @@ module AttrJson
   #
   #        class Something
   #          include AttrJson::Model
-  #          attr_json_config(unknown_key: :ignore)
+  #          attr_json_config(unknown_key: :allow)
   #          #...
   #        end
   module Model
