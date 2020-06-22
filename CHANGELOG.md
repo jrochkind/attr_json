@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* attr_json_config(bad_cast: :as_nil) to avoid raising on data that can't be cast to a
+  AttrJson::Model, instead just casting to nil. https://github.com/jrochkind/attr_json/pull/95
+
 * Documented and tested support for using ActiveRecord serialize to map one AttrJson::Model
 to an entire column on it's own. https://github.com/jrochkind/attr_json/pull/89
 
