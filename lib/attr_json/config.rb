@@ -8,7 +8,12 @@ module AttrJson
       default_rails_attribute
       default_accepts_nested_attributes
     }
-    MODEL_ALLOWED_KEYS = %i{unknown_key}
+
+    MODEL_ALLOWED_KEYS = %i{
+      unknown_key
+      bad_cast
+    }
+
     DEFAULTS = {
       default_container_attribute: "json_attributes",
       default_rails_attribute: false,
