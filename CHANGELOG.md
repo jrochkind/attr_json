@@ -12,7 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   AttrJson::Model, instead just casting to nil. https://github.com/jrochkind/attr_json/pull/95
 
 * Documented and tested support for using ActiveRecord serialize to map one AttrJson::Model
-to an entire column on it's own. https://github.com/jrochkind/attr_json/pull/89
+to an entire column on it's own. https://github.com/jrochkind/attr_json/pull/89 and
+https://github.com/jrochkind/attr_json/pull/93
 
 * Better synchronization with ActiveRecord attributes when using rails_attribute:true, and a configurable true default_rails_attribute.  Thanks @volkanunsal . https://github.com/jrochkind/attr_json/pull/94
 
