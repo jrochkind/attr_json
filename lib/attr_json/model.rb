@@ -33,6 +33,17 @@ module AttrJson
   #          attr_json_config(unknown_key: :allow)
   #          #...
   #        end
+  #
+  # Similarly, trying to set a Model-valued attribute with an object that
+  # can't be cast to a Hash or Model at all will normally raise a
+  # AttrJson::Type::Model::BadCast error, but you can set config `bad_cast: :as_nil`
+  # to make it cast to nil, more like typical ActiveRecord cast.
+  #
+  #        class Something
+  #          include AttrJson::Model
+  #          attr_json_config(bad_cast: :as_nil)
+  #          #...
+  #        end
   module Model
     extend ActiveSupport::Concern
 

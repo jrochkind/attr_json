@@ -51,11 +51,13 @@ module AttrJson
         elsif v.respond_to?(:to_h)
           # TODO Maybe we ought not to do this on #to_h?
           model.new_from_serializable(v.to_h)
+        elsif model.attr_json_config.bad_cast == :as_nil
+          # This was originally default behavior, to be like existing ActiveRecord
+          # which kind of silently does this for non-castable basic values. That
+          # ended up being confusing in the basic case, so now we raise by default,
+          # but this is still configurable.
+          nil
         else
-          # Bad input. Originally we were trying to return nil, to be like
-          # existing ActiveRecord which kind of silently does a basic value
-          # with null input. But that ended up making things confusing, let's
-          # just raise.
           raise BadCast.new("Can not cast from #{v.inspect} to #{self.type}")
         end
       end
