@@ -119,7 +119,8 @@ module AttrJson
       # @option options [Boolean] :rails_attribute (false) Create an actual ActiveRecord
       #    `attribute` for name param. A Rails attribute isn't needed for our functionality,
       #    but registering thusly will let the type be picked up by simple_form and
-      #    other tools that may look for it via Rails attribute APIs.
+      #    other tools that may look for it via Rails attribute APIs. Default can be changed
+      #    with `attr_json_config(default_rails_attribute: true)`
       def attr_json(name, type, **options)
         options = {
           rails_attribute: self.attr_json_config.default_rails_attribute,
