@@ -819,6 +819,16 @@ RSpec.describe AttrJson::Record do
           expect(found_record.attributes["int"]).to eq 100
           expect(found_record.int_changed?).to be(false)
         end
+
+        it "knows when a change has happened" do
+          expect(instance.str_changed?).to be(false)
+
+          instance.str = "new value"
+          expect(instance.str_changed?).to eq(true)
+
+          instance.save!
+          expect(instance.str_changed?).to eq(false)
+        end
       end
     end
 
