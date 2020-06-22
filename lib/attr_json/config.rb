@@ -4,7 +4,7 @@ module AttrJson
   # changed with {#merge}.
   class Config
     RECORD_ALLOWED_KEYS = %i{default_container_attribute default_accepts_nested_attributes}
-    MODEL_ALLOWED_KEYS = %i{unknown_key}
+    MODEL_ALLOWED_KEYS = %i{unknown_key bad_cast}
     DEFAULTS = {
       default_container_attribute: "json_attributes",
       unknown_key: :raise
