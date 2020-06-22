@@ -119,10 +119,11 @@ module AttrJson
       # @option options [Boolean] :rails_attribute (false) Create an actual ActiveRecord
       #    `attribute` for name param. A Rails attribute isn't needed for our functionality,
       #    but registering thusly will let the type be picked up by simple_form and
-      #    other tools that may look for it via Rails attribute APIs.
+      #    other tools that may look for it via Rails attribute APIs. Default can be changed
+      #    with `attr_json_config(default_rails_attribute: true)`
       def attr_json(name, type, **options)
         options = {
-          rails_attribute: false,
+          rails_attribute: self.attr_json_config.default_rails_attribute,
           validate: true,
           container_attribute: self.attr_json_config.default_container_attribute,
           accepts_nested_attributes: self.attr_json_config.default_accepts_nested_attributes
@@ -160,7 +161,21 @@ module AttrJson
         # We don't actually use this for anything, we provide our own covers. But registering
         # it with usual system will let simple_form and maybe others find it.
         if options[:rails_attribute]
-          self.attribute name.to_sym, self.attr_json_registry.fetch(name).type
+          attr_json_definition = attr_json_registry[name]
+
+          attribute_args = attr_json_definition.has_default? ? { default: attr_json_definition.default_argument } : {}
+          self.attribute name.to_sym, attr_json_definition.type, **attribute_args
+
+          # Ensure that rails attributes tracker knows about value we just fetched
+          # for this particular attribute. Yes, we are registering an after_find for each
+          # attr_json registered with rails_attribute:true, using the `name` from above under closure. .
+          after_find do
+            value = public_send(name)
+            if value && has_attribute?(name.to_sym)
+              write_attribute(name.to_sym, value)
+              self.send(:clear_attribute_changes, [name.to_sym])
+            end
+          end
         end
 
         _attr_jsons_module.module_eval do
@@ -173,6 +188,7 @@ module AttrJson
           # this simple way.
 
           define_method("#{name}=") do |value|
+            super(value) if defined?(super)
             attribute_def = self.class.attr_json_registry.fetch(name.to_sym)
             public_send(attribute_def.container_attribute)[attribute_def.store_key] = attribute_def.cast(value)
           end
