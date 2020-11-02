@@ -58,7 +58,40 @@ module AttrJson
       end
 
       def deserialize(v)
-        cast(v)
+        if v.nil?
+          # important to stay nil instead of empty object, because they
+          # are different things.
+          v
+        elsif v.kind_of? model
+          v
+        elsif v.respond_to?(:to_hash)
+          # to_hash is actually the 'implicit' conversion, it really is a hash
+          # even though it isn't is_a?(Hash), try to_hash first before to_h,
+          # the explicit conversion.
+          model.new_from_serializable(
+            v.to_hash.map do |k, v|
+              attr_def = model.attr_json_registry[k.to_sym]
+              [k, attr_def ? attr_def.deserialize(v) : v]
+            end.to_h
+          )
+        elsif v.respond_to?(:to_h)
+          # TODO Maybe we ought not to do this on #to_h?
+          model.new_from_serializable(
+            v.to_h.map do |k, v|
+              attr_def = model.attr_json_registry[k.to_sym]
+              [k, attr_def ? attr_def.deserialize(v) : v]
+            end.to_h
+          )
+         model.new_from_serializable(v.to_h)
+        elsif model.attr_json_config.bad_cast == :as_nil
+          # This was originally default behavior, to be like existing ActiveRecord
+          # which kind of silently does this for non-castable basic values. That
+          # ended up being confusing in the basic case, so now we raise by default,
+          # but this is still configurable.
+          nil
+        else
+          raise BadCast.new("Can not cast from #{v.inspect} to #{self.type}")
+        end
       end
 
       # these guys are definitely mutable, so we need this.
