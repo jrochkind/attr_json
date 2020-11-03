@@ -27,6 +27,25 @@ RSpec.describe AttrJson::Record do
   end
   let(:instance_custom) { klass_with_custom.new }
 
+  let(:serializing_type) do
+    Class.new(ActiveRecord::Type::Value) do
+      def serialize(value) ; "#{value}x" ; end
+
+      def deserialize(value) ; value.chop ; end
+
+      def cast(value) ; value ; end
+    end
+  end
+  let(:klass_with_serializing) do
+    Class.new(ActiveRecord::Base) do
+      include AttrJson::Record
+
+      self.table_name = "products"
+      attr_json :custom, :serializing
+    end
+  end
+  let(:instance_serializing) { klass_with_serializing.new }
+
   [
     [:integer, 12, "12", 0],
     [:string, "12", 12, ""],
@@ -150,6 +169,22 @@ RSpec.describe AttrJson::Record do
     instance_custom.save!
     instance_custom.reload
     expect(instance_custom.custom).to eq 'foo'
+  end
+
+  it 'supports custom ActiveRecord registered type that serializes value' do
+    expect { instance_serializing }.to raise_error ArgumentError
+
+    ActiveRecord::Type.register(:serializing, serializing_type)
+    expect { instance_serializing }.to_not raise_error
+
+    instance_serializing.custom = 'foo'
+    expect(instance_serializing.json_attributes).to eq('custom' => 'foo')
+
+    instance_serializing.save!
+    instance_serializing.reload
+
+    expect(instance_serializing.custom).to eq 'foo'
+    expect(instance_serializing.json_attributes_before_type_cast).to eq('{"custom": "foox"}')
   end
 
   # TODO: Should it LET you redefine instead, and spec for that? Have to pay

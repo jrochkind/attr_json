@@ -369,4 +369,40 @@ RSpec.describe AttrJson::NestedAttributes do
       expect(instance).not_to respond_to(:one_model_attributes=)
     end
   end
+
+  describe "model with serializing type" do
+    let(:serializing_type) do
+      Class.new(ActiveRecord::Type::Value) do
+        def serialize(value) ; "#{value}x" ; end
+
+        def deserialize(value) ; value.chop ; end
+
+        def cast(value) ; value ; end
+      end
+    end
+
+    let(:model_class) do
+      Class.new do
+        include AttrJson::Model
+
+        attr_json :str, :nested_serializing
+      end
+    end
+
+    it 'supports custom ActiveRecord registered type that serializes value', :focus do
+      expect { instance.one_model }.to raise_error ArgumentError
+
+      ActiveRecord::Type.register(:nested_serializing, serializing_type)
+      expect { instance.one_model }.to_not raise_error
+
+      instance.one_model = {str: 'foo'}
+      expect(instance.one_model.str).to eq 'foo'
+
+      instance.save!
+      instance.reload
+
+      expect(instance.one_model.str).to eq 'foo'
+      expect(instance.json_attributes_before_type_cast).to eq('{"one_model": {"str": "foox"}}')
+    end
+  end
 end
