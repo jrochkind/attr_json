@@ -104,15 +104,21 @@ module AttrJson
 
 
       # Like `.new`, but translate store keys in hash
-      def new_from_serializable(attributes = {})
-        attributes = attributes.transform_keys do |key|
+      def new_from_serializable(attributes = {}, deserialize = false)
+        attributes = attributes.map do |key, value|
           # store keys in arguments get translated to attribute names on initialize.
-          if attribute_def = self.attr_json_registry.store_key_lookup("", key.to_s)
+          k = if attribute_def = self.attr_json_registry.store_key_lookup("", key.to_s)
             attribute_def.name.to_s
           else
             key
           end
-        end
+          v = if deserialize && (attr_def = model.attr_json_registry[k])
+            attr_def.deserialize(value)
+          else
+            value
+          end
+          [k, v]
+        end.to_h
         self.new(attributes)
       end
 
