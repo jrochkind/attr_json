@@ -112,7 +112,7 @@ module AttrJson
           else
             key
           end
-          v = if deserialize && (attr_def = model.attr_json_registry[k])
+          v = if deserialize && (attr_def = self.attr_json_registry[k])
             attr_def.deserialize(value)
           else
             value

@@ -389,7 +389,7 @@ RSpec.describe AttrJson::NestedAttributes do
       end
     end
 
-    it 'supports custom ActiveRecord registered type that serializes value', :focus do
+    it 'supports custom ActiveRecord registered type that serializes value' do
       expect { instance.one_model }.to raise_error ArgumentError
 
       ActiveRecord::Type.register(:nested_serializing, serializing_type)
