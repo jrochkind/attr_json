@@ -1,5 +1,5 @@
 # AttrJson
-[![Build Status](https://travis-ci.org/jrochkind/attr_json.svg?branch=master)](https://travis-ci.org/jrochkind/attr_json)
+[![Build Status](https://travis-ci.com/jrochkind/attr_json.svg?branch=master)](https://travis-ci.com/jrochkind/attr_json)
 [![Gem Version](https://badge.fury.io/rb/attr_json.svg)](https://badge.fury.io/rb/attr_json)
 
 
