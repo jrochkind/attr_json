@@ -32,6 +32,13 @@ appraise "rails-6-0" do
   gem "pg", "~> 1.0"
 end
 
+appraise "rails-6-1" do
+  gem 'combustion', "~> 1.0"
+
+  gem "rails", ">= 6.0.0.rc1", "< 6.2.0.a"
+  gem "pg", "~> 1.0"
+end
+
 appraise "rails-edge-6" do
   # Edge rails needs unreleased combustion
   # https://github.com/pat/combustion/issues/92
