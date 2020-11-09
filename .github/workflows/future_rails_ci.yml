@@ -45,7 +45,7 @@ jobs:
           - gemfile: rails_edge
             ruby: 2.7.0
 
-    name: RAILS FUTURE ${{ matrix.gemfile }}, ruby ${{ matrix.ruby }}
+    name: ${{ matrix.gemfile }}, ruby ${{ matrix.ruby }}
 
     steps:
     - uses: actions/checkout@v2
