@@ -63,9 +63,5 @@ jobs:
         gem install bundler
         bundle install
 
-    - name: App setup
-      run: |
-        bundle exec rails db:prepare
-
     - name: Run tests
       run: bundle exec rspec
