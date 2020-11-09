@@ -1,5 +1,6 @@
 # AttrJson
 [![CI Status](https://github.com/jrochkind/attr_json/workflows/CI/badge.svg?branch=master)](https://github.com/jrochkind/attr_json/actions?query=workflow%3ACI+branch%3Amaster)
+[![CI Status](https://github.com/jrochkind/attr_json/workflows/CI%20on%20Future%20Rails%20Versions/badge.svg?branch=master)](https://github.com/jrochkind/attr_json/actions?query=workflow%3A%22CI+on+Future+Rails+Versions%22+branch%3Amaster)
 [![Gem Version](https://badge.fury.io/rb/attr_json.svg)](https://badge.fury.io/rb/attr_json)
 
 
