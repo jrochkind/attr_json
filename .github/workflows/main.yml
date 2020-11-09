@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  tests:
+    services:
+      db:
+        image: postgres:9.4
+        ports: ['5432:5432']
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        - ruby 2.4.5
+          gemfile: gemfiles/rails_5_0.gemfile
+
+        - ruby: 2.4.5
+          gemfile: gemfiles/rails_5_1.gemfile
+
+        - ruby: 2.4.5
+          gemfile: gemfiles/rails_5_2.gemfile
+
+        - ruby: 2.5.3
+          gemfile: gemfiles/rails_5_0.gemfile
+
+        - ruby: 2.6.5
+          gemfile: gemfiles/rails_5_2.gemfile
+
+        - ruby: 2.6.5
+          gemfile: gemfiles/rails_6_0.gemfile
+
+        - ruby: 2.7.0
+          gemfile: gemfiles/rails_6_0.gemfile
+
+        - ruby: 2.7.0
+          gemfile: gemfiles/rails_6_1.gemfile
+
+        - ruby: 2.7.0
+          gemfile: gemfiles/rails_edge.gemfile
+
+
+    name: Ruby ${{ matrix.ruby }}
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: ${{ matrix.ruby }}
+        bundler-cache: true
+
+    - name: Install dependencies
+      run: |
+        export BUNDLE_GEMFILE="${GITHUB_WORKSPACE}/gemfiles/${gemfile}"
+        sudo apt install -yqq libpq-dev
+        gem install bundler
+        bundle install
+
+    - name: App setup
+
+
+    - name: Run tests
+      run: bundle exec rspec
