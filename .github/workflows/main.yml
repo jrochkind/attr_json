@@ -65,7 +65,6 @@ jobs:
     - name: Install dependencies
       run: |
         export BUNDLE_GEMFILE="${GITHUB_WORKSPACE}/gemfiles/${{ matrix.gemfile }}.gemfile"
-        sudo apt install -yqq libpq-dev
         gem install bundler
         bundle install
 
