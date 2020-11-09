@@ -18,34 +18,34 @@ jobs:
       matrix:
         include:
           - ruby: 2.4.5
-            gemfile: gemfiles/rails_5_0.gemfile
+            gemfile: rails_5_0
 
           - ruby: 2.4.5
-            gemfile: gemfiles/rails_5_1.gemfile
+            gemfile: rails_5_1
 
           - ruby: 2.4.5
-            gemfile: gemfiles/rails_5_2.gemfile
+            gemfile: rails_5_2
 
           - ruby: 2.5.3
-            gemfile: gemfiles/rails_5_0.gemfile
+            gemfile: rails_5_0
 
           - ruby: 2.6.5
-            gemfile: gemfiles/rails_5_2.gemfile
+            gemfile: rails_5_2
 
           - ruby: 2.6.5
-            gemfile: gemfiles/rails_6_0.gemfile
+            gemfile: rails_6_0
 
           - ruby: 2.7.0
-            gemfile: gemfiles/rails_6_0.gemfile
+            gemfile: rails_6_0
 
           - ruby: 2.7.0
-            gemfile: gemfiles/rails_6_1.gemfile
+            gemfile: rails_6_1
 
           - ruby: 2.7.0
-            gemfile: gemfiles/rails_edge.gemfile
+            gemfile: rails_edge
 
 
-    name: Ruby ${{ matrix.ruby }}
+    name: ${{ matrix.gemfile }}, ruby ${{ matrix.ruby }}
 
     steps:
     - uses: actions/checkout@v2
@@ -58,7 +58,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        export BUNDLE_GEMFILE="${GITHUB_WORKSPACE}/gemfiles/${gemfile}"
+        export BUNDLE_GEMFILE="${GITHUB_WORKSPACE}/gemfiles/${gemfile}.gemfile"
         sudo apt install -yqq libpq-dev
         gem install bundler
         bundle install
