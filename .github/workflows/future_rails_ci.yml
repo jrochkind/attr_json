@@ -6,6 +6,8 @@ name: CI on Future Rails Versions
 #
 # This has to just be a copy-and-paste copy of our main ci.yml,
 # but with different gemfiles in the matrix. That is not great.
+# We also choose NOT to run this one on pull_request, we just
+# run it on master, see how that works.
 #
 # These jobs can be left out of "required" for merge in github settings
 # for "Branch Protection Rules" at https://github.com/jrochkind/attr_json/settings/branches
@@ -16,8 +18,6 @@ name: CI on Future Rails Versions
 
 on:
   push:
-    branches: [ master ]
-  pull_request:
     branches: [ master ]
 
 env:
