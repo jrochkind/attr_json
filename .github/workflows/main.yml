@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ master ]
 
+env:
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+
 jobs:
   tests:
     services:
@@ -13,7 +17,7 @@ jobs:
         image: postgres:9.4
         env:
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: ci
+          POSTGRES_PASSWORD: postgres
         ports: ['5432:5432']
 
     runs-on: ubuntu-latest
