@@ -24,33 +24,32 @@ jobs:
     strategy:
       matrix:
         include:
-          - ruby: 2.4.5
-            gemfile: rails_5_0
+          - gemfile: rails_5_0
+            ruby: 2.4.5
 
-          - ruby: 2.4.5
-            gemfile: rails_5_1
+          - gemfile: rails_5_0
+            ruby: 2.5.3
 
-          - ruby: 2.4.5
-            gemfile: rails_5_2
+          - gemfile: rails_5_1
+            ruby: 2.4.5
 
-          - ruby: 2.5.3
-            gemfile: rails_5_0
+          - gemfile: rails_5_2
+            ruby: 2.4.5
 
-          - ruby: 2.6.5
-            gemfile: rails_5_2
+          - gemfile: rails_5_2
+            ruby: 2.6.5
 
-          - ruby: 2.6.5
-            gemfile: rails_6_0
+          - gemfile: rails_6_0
+            ruby: 2.6.5
 
-          - ruby: 2.7.0
-            gemfile: rails_6_0
+          - gemfile: rails_6_0
+            ruby: 2.7.0
 
-          - ruby: 2.7.0
-            gemfile: rails_6_1
+          - gemfile: rails_6_1
+            ruby: 2.7.0
 
-          - ruby: 2.7.0
-            gemfile: rails_edge
-
+          - gemfile: rails_edge
+            ruby: 2.7.0
 
     name: ${{ matrix.gemfile }}, ruby ${{ matrix.ruby }}
 
