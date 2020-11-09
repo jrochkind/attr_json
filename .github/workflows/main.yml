@@ -11,6 +11,9 @@ jobs:
     services:
       db:
         image: postgres:9.4
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci
         ports: ['5432:5432']
 
     runs-on: ubuntu-latest
