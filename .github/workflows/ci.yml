@@ -45,12 +45,6 @@ jobs:
           - gemfile: rails_6_0
             ruby: 2.7.0
 
-          - gemfile: rails_6_1
-            ruby: 2.7.0
-
-          - gemfile: rails_edge
-            ruby: 2.7.0
-
     name: ${{ matrix.gemfile }}, ruby ${{ matrix.ruby }}
 
     steps:
