@@ -1,5 +1,4 @@
 # AttrJson
-[![Build Status](https://travis-ci.com/jrochkind/attr_json.svg?branch=master)](https://travis-ci.com/jrochkind/attr_json)
 [![CI Status](https://github.com/jrochkind/attr_json/workflows/CI/badge.svg?branch=master)](https://github.com/jrochkind/attr_json/actions?query=workflow%3ACI+branch%3Amaster)
 [![Gem Version](https://badge.fury.io/rb/attr_json.svg)](https://badge.fury.io/rb/attr_json)
 
