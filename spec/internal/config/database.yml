@@ -8,6 +8,7 @@
 test:
   adapter: postgresql
   encoding: unicode
+  host: localhost
   database: <%= ENV['RAILS_PG_DB'] || "attr_json_project_test" %>
 
 # Warning, combustion will drop your dev database too....
