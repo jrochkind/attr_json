@@ -63,4 +63,6 @@ jobs:
         bundle install
 
     - name: Run tests
-      run: bundle exec rspec
+      run: |
+        export BUNDLE_GEMFILE="${GITHUB_WORKSPACE}/gemfiles/${{ matrix.gemfile }}.gemfile"
+        bundle exec rspec
