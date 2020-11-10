@@ -60,7 +60,6 @@ jobs:
     - name: Bundle install
       run: |
         bundle config set gemfile"${GITHUB_WORKSPACE}/gemfiles/${{ matrix.gemfile }}.gemfile"
-        gem install bundler
         bundle install --jobs 4 --retry 3
 
     - name: Run tests
