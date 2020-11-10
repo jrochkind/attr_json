@@ -35,7 +35,9 @@ jobs:
         ports: ['5432:5432']
 
     runs-on: ubuntu-latest
+
     strategy:
+      fail-fast: false
       matrix:
         include:
 
@@ -54,13 +56,12 @@ jobs:
       uses: ruby/setup-ruby@v1
       with:
         ruby-version: ${{ matrix.ruby }}
-        bundler-cache: true
 
-    - name: Install dependencies
+    - name: Bundle install
       run: |
-        export BUNDLE_GEMFILE="${GITHUB_WORKSPACE}/gemfiles/${{ matrix.gemfile }}.gemfile"
+        bundle config set gemfile"${GITHUB_WORKSPACE}/gemfiles/${{ matrix.gemfile }}.gemfile"
         gem install bundler
-        bundle install
+        bundle install --jobs 4 --retry 3
 
     - name: Run tests
       run: bundle exec rspec
