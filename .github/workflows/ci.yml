@@ -60,7 +60,6 @@ jobs:
     - name: Install dependencies
       run: |
         export BUNDLE_GEMFILE="${GITHUB_WORKSPACE}/gemfiles/${{ matrix.gemfile }}.gemfile"
-        gem install bundler
         bundle install
 
     - name: Run tests
