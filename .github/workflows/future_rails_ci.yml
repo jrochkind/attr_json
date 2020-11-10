@@ -19,6 +19,9 @@ name: CI on Future Rails Versions
 on:
   push:
     branches: [ master ]
+  # UTC Sundays 0900. note, no notifications will be sent for failed scheduled builds. :(
+  schedule:
+    - cron: '0 9 * * SUN'
 
 env:
   POSTGRES_USER: postgres
