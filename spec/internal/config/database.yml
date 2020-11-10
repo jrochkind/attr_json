@@ -8,7 +8,12 @@
 test:
   adapter: postgresql
   encoding: unicode
+  host: localhost
   database: <%= ENV['RAILS_PG_DB'] || "attr_json_project_test" %>
+  # ENV POSTGRES_USER and POSTGRES_PASSWORD set in CI, usually empty
+  # in local tests, where pg is usually running with no authentication required
+  username: <%= ENV['POSTGRES_USER'] %>
+  password: <%= ENV['POSTGRES_PASSWORD'] %>
 
 # Warning, combustion will drop your dev database too....
 development:

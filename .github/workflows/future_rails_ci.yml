@@ -1,0 +1,66 @@
+name: CI on Future Rails Versions
+
+# Experimenting with separate github actions workflow
+# for gemfiles for FUTURE Rails vesions, we'd like to keep an eye on
+# if they pass, but they aren't required to do so.
+#
+# This has to just be a copy-and-paste copy of our main ci.yml,
+# but with different gemfiles in the matrix. That is not great.
+# We also choose NOT to run this one on pull_request, we just
+# run it on master, see how that works.
+#
+# These jobs can be left out of "required" for merge in github settings
+# for "Branch Protection Rules" at https://github.com/jrochkind/attr_json/settings/branches
+#
+# You can move a Rails version between this file and ci.yml, and (un)check it in those
+# github settings. (I wish whether it was required to pass could be in this file
+# too, to keep things together)
+
+on:
+  push:
+    branches: [ master ]
+
+env:
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+
+jobs:
+  tests:
+    services:
+      db:
+        image: postgres:9.4
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+
+          - gemfile: rails_6_1
+            ruby: 2.7.0
+
+          - gemfile: rails_edge
+            ruby: 2.7.0
+
+    name: ${{ matrix.gemfile }}, ruby ${{ matrix.ruby }}
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: ${{ matrix.ruby }}
+
+    - name: Bundle install
+      run: |
+        bundle config set gemfile"${GITHUB_WORKSPACE}/gemfiles/${{ matrix.gemfile }}.gemfile"
+        bundle install --jobs 4 --retry 3
+
+    - name: Run tests
+      run: bundle exec rspec
