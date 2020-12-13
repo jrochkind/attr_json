@@ -5,9 +5,9 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ '**' ]
-  # UTC Sundays 0900. note, no notifications will be sent for failed scheduled builds. :(
+  # UTC Tuesdays 0900. note, no notifications will be sent for failed scheduled builds. :(
   schedule:
-    - cron: '0 9 * * SUN'
+    - cron: '0 9 * * TUE'
 
 
 env:
