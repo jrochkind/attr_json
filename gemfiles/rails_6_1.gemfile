@@ -3,7 +3,7 @@
 source "https://rubygems.org"
 
 gem "combustion", "~> 1.0"
-gem "rails", ">= 6.0.0.rc1", "< 6.2.0.a"
+gem "activerecord", "~> 6.1"
 gem "railties"
 gem "pg", "~> 1.0"
 gem "rspec-rails", "~> 4.0"
