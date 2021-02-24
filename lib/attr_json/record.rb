@@ -172,10 +172,15 @@ module AttrJson
           # for this particular attribute. Yes, we are registering an after_find for each
           # attr_json registered with rails_attribute:true, using the `name` from above under closure. .
           after_find do
-            value = public_send(name)
-            if value && has_attribute?(name.to_sym)
-              write_attribute(name.to_sym, value)
-              self.send(:clear_attribute_changes, [name.to_sym])
+            begin
+              value = public_send(name)
+              if value && has_attribute?(name.to_sym)
+                write_attribute(name.to_sym, value)
+                self.send(:clear_attribute_changes, [name.to_sym])
+              end
+            rescue AttrJson::Type::Model::BadCast, AttrJson::Type::PolymorphicModel::TypeError => e
+              # There was bad data in the DB, we're just going to skip the Rails attribute sync.
+              # Should we log?
             end
           end
         end
