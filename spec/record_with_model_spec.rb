@@ -139,12 +139,41 @@ RSpec.describe AttrJson::Record do
     end
   end
 
-  describe "with weird input" do
+  describe "with un-casteable input" do
     it "raises" do
       # this SEEMS to be consistent with what other ActiveModel::Types do...
       expect {
         instance.model = "this is not a model"
       }.to raise_error(AttrJson::Type::Model::BadCast)
+    end
+
+    describe "already in database" do
+      let(:bad_value) {{ "model" => "this is not a hash" }}
+      before do
+        instance.save!
+        ActiveRecord::Base.connection.execute("update products set json_attributes='#{bad_value.to_json}' where id=#{instance.id}")
+      end
+
+      it "can load without error" do
+        instance.reload
+      end
+
+      it "can show before_type_cast without error" do
+        instance.reload
+        expect(JSON.parse(instance.json_attributes_before_type_cast)).to eq bad_value
+      end
+
+      it "errors on accessing attribute" do
+        instance.reload
+        expect { instance.model }.to raise_error AttrJson::Type::Model::BadCast
+      end
+
+      # Not so much intentional design, but this is what it does...
+      it "errors on accessing container" do
+        instance.reload
+        expect { instance.json_attributes }.to raise_error AttrJson::Type::Model::BadCast
+      end
+
     end
   end
 
