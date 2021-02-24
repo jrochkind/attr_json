@@ -776,59 +776,55 @@ RSpec.describe AttrJson::Record do
     end
 
     describe "rails_attribute" do
-      it "does not register rails attribute by default" do
-        expect(instance.attributes.keys).not_to include("str")
+      let(:klass) do
+        Class.new(ActiveRecord::Base) do
+          include AttrJson::Record
+
+          self.table_name = "products"
+          attr_json :str, :string, array: true, rails_attribute: true, default: 'foo'
+          attr_json :int, :integer, rails_attribute: true
+        end
       end
-      describe "with rails_attribute: true" do
-        let(:klass) do
-          Class.new(ActiveRecord::Base) do
-            include AttrJson::Record
 
-            self.table_name = "products"
-            attr_json :str, :string, array: true, rails_attribute: true, default: 'foo'
-            attr_json :int, :integer, rails_attribute: true
-          end
-        end
-        it "registers attribute and type" do
-          expect(instance.attributes.keys).to include("str")
-          expect(instance.type_for_attribute("str")).to be_kind_of(AttrJson::Type::Array)
-          expect(instance.type_for_attribute("str").base_type).to be_kind_of(ActiveModel::Type::String)
+      it "registers attribute and type" do
+        expect(instance.attributes.keys).to include("str")
+        expect(instance.type_for_attribute("str")).to be_kind_of(AttrJson::Type::Array)
+        expect(instance.type_for_attribute("str").base_type).to be_kind_of(ActiveModel::Type::String)
 
-        end
+      end
 
-        it "has initial values" do
-          expect(instance.attributes["str"]).to eq ['foo']
-          # this seems to be consistent with ordinary rails attribute use, not marked changed with initial default
-          expect(instance.str_changed?).to be(false)
+      it "has initial values" do
+        expect(instance.attributes["str"]).to eq ['foo']
+        # this seems to be consistent with ordinary rails attribute use, not marked changed with initial default
+        expect(instance.str_changed?).to be(false)
 
-          expect(instance.attributes["int"]).to be_nil
-          expect(instance.str_changed?).to be(false)
-        end
+        expect(instance.attributes["int"]).to be_nil
+        expect(instance.str_changed?).to be(false)
+      end
 
-        it "still has our custom methods on top" do
-          skip "gah, how do we test this"
-        end
+      it "still has our custom methods on top" do
+        skip "gah, how do we test this"
+      end
 
-        it 'syncs Rails attributes and default values after find' do
-          instance.update(str: "our str", int: 100)
-          found_record = klass.find(instance.id)
+      it 'syncs Rails attributes and default values after find' do
+        instance.update(str: "our str", int: 100)
+        found_record = klass.find(instance.id)
 
-          expect(found_record.attributes["str"]).to eq ['our str']
-          expect(found_record.str_changed?).to be(false)
+        expect(found_record.attributes["str"]).to eq ['our str']
+        expect(found_record.str_changed?).to be(false)
 
-          expect(found_record.attributes["int"]).to eq 100
-          expect(found_record.int_changed?).to be(false)
-        end
+        expect(found_record.attributes["int"]).to eq 100
+        expect(found_record.int_changed?).to be(false)
+      end
 
-        it "knows when a change has happened" do
-          expect(instance.str_changed?).to be(false)
+      it "knows when a change has happened" do
+        expect(instance.str_changed?).to be(false)
 
-          instance.str = "new value"
-          expect(instance.str_changed?).to eq(true)
+        instance.str = "new value"
+        expect(instance.str_changed?).to eq(true)
 
-          instance.save!
-          expect(instance.str_changed?).to eq(false)
-        end
+        instance.save!
+        expect(instance.str_changed?).to eq(false)
       end
     end
 
