@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/jrochkind/attr_json/compare/v1.3.0...HEAD)
 
+### Fixed
+
+* polymorphic single type can be set to nil https://github.com/jrochkind/attr_json/pull/115
+
 ## [1.3.0](https://github.com/jrochkind/attr_json/compare/v1.2.0...v1.3.0)
 
 ### Added
