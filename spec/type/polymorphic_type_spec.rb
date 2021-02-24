@@ -80,6 +80,19 @@ RSpec.describe AttrJson::Type::PolymorphicModel do
 
       expect(instance.one_poly).to eq model1.new(str: "str", int: 12)
     end
+
+    it "can set to nil though" do
+      instance.save!
+      expect(instance.one_poly).to be(nil)
+
+      instance.one_poly = model1.new
+      instance.save!
+
+      instance.one_poly = nil
+      instance.save!
+      expect(instance.one_poly).to be(nil)
+    end
+
     it "can set hash with type key" do
       instance.one_poly = { str: "str", int: 12, type: "Model1" }
       instance.save!
@@ -98,9 +111,9 @@ RSpec.describe AttrJson::Type::PolymorphicModel do
       instance.many_poly = [model1.new(str: "str", int: 12), model2.new(str: "str", bool: true)]
       instance.save!
       instance.reload
-
       expect(instance.many_poly).to eq [model1.new(str: "str", int: 12), model2.new(str: "str", bool: true)]
     end
+
     it "can set hashes with type key" do
       instance.many_poly = [{ str: "str", int: 12, type: "Model1" }, { str: "str", bool: true, type: "Model2" }]
       instance.save!
