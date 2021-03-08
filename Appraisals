@@ -46,9 +46,4 @@ appraise "rails-edge-6" do
 
   gem "rails", git: "https://github.com/rails/rails.git", branch: "master"
   gem "pg", "~> 1.0"
-
-  # We don't actually use coffeescript at all, we need coffee-rails as an explicit
-  # dependency just for transitory edge weirdness using current sprockets release
-  # with rails 6 edge.
-  gem 'coffee-rails'
 end
