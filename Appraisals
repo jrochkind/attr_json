@@ -47,6 +47,6 @@ appraise "rails-edge" do
   # understand, so we need to depend on it.
   gem "coffee-rails"
 
-  gem "rails", git: "https://github.com/rails/rails.git", branch: "master"
+  gem "rails", git: "https://github.com/rails/rails.git", branch: "main"
   gem "pg", "~> 1.0"
 end
