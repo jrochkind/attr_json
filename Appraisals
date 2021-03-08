@@ -35,7 +35,7 @@ end
 appraise "rails-6-1" do
   gem 'combustion', "~> 1.0"
 
-  gem "rails", ">= 6.0.0.rc1", "< 6.2.0.a"
+  gem "rails", "~> 6.1.0"
   gem "pg", "~> 1.0"
 end
 
