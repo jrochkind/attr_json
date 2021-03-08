@@ -39,10 +39,13 @@ appraise "rails-6-1" do
   gem "pg", "~> 1.0"
 end
 
-appraise "rails-edge-6" do
-  # Edge rails needs unreleased combustion
-  # https://github.com/pat/combustion/issues/92
+appraise "rails-edge" do
   gem 'combustion', "~> 1.0"
+
+  # Even though we don't use coffee-script, some part of rails or other part
+  # of our stack is still insisting on requiring it, for reasons we don't
+  # understand, so we need to depend on it.
+  gem "coffee-rails"
 
   gem "rails", git: "https://github.com/rails/rails.git", branch: "master"
   gem "pg", "~> 1.0"
