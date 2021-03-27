@@ -126,8 +126,11 @@ RSpec.describe AttrJson::Type::PolymorphicModel do
   describe "assigning via json_attributes" do
     it "allows assigning via raw hash object" do
       instance.json_attributes = {
-        "many_poly"=>[{"str"=>"str", "int"=>12}, {"str"=>"str", "bool"=>true}],
-        "one_poly"=>{"str"=>"str", "int"=>12},
+        "one_poly": {"int": 12, "str": "str", "type": "Model1"},
+        "many_poly": [
+          {"int": 12, "str": "str", "type": "Model1"},
+          {"str": "str", "bool": true, "type": "Model2"}
+        ]
       }
       instance.save
       # TODO: assert assignment worked correctly
