@@ -20,6 +20,7 @@ require 'bundler'
 # replace manual requires with? :
 # #Bundler.require :default, :development, :test
 
+require 'uri'
 require 'combustion'
 Combustion.initialize! :all do
   # not really combustion config but it applies to our combustion app, so.

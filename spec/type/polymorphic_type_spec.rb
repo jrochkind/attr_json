@@ -123,6 +123,17 @@ RSpec.describe AttrJson::Type::PolymorphicModel do
     end
   end
 
+  describe "assigning via json_attributes" do
+    it "allows assigning via raw hash object" do
+      instance.json_attributes = {
+        "many_poly"=>[{"str"=>"str", "int"=>12}, {"str"=>"str", "bool"=>true}],
+        "one_poly"=>{"str"=>"str", "int"=>12},
+      }
+      instance.save
+      # TODO: assert assignment worked correctly
+    end
+  end
+
   describe "bad types" do
     it "raises on hash set with no type key" do
       expect { instance.one_poly = { str: "str", int: 12 } }.to raise_error AttrJson::Type::PolymorphicModel::TypeError
