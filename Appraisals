@@ -42,11 +42,6 @@ end
 appraise "rails-edge" do
   gem 'combustion', "~> 1.0"
 
-  # Even though we don't use coffee-script, some part of rails or other part
-  # of our stack is still insisting on requiring it, for reasons we don't
-  # understand, so we need to depend on it.
-  gem "coffee-rails"
-
   gem "rails", git: "https://github.com/rails/rails.git", branch: "main"
   gem "pg", "~> 1.0"
 end
