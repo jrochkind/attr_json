@@ -332,7 +332,7 @@ RSpec.describe AttrJson::Record do
       Class.new(ActiveRecord::Type::Value) do
         def serialize(value) ; "#{value}_serialized" ; end
 
-        def deserialize(value) ; value.delete_suffix("_serialized") ; end
+        def deserialize(value) ; value.gsub(/_serialized$/, '') ; end
 
         def cast(value) ; value ; end
       end
