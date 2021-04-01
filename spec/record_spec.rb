@@ -312,6 +312,12 @@ RSpec.describe AttrJson::Record do
       expect(instance.json_attributes).to eq("_store_key" => "set value")
     end
 
+    it "does not recognize  a store_key in assign_attributes" do
+      expect {
+        instance.assign_attributes("_store_key" => "value")
+      }.to raise_error(ActiveModel::UnknownAttributeError)
+    end
+
     it "raises on conflicting store key" do
       expect {
         Class.new(ActiveRecord::Base) do
