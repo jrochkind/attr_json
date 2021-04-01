@@ -152,6 +152,39 @@ RSpec.describe AttrJson::Record do
     expect(instance_custom.custom).to eq 'foo'
   end
 
+  describe "type that modifies on serialization" do
+    let(:serialize_transform_str_type) do
+      Class.new(ActiveRecord::Type::Value) do
+        def serialize(value) ; "#{value}_serialized" ; end
+
+        def deserialize(value) ; value.delete_suffix("_serialized") ; end
+
+        def cast(value) ; value ; end
+      end
+    end
+
+    let(:klass) do
+      # closure nonsense
+      _serializing_type = serialize_transform_str_type
+      Class.new(ActiveRecord::Base) do
+        include AttrJson::Record
+
+        self.table_name = "products"
+        attr_json :str, _serializing_type.new
+      end
+    end
+
+    it "properly serializes and deserializes" do
+      instance.str = "foo"
+      instance.save!
+
+      instance.reload
+
+      expect(instance.str).to eq("foo")
+      expect(JSON.parse(instance.json_attributes_before_type_cast)).to eq({"str" => "foo_serialized"})
+    end
+  end
+
   # TODO: Should it LET you redefine instead, and spec for that? Have to pay
   # attention to store keys too if we let people replace attributes.
   it "raises on re-using attribute name" do
