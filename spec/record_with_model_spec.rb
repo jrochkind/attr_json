@@ -319,6 +319,12 @@ RSpec.describe AttrJson::Record do
       instance_reloaded = klass.find(1)
       expect(instance_reloaded.model.str).to eq("Value")
     end
+
+    it "does not recognize a store_key in assign_attributes" do
+      expect {
+        instance.assign_attributes(model: { "__string__" => "value" })
+      }.to raise_error(ActiveModel::UnknownAttributeError)
+    end
   end
 
   describe "model defaults" do
