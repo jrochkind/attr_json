@@ -327,6 +327,50 @@ RSpec.describe AttrJson::Record do
     end
   end
 
+  describe "model with type that modifies on serialization" do
+    let(:serialize_transform_str_type) do
+      Class.new(ActiveRecord::Type::Value) do
+        def serialize(value) ; "#{value}_serialized" ; end
+
+        def deserialize(value) ; value.delete_suffix("_serialized") ; end
+
+        def cast(value) ; value ; end
+      end
+    end
+
+    let(:model_class) do
+      # closure nonsense
+      _serializing_type = serialize_transform_str_type
+      Class.new do
+        include AttrJson::Model
+
+        attr_json :str, _serializing_type.new
+      end
+    end
+
+    it "properly serializes and deserializes when set as model attribute" do
+      instance.model = {str: "foo"}
+      expect(instance.model.str).to eq("foo")
+
+      instance.save!
+      instance.reload
+
+      expect(instance.model.str).to eq("foo")
+      expect(JSON.parse(instance.json_attributes_before_type_cast)).to eq({ "model" => {"str" => "foo_serialized" } })
+    end
+
+    it "properly serializes and deserializes when set at container" do
+      instance.assign_attributes(model: { str: "foo"})
+      expect(instance.model.str).to eq("foo")
+
+      instance.save!
+      instance.reload
+
+      expect(instance.model.str).to eq("foo")
+      expect(JSON.parse(instance.json_attributes_before_type_cast)).to eq({ "model" => {"str" => "foo_serialized" } })
+    end
+  end
+
   describe "model defaults" do
     describe "empty hash" do
       let(:klass) do
