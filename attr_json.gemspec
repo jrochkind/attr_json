@@ -65,4 +65,10 @@ attributes use as much of the existing ActiveRecord architecture as we can.}
   # if in the future you can remove this dependecy and still have tests pass
   # under ruby 3.x, you're good.
   spec.add_development_dependency "rexml"
+
+  # Used only for Capybara.server in our spec_helper.rb.
+  # webrick is no longer included in ruby 3.0, so has to
+  # be expressed as a dependecy, unless we switch
+  # capybara to use alternate webserver.
+  spec.add_development_dependency "webrick", "~> 1.0"
 end
