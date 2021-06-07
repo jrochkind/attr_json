@@ -476,11 +476,15 @@ to prevent overwriting other updates from processes.
 
 ## State of Code, and To Be Done
 
-The functionality that is here seems pretty solid, and is being used by jrochkind in a production app.
+This code is solid and stable and is being used in production by at least a handful of people, including the primary maintainer, jrochkind. 
+
+The project is currently getting very little maintainance -- and is still working reliably through Rails releases. It is tested on edge rails and ruby (and has needed very few if any changes with subsequent releases), and I endeavor to keep it working as Rails keeps releasing. 
+
+In order to keep the low-maintenace scenario sustainable, I am *very* cautious accepting new features, especially if they increase code complexity at all. Even if you have a working PR, I may be reluctant to accept it. I'm prioritizing sustainability and stability over new features, and so far this is working out well. However, discussion is always welcome! Especially when paired with code (failing tests for the bugfix or feature you want are super helpful on their own!). 
 
 We are committed to [semantic versioning](https://semver.org/) and will endeavor to release no backwards breaking changes without a major version. We are also serious about minimizing backwards incompat releases altogether (ie minimiing major version releases).
 
-Feedback of any kind of _very welcome_, please feel free to use the issue tracker.
+Feedback of any kind of _very welcome_, please feel free to use the issue tracker. It is hard to get a sense of how many people are actually using this, which is helpful both for my own sense of reward and for anyone to get a sense of the size of the userbase -- feel free to say hi and let us know how you are using it! 
 
 Except for the jsonb_contains stuff using postgres jsonb contains operator, I don't believe any postgres-specific features are used. It ought to work with MySQL, testing and feedback welcome. (Or a PR to test on MySQL?).  My own interest is postgres.
 
@@ -488,26 +492,30 @@ This is still mostly a single-maintainer operation, so has all the sustainabilit
 
 ### Possible future features:
 
-* partial updates for json hashes would be really nice: Using postgres jsonb merge operators to only overwrite what changed. In my initial attempts, AR doesn't make it easy to customize this.
+* Make AttrJson::Model lean more heavily on ActiveModel::Attributes API that did not fully exist in first version of attr_json [hope for a future attr_json 2.0 release]
 
-* seamless compatibility with ransack
+* Make AttrJson::Record insist on creating rails cover attributes (no longer optional)  and integrating more fully into rails, including rails dirty tricking, eliminating need for custom dirty tracking implementation. Overall decrease in lines of code. Can use jsonb_accessor as guide for some aspects. [hope for inclusion in future attr_json 2.0 release]
+
+* partial updates for json hashes would be really nice: Using postgres jsonb merge operators to only overwrite what changed. In my initial attempts, AR doesn't make it easy to customize this. [update: this is hard, probably not coming soon]
+
+* seamless compatibility with ransack [update: not necessarily prioritized]
 
 * Should we give AttrJson::Model a before_serialize hook that you might
   want to use similar to AR before_save?  Should AttrJson::Models
-  raise on trying to serialize an invalid model?
+  raise on trying to serialize an invalid model? [update: eh, hasn't really come up]
 
 * There are limits to what you can do with just jsonb_contains
   queries. We could support operations like `>`, `<`, `<>`
   as [jsonb_accessor](https://github.com/devmynd/jsonb_accessor),
   even accross keypaths. (At present, you could use a
   before_savee to denormalize/renormalize copy your data into
-  ordinary AR columns/associations for searching. Or perhaps a postgres ts_vector for text searching. Needs to be worked out.)
+  ordinary AR columns/associations for searching. Or perhaps a postgres ts_vector for text searching. Needs to be worked out.) [update: interested, but not necessarily prioritized. This one would be interesting for a third-party PR draft!]
 
 * We could/should probably support `jsonb_order` clauses, even
-  accross key paths, like jsonb_accessor.
+  accross key paths, like jsonb_accessor. [update: interested but not necessarily prioritized]
 
 * Could we make these attributes work in ordinary AR where, same
-  as they do in jsonb_contains? Maybe.
+  as they do in jsonb_contains? Maybe. [update: probably not]
 
 ## Development
 
