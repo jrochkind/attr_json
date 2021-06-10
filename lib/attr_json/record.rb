@@ -116,11 +116,13 @@ module AttrJson
       # @option options [Boolean] :validate (true) Create an ActiveRecord::Validations::AssociatedValidator so
       #   validation errors on the attributes post up to self.
       #
-      # @option options [Boolean] :rails_attribute (false) Create an actual ActiveRecord
+      # @option options [Boolean] :rails_attribute (true) Create an actual ActiveRecord
       #    `attribute` for name param. A Rails attribute isn't needed for our functionality,
       #    but registering thusly will let the type be picked up by simple_form and
       #    other tools that may look for it via Rails attribute APIs. Default can be changed
-      #    with `attr_json_config(default_rails_attribute: true)`
+      #    with `attr_json_config(default_rails_attribute: false). Not sure if there's any
+      #    reason to disable this (performance?), and the ability to do so may be removed in
+      #    a future version. `
       def attr_json(name, type, **options)
         options = {
           rails_attribute: self.attr_json_config.default_rails_attribute,
@@ -170,10 +172,15 @@ module AttrJson
           # for this particular attribute. Yes, we are registering an after_find for each
           # attr_json registered with rails_attribute:true, using the `name` from above under closure. .
           after_find do
-            value = public_send(name)
-            if value && has_attribute?(name.to_sym)
-              write_attribute(name.to_sym, value)
-              self.send(:clear_attribute_changes, [name.to_sym])
+            begin
+              value = public_send(name)
+              if value && has_attribute?(name.to_sym)
+                write_attribute(name.to_sym, value)
+                self.send(:clear_attribute_changes, [name.to_sym])
+              end
+            rescue AttrJson::Type::Model::BadCast, AttrJson::Type::PolymorphicModel::TypeError => e
+              # There was bad data in the DB, we're just going to skip the Rails attribute sync.
+              # Should we log?
             end
           end
         end

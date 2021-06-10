@@ -386,8 +386,6 @@ Use with Rails form builders is supported pretty painlessly. Including with [sim
 
 If you have nested AttrJson::Models you'd like to use in your forms much like Rails associated records: Where you would use Rails `accepts_nested_attributes_for`, instead `include AttrJson::NestedAttributes` and use `attr_json_accepts_nested_attributes_for`. Multiple levels of nesting are supported.
 
-To get simple_form to properly detect your attribute types, define your attributes with `rails_attribute: true`.  You can default rails_attribute to true with `attr_json_config(default_rails_attribute: true)`
-
 For more info, see doc page on [Use with Forms and Form Builders](doc_src/forms.md).
 
 <a name="dirty"></a>

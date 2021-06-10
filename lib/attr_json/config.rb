@@ -16,7 +16,7 @@ module AttrJson
 
     DEFAULTS = {
       default_container_attribute: "json_attributes",
-      default_rails_attribute: false,
+      default_rails_attribute: true,
       unknown_key: :raise
     }
 

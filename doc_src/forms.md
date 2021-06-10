@@ -109,19 +109,8 @@ Remember to add `include AttrJson::NestedAttributes` to all your AttrJson::Model
 
 One of the nice parts about [simple_form](https://github.com/plataformatec/simple_form) is how you can just give it `f.input`, and it figures out the right input for you.
 
-AttrJson by default, on an ActiveRecord::Base, doesn't register it's `attr_jsons` in the right way for simple_form to reflect and figure out their types. However, you can ask it to with `rails_attribute: true`.
+AttrJson by default registers  `attr_jsons` as Rails attributes, and provides other appropriate implementations in AttrJson::Model classes, such that simple_form should just work. There are limited CI tests in this project to confirm simple_form stays working.
 
-```ruby
-class SomeRecord < ActiveRecord::Base
-  include AttrJson::Record
-
-  attr_json :my_date, :date, rails_attribute: true
-end
-```
-
-This will use the [ActiveRecord::Base.attribute](http://api.rubyonrails.org/classes/ActiveRecord/Attributes/ClassMethods.html) method to register the attribute and type, and SimpleForm will now be able to automatically look up attribute type just as you expect. (Q: Should we make this default on?)
-
-You don't need to do this in your nested AttrJson::Model classes, SimpleForm will already be able to reflect on their attribute types just fine as is.
 
 ### Arrays of simple attributes
 
