@@ -44,4 +44,9 @@ appraise "rails-edge" do
 
   gem "rails", git: "https://github.com/rails/rails.git", branch: "main"
   gem "pg", "~> 1.0"
+
+  # Current rails 7 master doesn't have sprockets-rails as a dependency.
+  # We don't actually USE sprockets, but we're using "combustion"
+  # gem for rails app setup, which is assumign it. So.
+  gem "sprockets-rails"
 end
