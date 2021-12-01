@@ -398,27 +398,29 @@ Rails 5.1+ on `attr_json`s on your ActiveRecord classes that include
 `AttrJson::Record`, by including `AttrJson::Record::Dirty`.
 Change-tracking methods are available off the `attr_json_changes` method.
 
-    class MyModel < ActiveRecord::Base
-       include AttrJson::Record
-       include AttrJson::Record::Dirty
+```ruby
+class MyModel < ActiveRecord::Base
+   include AttrJson::Record
+   include AttrJson::Record::Dirty
 
-       attr_json :str, :string
-    end
+   attr_json :str, :string
+end
 
-    model = MyModel.new
-    model.str = "old"
-    model.save
-    model.str = "new"
+model = MyModel.new
+model.str = "old"
+model.save
+model.str = "new"
 
-    # All and only "new" style dirty tracking methods (Raisl 5.1+)
-    # are available:
+# All and only "new" style dirty tracking methods (Raisl 5.1+)
+# are available:
 
-    model.attr_json_changes.saved_changes
-    model.attr_json_changes.changes_to_save
-    model.attr_json_changes.saved_change_to_str?
-    model.attr_json_changes.saved_change_to_str
-    model.attr_json_changes.will_save_change_to_str?
-    # etc
+model.attr_json_changes.saved_changes
+model.attr_json_changes.changes_to_save
+model.attr_json_changes.saved_change_to_str?
+model.attr_json_changes.saved_change_to_str
+model.attr_json_changes.will_save_change_to_str?
+# etc
+```
 
 More options are available, including merging changes from 'ordinary'
 ActiveRecord attributes in. See docs on [Dirty Tracking](./doc_src/dirty_tracking.md)
