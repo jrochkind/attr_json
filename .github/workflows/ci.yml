@@ -56,6 +56,9 @@ jobs:
           - gemfile: rails_6_1
             ruby: 3.0
 
+          - gemfile: rails_7_0
+            ruby: 3.0
+
     name: ${{ matrix.gemfile }}, ruby ${{ matrix.ruby }}
 
     steps:
