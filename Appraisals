@@ -45,6 +45,10 @@ appraise "rails-7-0" do
   gem "rails", "~> 7.0.0"
   gem "pg", "~> 1.0"
 
+  # to make our integration tests using simple_form work as-is,
+  # this works. Don't totally underestand the actual simple_form
+  # setup paths in Rails 7....
+  gem "sprockets-rails"
 end
 
 appraise "rails-edge" do
@@ -53,8 +57,8 @@ appraise "rails-edge" do
   gem "rails", git: "https://github.com/rails/rails.git", branch: "main"
   gem "pg", "~> 1.0"
 
-  # Current rails 7 master doesn't have sprockets-rails as a dependency.
-  # We don't actually USE sprockets, but we're using "combustion"
-  # gem for rails app setup, which is assumign it. So.
+  # We do some tests using cocoon, currently via sprockets-rails,
+  # which is not automatically available in Rails 7.  Not sure
+  # the future of cocoon in general. https://github.com/nathanvda/cocoon/issues/555
   gem "sprockets-rails"
 end
