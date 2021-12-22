@@ -45,7 +45,7 @@ attributes use as much of the existing ActiveRecord architecture as we can.}
   # Only to get CI to work on versions of Rails other than we release with,
   # should never release a gem with RAILS_GEM set!
   unless ENV['APPRAISAL_INITIALIZED'] || ENV["TRAVIS"] || ENV['CI']
-    spec.add_runtime_dependency "activerecord", ">= 5.0.0", "< 7.0"
+    spec.add_runtime_dependency "activerecord", ">= 5.0.0", "< 7.1"
   end
 
   spec.add_development_dependency "bundler"
