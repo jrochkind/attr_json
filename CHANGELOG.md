@@ -4,11 +4,18 @@ Notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/jrochkind/attr_json/compare/v1.3.0...HEAD)
+## [Unreleased](https://github.com/jrochkind/attr_json/compare/v1.4.0...HEAD)
+
+
+
+
+## [1.4.0](https://github.com/jrochkind/attr_json/compare/v1.3.0...v1.4.0)
 
 ### Changed
 
 * When using store_key feature on an AttrJson::Model, you should not be able to pass in the store_key as a key in initializer or assign_attributes. It was really a bug that this ended up mapped to attribute this way, which could cause a problem in some cases; but calling it out in Changed section because if you were accidentally relying on it, it may appear as a backwards incompat to you. https://github.com/jrochkind/attr_json/pull/125
+
+* Rails 7.0.0 allowed by gemspec and tested in CI
 
 ### Fixed
 
