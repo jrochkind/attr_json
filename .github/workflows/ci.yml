@@ -29,33 +29,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - gemfile: rails_5_0
-            ruby: 2.4
-
-          - gemfile: rails_5_0
-            ruby: 2.5
-
-          - gemfile: rails_5_1
-            ruby: 2.4
-
-          - gemfile: rails_5_2
-            ruby: 2.4
-
-          - gemfile: rails_5_2
-            ruby: 2.6
-
-          - gemfile: rails_6_0
-            ruby: 2.6
-
-          - gemfile: rails_6_0
-            ruby: 2.7
-
-          - gemfile: rails_6_1
-            ruby: 2.7
-
-          - gemfile: rails_6_1
-            ruby: 3.0
-
           - gemfile: rails_7_0
             ruby: 3.0
 
@@ -67,7 +40,7 @@ jobs:
     - name: Set up Ruby
       uses: ruby/setup-ruby@v1
       with:
-        ruby-version: ${{ matrix.ruby }}
+        ruby-version: 3.0
         bundler-cache: false
 
     - name: Bundle install
