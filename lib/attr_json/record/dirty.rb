@@ -270,7 +270,13 @@ module AttrJson
         # find it from currently declared attributes.
         # https://github.com/rails/rails/blob/6aa5cf03ea8232180ffbbae4c130b051f813c670/activemodel/lib/active_model/attribute_methods.rb#L463-L468
         def matched_attribute_method(method_name)
-          matches = self.class.send(:attribute_method_matchers_matching, method_name)
+          if self.class.respond_to?(:attribute_method_patterns_matching, true)
+            # Rails 7.1+
+            matches = self.class.send(:attribute_method_patterns_matching, method_name)
+          else
+            matches = self.class.send(:attribute_method_matchers_matching, method_name)
+          end
+
           matches.detect do |match|
             registry.has_attribute?(match.attr_name)
           end
