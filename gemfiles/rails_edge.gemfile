@@ -2,7 +2,7 @@
 
 source "https://rubygems.org"
 
-gem "combustion", "~> 1.0"
+gem "combustion", "~> 1.0", github: "pat/combustion"
 gem "rails", git: "https://github.com/rails/rails.git", branch: "main"
 gem "pg", "~> 1.0"
 gem "rspec-rails", "~> 4.0"

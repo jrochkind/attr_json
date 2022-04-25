@@ -52,7 +52,10 @@ appraise "rails-7-0" do
 end
 
 appraise "rails-edge" do
-  gem 'combustion', "~> 1.0"
+  # need combustion edge to work with rails edge, will no longer
+  # be true on next combustion release, probably no later than Rails 7.1
+  # https://github.com/pat/combustion/pull/126
+  gem 'combustion', "~> 1.0", github: "pat/combustion"
 
   gem "rails", git: "https://github.com/rails/rails.git", branch: "main"
   gem "pg", "~> 1.0"
