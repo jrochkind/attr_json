@@ -34,6 +34,8 @@
 
       @default = if options.has_key?(:default)
         options[:default]
+      elsif options[:array] == true
+        []
       else
         NO_DEFAULT_PROVIDED
       end
