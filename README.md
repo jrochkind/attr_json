@@ -39,7 +39,7 @@ class MyModel < ActiveRecord::Base
    attr_json :my_integer, :integer
    attr_json :my_datetime, :datetime
 
-   # You can have an _array_ of those things too.
+   # You can have an _array_ of those things too. It will ordinarily default to empty array.
    attr_json :int_array, :integer, array: true
 
    #and/or defaults

@@ -24,7 +24,7 @@ if Gem.loaded_specs["activerecord"].version.release >= Gem::Version.new('5.1')
         self.table_name = "products"
         attr_json :str, :string
         attr_json :int, :integer
-        attr_json :str_array, :string, array: true
+        attr_json :str_array, :string, array: true, default: AttrJson::AttributeDefinition::NO_DEFAULT_PROVIDED
         attr_json :embedded, model_class_type
       end
     end
@@ -165,6 +165,33 @@ if Gem.loaded_specs["activerecord"].version.release >= Gem::Version.new('5.1')
           expect(changes.attribute_change_to_be_saved(:str_array)).to eq [["old1", "old2"], ["old1", "old2", "new1"]]
           expect(changes.attribute_in_database(:str_array)).to eq ["old1", "old2"]
           expect(changes.changes_to_save).to eq('str_array' => [["old1", "old2"], ["old1", "old2", "new1"]])
+          expect(changes.has_changes_to_save?).to be true
+          expect(changes.changed_attribute_names_to_save).to eq(["str_array"])
+        end
+      end
+
+      describe "with standard empty array default" do
+        let(:klass) do
+          Class.new(ActiveRecord::Base) do
+            include AttrJson::Record
+            include AttrJson::Record::Dirty
+
+            self.table_name = "products"
+            attr_json :str_array, :string, array: true
+          end
+        end
+
+        it "recognizes mutation changes" do
+          instance.str_array << "new"
+
+          expect(changes.saved_changes?).to be false
+          expect(changes.attribute_before_last_save(:str_array)).to be nil
+          expect(changes.attributes_in_database).to eq('str_array' => nil)
+
+          expect(changes.will_save_change_to_attribute?(:str_array)).to be true
+          expect(changes.attribute_change_to_be_saved(:str_array)).to eq [nil, ["new"]]
+          expect(changes.attribute_in_database(:str_array)).to eq nil
+          expect(changes.changes_to_save).to eq('str_array' => [nil, ["new"]])
           expect(changes.has_changes_to_save?).to be true
           expect(changes.changed_attribute_names_to_save).to eq(["str_array"])
         end

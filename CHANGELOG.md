@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Drop Rails earlier than 6.0 and ruby earlier than 2.6. https://github.com/jrochkind/attr_json/pull/155
 
+* Array types now default to an empty array. If you'd like to turn that off, you can use the somewhat odd `default: AttrJson::AttributeDefinition::NO_DEFAULT_PROVIDED` on attribute definiton. Thanks @g13ydson for suggestion. https://github.com/jrochkind/attr_json/pull/161
+
 ## [1.4.1](https://github.com/jrochkind/attr_json/compare/v1.4.0...v1.4.1)
 
 ### Fixed

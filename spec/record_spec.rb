@@ -77,6 +77,61 @@ RSpec.describe AttrJson::Record do
     end
   end
 
+  describe "array types" do
+    let(:klass) do
+      Class.new(ActiveRecord::Base) do
+        include AttrJson::Record
+
+        self.table_name = "products"
+        attr_json :int_array, :integer, array: true
+      end
+    end
+
+    it "defaults to empty array" do
+      expect(instance.int_array).to eq []
+    end
+
+    it "can save mutation to array" do
+      instance.int_array.concat([1,2])
+      instance.save!
+      instance.reload
+      expect(instance.int_array).to eq [1,2]
+    end
+
+    it "can save new array" do
+      instance.int_array = %w(1 2 3)
+      expect(instance.int_array).to eq([1, 2, 3])
+      instance.save!
+      instance.reload
+      expect(instance.int_array).to eq([1, 2, 3])
+    end
+
+    it "casts to array" do
+      instance.int_array = 1
+      expect(instance.int_array).to eq([1])
+      instance.save!
+      instance.reload
+      expect(instance.int_array).to eq([1])
+    end
+
+    describe "with explicit no default" do
+      let(:klass) do
+        Class.new(ActiveRecord::Base) do
+          include AttrJson::Record
+
+          self.table_name = "products"
+          # Very hacky, but one way to override empty array default
+          attr_json :int_array, :integer, array: true, default: AttrJson::AttributeDefinition::NO_DEFAULT_PROVIDED
+        end
+      end
+
+      it "has no default" do
+        expect(instance.json_attributes).not_to have_key("int_array")
+        expect(instance.int_array).to eq nil
+      end
+    end
+  end
+
   describe "for hash with ActiveRecord::Type::Value type instance" do
     let(:klass) do
       Class.new(ActiveRecord::Base) do
@@ -100,27 +155,13 @@ RSpec.describe AttrJson::Record do
   it "can set nil" do
     instance.str = nil
     expect(instance.str).to be_nil
-    expect(instance.json_attributes).to eq("str" => nil, "int_with_default" => 5)
+    expect(instance.json_attributes).to eq("int_array"=>[], "str" => nil, "int_with_default" => 5)
 
     instance.save!
     instance.reload
 
     expect(instance.str).to be_nil
-    expect(instance.json_attributes).to eq("str" => nil, "int_with_default" => 5)
-  end
-
-  it "supports arrays" do
-    instance.int_array = %w(1 2 3)
-    expect(instance.int_array).to eq([1, 2, 3])
-    instance.save!
-    instance.reload
-    expect(instance.int_array).to eq([1, 2, 3])
-
-    instance.int_array = 1
-    expect(instance.int_array).to eq([1])
-    instance.save!
-    instance.reload
-    expect(instance.int_array).to eq([1])
+    expect(instance.json_attributes).to eq("int_array"=>[], "str" => nil, "int_with_default" => 5)
   end
 
   it "has right ActiveRecord changed? even back and forth" do
