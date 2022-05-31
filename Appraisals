@@ -37,6 +37,11 @@ appraise "rails-6-1" do
 
   gem "rails", "~> 6.1.0"
   gem "pg", "~> 1.0"
+
+  # sprockets-rails is already a rails 6.1 dependency, but combustion is failing
+  # to require it, this is one way to get it required.
+  # https://github.com/pat/combustion/issues/128
+  gem "sprockets-rails"
 end
 
 appraise "rails-7-0" do
