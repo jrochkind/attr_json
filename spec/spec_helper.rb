@@ -35,7 +35,6 @@ Combustion.initialize! :all do
 end
 
 require 'yaml'
-require "database_cleaner"
 require 'byebug'
 require 'attr_json'
 
@@ -155,7 +154,12 @@ RSpec.configure do |config|
   # as the one that triggered the failure.
   Kernel.srand config.seed
 
-  config.before do
-    DatabaseCleaner.clean_with(:truncation)
-  end
+  # This isn't actually just about fixtures, it has Rails clean out our database
+  # after every test, by a strategy of putting each test in a DB transaction that
+  # can be reverted without commit. It's the way we currently make sure the database
+  # is clean for each test, although it could cause a problem if we were doing
+  # threaded stuff. An alternative is database_cleaner, but not currently working
+  # with edge Rails 7.1.
+  # https://github.com/DatabaseCleaner/database_cleaner/issues/693
+  config.use_transactional_fixtures = true
 end
