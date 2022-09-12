@@ -155,7 +155,14 @@ RSpec.configure do |config|
   # as the one that triggered the failure.
   Kernel.srand config.seed
 
-  config.before do
-    DatabaseCleaner.clean_with(:truncation)
+  if Gem::Version.new(Rails::VERSION::STRING) < Gem::Version.new("7.1.0.alpha")
+    config.before do
+      DatabaseCleaner.clean_with(:truncation)
+    end
+  else
+    # database_cleaner doesn't currently work with pre-release Rails 7.1.
+    # https://github.com/DatabaseCleaner/database_cleaner/issues/693
+    # But maybe we don't need it anyway, Rails transactional fixtures are fine?
+    config.use_transactional_fixtures = true
   end
 end
