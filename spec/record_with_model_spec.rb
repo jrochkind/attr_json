@@ -316,7 +316,7 @@ RSpec.describe AttrJson::Record do
       instance.save!
 
       expect(JSON.parse instance.json_attributes_before_type_cast) .to include("model" => {"__string__" => "Value"})
-      instance_reloaded = klass.find(1)
+      instance_reloaded = klass.find(instance.id)
       expect(instance_reloaded.model.str).to eq("Value")
     end
 
