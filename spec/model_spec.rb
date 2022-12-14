@@ -29,6 +29,12 @@ RSpec.describe AttrJson::Record do
       # but store_key when serialized
       expect(instance.as_json).to eq("__str_one" => "value")
     end
+
+    it "does not recognize  a store_key in assign_attributes" do
+      expect {
+        instance.assign_attributes("__str_one" => "value")
+      }.to raise_error(ActiveModel::UnknownAttributeError)
+    end
   end
 
   describe "validation" do

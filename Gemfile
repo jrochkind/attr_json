@@ -18,16 +18,16 @@ gem 'combustion', '~> 1.1'
 # be the way to do it.
 gem 'rails'
 
-# We should not really need to mention railties, it's already a dependency of
-# rails, but seems to be necessary to get around some mystery bug in bundler
-# dependency resolution.
-gem 'railties'
-
 gem "pg"
 gem "rspec-rails", "~> 4.0"
 gem "simple_form", ">= 4.0"
 gem 'cocoon', ">= 1.2"
 gem 'jquery-rails'
+
+# Even though we don't use coffee-script, when running specs, some part of rails
+# or other part of our stack is still insisting on requiring it, for reasons we
+# don't understand, so we need to depend on it.
+gem "coffee-rails"
 
 gem 'capybara', "~> 3.0"
 gem 'webdrivers', '~> 4.0'

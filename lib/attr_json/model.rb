@@ -103,16 +103,27 @@ module AttrJson
       end
 
 
-      # Like `.new`, but translate store keys in hash
+      # The inverse of model#serializable_hash -- re-hydrates a serialized hash to a model.
+      #
+      # Similar to `.new`, but translates things that need to be translated in deserialization,
+      # like store_keys, and properly calling deserialize on the underlying types.
+      #
+      # @example Model.new_from_serializable(hash)
       def new_from_serializable(attributes = {})
-        attributes = attributes.transform_keys do |key|
+        attributes = attributes.collect do |key, value|
           # store keys in arguments get translated to attribute names on initialize.
           if attribute_def = self.attr_json_registry.store_key_lookup("", key.to_s)
-            attribute_def.name.to_s
-          else
-            key
+            key = attribute_def.name.to_s
           end
-        end
+
+          attr_type = self.attr_json_registry.has_attribute?(key) && self.attr_json_registry.type_for_attribute(key)
+          if attr_type
+            value = attr_type.deserialize(value)
+          end
+
+          [key, value]
+        end.to_h
+
         self.new(attributes)
       end
 

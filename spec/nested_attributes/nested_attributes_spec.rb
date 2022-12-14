@@ -49,6 +49,15 @@ RSpec.describe AttrJson::NestedAttributes do
     expect(instance.one_model.int).to eq 101
   end
 
+  describe "assigning via json_attributes" do
+    it "allows assigning via raw hash object" do
+      instance.json_attributes = {"one_model"=>{"str"=>"original"}}
+      instance.save
+      instance.reload
+      expect(instance.one_model.str).to eq "original"
+    end
+  end
+
   describe "single model attribute" do
     let(:setter) { :one_model_attributes= }
 

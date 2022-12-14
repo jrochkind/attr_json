@@ -35,20 +35,38 @@ end
 appraise "rails-6-1" do
   gem 'combustion', "~> 1.0"
 
-  gem "rails", ">= 6.0.0.rc1", "< 6.2.0.a"
+  gem "rails", "~> 6.1.0"
   gem "pg", "~> 1.0"
+
+  # sprockets-rails is already a rails 6.1 dependency, but combustion is failing
+  # to require it, this is one way to get it required.
+  # https://github.com/pat/combustion/issues/128
+  gem "sprockets-rails"
 end
 
-appraise "rails-edge-6" do
-  # Edge rails needs unreleased combustion
-  # https://github.com/pat/combustion/issues/92
+appraise "rails-7-0" do
   gem 'combustion', "~> 1.0"
 
-  gem "rails", git: "https://github.com/rails/rails.git", branch: "master"
+  gem "rails", "~> 7.0.0"
   gem "pg", "~> 1.0"
 
-  # We don't actually use coffeescript at all, we need coffee-rails as an explicit
-  # dependency just for transitory edge weirdness using current sprockets release
-  # with rails 6 edge.
-  gem 'coffee-rails'
+  # We do some tests using cocoon, currently via sprockets-rails,
+  # which is not automatically available in Rails 7.  Not sure
+  # the future of cocoon in general. https://github.com/nathanvda/cocoon/issues/555
+  gem "sprockets-rails"
+end
+
+appraise "rails-edge" do
+  # need combustion edge to work with rails edge, will no longer
+  # be true on next combustion release, probably no later than Rails 7.1
+  # https://github.com/pat/combustion/pull/126
+  gem 'combustion', "~> 1.0", github: "pat/combustion"
+
+  gem "rails", git: "https://github.com/rails/rails.git", branch: "main"
+  gem "pg", "~> 1.0"
+
+  # We do some tests using cocoon, currently via sprockets-rails,
+  # which is not automatically available in Rails 7.  Not sure
+  # the future of cocoon in general. https://github.com/nathanvda/cocoon/issues/555
+  gem "sprockets-rails"
 end

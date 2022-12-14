@@ -116,6 +116,9 @@ module AttrJson
       def serialize(v)
         return nil if v.nil?
 
+        # if it's not already a model cast it to a model if possible (eg it's a hash)
+        v = cast(v)
+
         model_name = v.class.name
         type = type_for_model_name(model_name)
 

@@ -316,8 +316,58 @@ RSpec.describe AttrJson::Record do
       instance.save!
 
       expect(JSON.parse instance.json_attributes_before_type_cast) .to include("model" => {"__string__" => "Value"})
-      instance_reloaded = klass.find(1)
+      instance_reloaded = klass.find(instance.id)
       expect(instance_reloaded.model.str).to eq("Value")
+    end
+
+    it "does not recognize a store_key in assign_attributes" do
+      expect {
+        instance.assign_attributes(model: { "__string__" => "value" })
+      }.to raise_error(ActiveModel::UnknownAttributeError)
+    end
+  end
+
+  describe "model with type that modifies on serialization" do
+    let(:serialize_transform_str_type) do
+      Class.new(ActiveRecord::Type::Value) do
+        def serialize(value) ; "#{value}_serialized" ; end
+
+        def deserialize(value) ; value.gsub(/_serialized$/, '') ; end
+
+        def cast(value) ; value ; end
+      end
+    end
+
+    let(:model_class) do
+      # closure nonsense
+      _serializing_type = serialize_transform_str_type
+      Class.new do
+        include AttrJson::Model
+
+        attr_json :str, _serializing_type.new
+      end
+    end
+
+    it "properly serializes and deserializes when set as model attribute" do
+      instance.model = {str: "foo"}
+      expect(instance.model.str).to eq("foo")
+
+      instance.save!
+      instance.reload
+
+      expect(instance.model.str).to eq("foo")
+      expect(JSON.parse(instance.json_attributes_before_type_cast)).to eq({ "model" => {"str" => "foo_serialized" } })
+    end
+
+    it "properly serializes and deserializes when set at container" do
+      instance.assign_attributes(model: { str: "foo"})
+      expect(instance.model.str).to eq("foo")
+
+      instance.save!
+      instance.reload
+
+      expect(instance.model.str).to eq("foo")
+      expect(JSON.parse(instance.json_attributes_before_type_cast)).to eq({ "model" => {"str" => "foo_serialized" } })
     end
   end
 

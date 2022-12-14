@@ -45,13 +45,29 @@ attributes use as much of the existing ActiveRecord architecture as we can.}
   # Only to get CI to work on versions of Rails other than we release with,
   # should never release a gem with RAILS_GEM set!
   unless ENV['APPRAISAL_INITIALIZED'] || ENV["TRAVIS"] || ENV['CI']
-    spec.add_runtime_dependency "activerecord", ">= 5.0.0", "< 6.2"
+    spec.add_runtime_dependency "activerecord", ">= 5.0.0", "< 7.1"
   end
 
   spec.add_development_dependency "bundler"
   spec.add_development_dependency "rake", ">= 10.0"
   spec.add_development_dependency "rspec", "~> 3.7"
-  spec.add_development_dependency "database_cleaner", "~> 1.5"
   spec.add_development_dependency "yard-activesupport-concern"
   spec.add_development_dependency "appraisal", "~> 2.2"
+
+  # Working around annoying issue in selenium 3.x with ruby 3.0.
+  # we don't actually use rexml ourselves. selenium 3 is a dependency
+  # of webdrivers, and tries to use rexml without depending on it
+  # as is needed in ruby 3.
+  #
+  # https://github.com/SeleniumHQ/selenium/issues/9001
+  #
+  # if in the future you can remove this dependecy and still have tests pass
+  # under ruby 3.x, you're good.
+  spec.add_development_dependency "rexml"
+
+  # Used only for Capybara.server in our spec_helper.rb.
+  # webrick is no longer included in ruby 3.0, so has to
+  # be expressed as a dependecy, unless we switch
+  # capybara to use alternate webserver.
+  spec.add_development_dependency "webrick", "~> 1.0"
 end
