@@ -24,6 +24,22 @@ module AttrJson
 
       class_attribute :attr_json_registry, instance_accessor: false
       self.attr_json_registry = AttrJson::AttributeDefinition::Registry.new
+
+      # Ensure that rails attributes tracker knows about values we just fetched
+      after_find do
+        self.class.attr_json_registry.attribute_names.each do |attr_name|
+          begin
+            value = public_send(attr_name)
+            if value
+              write_attribute(attr_name, value)
+              clear_attribute_change(attr_name)
+            end
+          rescue AttrJson::Type::Model::BadCast, AttrJson::Type::PolymorphicModel::TypeError => e
+            # There was bad data in the DB, we're just going to skip the Rails attribute sync.
+            # Should we log?
+          end
+        end
+      end
     end
 
     protected
@@ -157,25 +173,6 @@ module AttrJson
         attr_json_definition = attr_json_registry[name]
         attribute_args = attr_json_definition.has_default? ? { default: attr_json_definition.default_argument } : {}
         self.attribute name.to_sym, attr_json_definition.type, **attribute_args
-
-        # Ensure that rails attributes tracker knows about value we just fetched
-        # for this particular attribute. Yes, we are registering an after_find for each
-        # attr_json registered with rails_attribute:true, using the `name` from above under closure. .
-        #
-        # TODO: Consolidate as one after_find
-        after_find do
-          begin
-            value = public_send(name)
-            if value && has_attribute?(name.to_sym)
-              write_attribute(name.to_sym, value)
-              self.send(:clear_attribute_changes, [name.to_sym])
-            end
-          rescue AttrJson::Type::Model::BadCast, AttrJson::Type::PolymorphicModel::TypeError => e
-            # There was bad data in the DB, we're just going to skip the Rails attribute sync.
-            # Should we log?
-          end
-        end
-
 
         _attr_jsons_module.module_eval do
           # For getter and setter, we used to use read_store_attribute/write_store_attribute
