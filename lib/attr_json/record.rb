@@ -204,11 +204,6 @@ module AttrJson
             attribute_def = self.class.attr_json_registry.fetch(name.to_sym)
             public_send(attribute_def.container_attribute)[attribute_def.store_key]
           end
-
-          define_method("#{name}?") do
-            # implementation of `query_store_attribute` is based on Rails `query_attribute` implementation
-            AttrJson::Record.attr_json_query_method(self, name)
-          end
         end
 
         # Default attr_json_accepts_nested_attributes_for values
