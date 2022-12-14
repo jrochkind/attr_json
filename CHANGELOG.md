@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-* By default we now create Rails Attribute cover for all attr_json attributes. Ie, `rails_attribute` now defaults to true. https://github.com/jrochkind/attr_json/pull/117
+* We now create Rails Attribute cover for all attr_json attributes.  The `rails_attribute` param to `attr_json` or `attr_json_config` no longer exists.  https://github.com/jrochkind/attr_json/pull/117 and https://github.com/jrochkind/attr_json/pull/158
 
 * Drop Rails earlier than 6.0 and ruby earlier than 2.6. https://github.com/jrochkind/attr_json/pull/155
 

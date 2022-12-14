@@ -820,8 +820,8 @@ RSpec.describe AttrJson::Record do
           include AttrJson::Record
 
           self.table_name = "products"
-          attr_json :str, :string, array: true, rails_attribute: true, default: 'foo'
-          attr_json :int, :integer, rails_attribute: true
+          attr_json :str, :string, array: true, default: 'foo'
+          attr_json :int, :integer
         end
       end
 
