@@ -5,7 +5,6 @@ module AttrJson
   class Config
     RECORD_ALLOWED_KEYS = %i{
       default_container_attribute
-      default_rails_attribute
       default_accepts_nested_attributes
     }
 
@@ -16,7 +15,6 @@ module AttrJson
 
     DEFAULTS = {
       default_container_attribute: "json_attributes",
-      default_rails_attribute: true,
       unknown_key: :raise
     }
 
