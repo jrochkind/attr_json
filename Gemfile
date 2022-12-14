@@ -29,6 +29,13 @@ gem 'jquery-rails'
 # don't understand, so we need to depend on it.
 gem "coffee-rails"
 
+# We do some tests using cocoon via sprockets, which needs sprockets-rails,
+# which is not automatically available in Rails 7. We add it explicitly,
+# which will duplciate dependences in rails pre-7, but add for rails 7. Not sure
+# the future of cocoon in general. https://github.com/nathanvda/cocoon/issues/555
+gem "sprockets-rails"
+
+
 gem 'capybara', "~> 3.0"
 gem 'webdrivers', '~> 4.0'
 gem "selenium-webdriver"
