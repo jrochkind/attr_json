@@ -4,6 +4,9 @@ Notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased](https://github.com/jrochkind/attr_json/compare/v1.4.0...HEAD)
+
+
 ## [3.0.0]
 
 ### Changed
@@ -12,8 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Drop Rails earlier than 6.0 and ruby earlier than 2.6. https://github.com/jrochkind/attr_json/pull/155
 
-## [Unreleased](https://github.com/jrochkind/attr_json/compare/v1.4.0...HEAD)
+## [1.4.1](https://github.com/jrochkind/attr_json/compare/v1.4.0...v1.4.1)
 
+### Fixed
+
+* Fixed an obscure bug involving a conflict between attribute defaults and accepts_nested_attributes, in which defaults could overwrite assigned attributes. The `.fill_in_defaults` class method, which was never intended as public API and was commented accordingly, is gone. https://github.com/jrochkind/attr_json/pull/160
 
 ## [1.4.0](https://github.com/jrochkind/attr_json/compare/v1.3.0...v1.4.0)
 
