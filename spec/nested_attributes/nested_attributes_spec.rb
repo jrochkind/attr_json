@@ -244,6 +244,28 @@ RSpec.describe AttrJson::NestedAttributes do
 
       expect(instance.many_models).to eq [model_class.new(str: "Someone", int: "101"), model_class.new(str: "Someone Else", int: "102")]
     end
+
+    describe "nested, with an inner default" do
+      let(:klass) do
+        Class.new do
+          include AttrJson::Model
+          include AttrJson::NestedAttributes
+
+          attr_json :array_of_strings, :string, array: true, default: -> { [] }
+
+          attr_json_accepts_nested_attributes_for :array_of_strings
+        end
+      end
+
+      it "can initialize with _attributes key" do
+        # this is proof of a bug fix. While you maybe wouldn't send
+        # an _attributes keys in initializer like this, you ought to be able to,
+        # and it turns out it needs to work for actual use cases involving nested attributes
+        # and AttrJson::Model
+        obj = klass.new(array_of_strings_attributes: ["a", "b"])
+        expect(obj.array_of_strings).to eq ["a", "b"]
+      end
+    end
   end
 
   describe "multiparameter attributes" do

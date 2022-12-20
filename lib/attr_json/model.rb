@@ -177,27 +177,6 @@ module AttrJson
         end
       end
 
-      # This should kind of be considered 'protected', but the semantics
-      # of how we want to call it don't give us a visibility modifier that works.
-      # Prob means refactoring called for. TODO?
-      def fill_in_defaults(hash)
-        # Only if we need to mutate it to add defaults, we'll dup it first. deep_dup not neccesary
-        # since we're only modifying top-level here.
-        duped = false
-        attr_json_registry.definitions.each do |definition|
-          if definition.has_default? && ! (hash.has_key?(definition.store_key.to_s) || hash.has_key?(definition.store_key.to_sym))
-            unless duped
-              hash = hash.dup
-              duped = true
-            end
-
-            hash[definition.store_key] = definition.provide_default!
-          end
-        end
-
-        hash
-      end
-
       private
 
       # Define an anonymous module and include it, so can still be easily
@@ -213,11 +192,9 @@ module AttrJson
     end
 
     def initialize(attributes = {})
-      if !attributes.respond_to?(:transform_keys)
-        raise ArgumentError, "When assigning attributes, you must pass a hash as an argument."
-      end
+      super
 
-      super(self.class.fill_in_defaults(attributes))
+      fill_in_defaults!
     end
 
     def attributes
@@ -302,6 +279,14 @@ module AttrJson
     end
 
     private
+
+    def fill_in_defaults!
+      self.class.attr_json_registry.definitions.each do |definition|
+        if definition.has_default? && !attributes.has_key?(definition.name.to_s)
+          self.send("#{definition.name.to_s}=", definition.provide_default!)
+        end
+      end
+    end
 
     def _attr_json_write(key, value)
       if attribute_def = self.class.attr_json_registry[key.to_sym]
