@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased](https://github.com/jrochkind/attr_json/compare/v1.4.0...HEAD)
 
 
+## [1.4.1](https://github.com/jrochkind/attr_json/compare/v1.4.0...v1.4.1)
 
+### Fixed
+
+* Fixed an obscure bug involving a conflict between attribute defaults and accepts_nested_attributes, in which defaults could overwrite assigned attributes. The `.fill_in_defaults` class method, which was never intended as public API and was commented accordingly, is gone. https://github.com/jrochkind/attr_json/pull/160
 
 ## [1.4.0](https://github.com/jrochkind/attr_json/compare/v1.3.0...v1.4.0)
 
