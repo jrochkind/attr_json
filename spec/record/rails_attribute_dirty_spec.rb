@@ -146,6 +146,19 @@ RSpec.describe AttrJson::Record::Dirty do
         expect(instance.attribute_in_database(:int)).to be nil
       end
     end
+
+    describe "multiple attributes in place" do
+      it "keeps them separate" do
+        # this is a regression from our custom dirty tracking
+        obj = klass.create!
+        obj.int = 101
+        obj.save!
+
+        obj.str = "value"
+        expect(obj.will_save_change_to_int?).to be false
+        expect(obj.will_save_change_to_str?).to be true
+      end
+    end
   end
 
   describe "array" do
