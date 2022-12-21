@@ -9,13 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [3.0.0]
 
+### Removed
+
+* `AttrJson::Record::Dirty` has been removed, along with the `#attr_json_changes` method. You should now be able to just use standard ActiveRecord dirty tracking with attr_json attributes. https://github.com/jrochkind/attr_json/pull/163 (AttrJson::Record::Dirty was actually badly broken, as reported by @bemueller at https://github.com/jrochkind/attr_json/issues/148)
+
+* The `rails_attribute` param to `attr_json` or `attr_json_config` no longer exists. We now always create rails attributes for AttrJson::Record attributes. https://github.com/jrochkind/attr_json/pull/117 and https://github.com/jrochkind/attr_json/pull/158
+
 ### Changed
 
-* We now create Rails Attribute cover for all attr_json attributes.  The `rails_attribute` param to `attr_json` or `attr_json_config` no longer exists.  https://github.com/jrochkind/attr_json/pull/117 and https://github.com/jrochkind/attr_json/pull/158
+* We now create Rails Attribute cover for all attr_json attributes, and we do a better job of keeping the Rails attribute values sync'd with attr_json values.   https://github.com/jrochkind/attr_json/pull/117, https://github.com/jrochkind/attr_json/pull/158, and https://github.com/jrochkind/attr_json/pull/163
 
 * Drop Rails earlier than 6.0 and ruby earlier than 2.6. https://github.com/jrochkind/attr_json/pull/155
 
 * Array types now default to an empty array. If you'd like to turn that off, you can use the somewhat odd `default: AttrJson::AttributeDefinition::NO_DEFAULT_PROVIDED` on attribute definiton. Thanks @g13ydson for suggestion. https://github.com/jrochkind/attr_json/pull/161
+
+### Fixed
+
+* the `AttrJson::Type::Array` type used for our array types was not properly tracking in-place mutation changes. Now it is https://github.com/jrochkind/attr_json/pull/163
 
 ## [1.4.1](https://github.com/jrochkind/attr_json/compare/v1.4.0...v1.4.1)
 
