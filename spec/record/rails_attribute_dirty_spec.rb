@@ -1,6 +1,6 @@
 # Ordinary Rails attribute dirty tracking. How well can we get it to work, even
 # under mutation of mutable objects
-RSpec.describe AttrJson::Record::Dirty do
+RSpec.describe "ActiveRecord dirty tracking" do
   let(:model_class) do
     Class.new do
       include AttrJson::Model
@@ -25,7 +25,6 @@ RSpec.describe AttrJson::Record::Dirty do
 
     Class.new(ActiveRecord::Base) do
       include AttrJson::Record
-      include AttrJson::Record::Dirty
 
       self.table_name = "products"
       attr_json :str, :string
@@ -301,9 +300,8 @@ RSpec.describe AttrJson::Record::Dirty do
         expect(instance.saved_change_to_attribute(:embedded)).to eq [nil, orig_model_eq]
         expect(instance.attribute_before_last_save(:embedded)).to be nil
 
-        expect(instance.saved_changes).to eq(
+        expect(instance.saved_changes.except("id")).to eq(
           'embedded' => [nil, orig_model_eq],
-          "id" => [nil, 1],
           "json_attributes" => [nil, { "embedded" => orig_model_eq }]
         )
         expect(instance.saved_changes?).to be true
