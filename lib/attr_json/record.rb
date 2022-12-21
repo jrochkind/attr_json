@@ -119,6 +119,8 @@ module AttrJson
       # @param type [ActiveModel::Type::Value] An instance of an ActiveModel::Type::Value (or subclass)
       #
       # @option options [Boolean] :array (false) Make this attribute an array of given type.
+      #    Array types default to an empty array. If you want to turn that off, you can add
+      #    `default: AttrJson::AttributeDefinition::NO_DEFAULT_PROVIDED`
       #
       # @option options [Object] :default (nil) Default value, if a Proc object it will be #call'd
       #   for default.

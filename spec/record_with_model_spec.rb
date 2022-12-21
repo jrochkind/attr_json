@@ -255,8 +255,8 @@ RSpec.describe AttrJson::Record do
         serialized = JSON.parse(instance.json_attributes_before_type_cast)
 
         expect(serialized["models"]).to eq([
-          {"str"=>"string value", "int"=>12, "int_with_default"=>5},
-          {"str"=>"string value", "int"=>12, "int_with_default"=>5}
+          {"str"=>"string value", "int"=>12, "int_with_default"=>5, "int_array" => []},
+          {"str"=>"string value", "int"=>12, "int_with_default"=>5, "int_array" => []}
         ])
       end
     end
@@ -274,7 +274,7 @@ RSpec.describe AttrJson::Record do
         serialized = JSON.parse(instance.json_attributes_before_type_cast)
 
         expect(serialized["models"]).to eq([
-          {"str"=>"string value", "int"=>12, "int_with_default"=>5}
+          {"str"=>"string value", "int"=>12, "int_with_default"=>5, "int_array" => [] }
         ])
       end
     end

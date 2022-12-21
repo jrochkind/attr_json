@@ -37,6 +37,36 @@ RSpec.describe AttrJson::Record do
     end
   end
 
+  describe "array types" do
+    let(:klass) do
+      Class.new do
+        include AttrJson::Model
+
+        attr_json :str_array, :string, array: true
+      end
+    end
+
+    it "defaults to empty array" do
+      expect(instance.str_array).to eq []
+    end
+
+    describe "with explicit no default" do
+      let(:klass) do
+        Class.new do
+          include AttrJson::Model
+
+          # Very hacky, but a way to override empty array default
+          attr_json :str_array, :string, array: true, default: AttrJson::AttributeDefinition::NO_DEFAULT_PROVIDED
+        end
+      end
+
+      it "has no default" do
+        expect(instance.as_json).not_to have_key("str_array")
+        expect(instance.str_array).to eq nil
+      end
+    end
+  end
+
   describe "validation" do
     let(:klass) do
       Class.new do
