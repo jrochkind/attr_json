@@ -308,8 +308,22 @@ RSpec.describe AttrJson::Record do
       expect(deserialized.json_datetime.class).to eq(ActiveSupport::TimeWithZone)
       expect(deserialized.json_datetime.time_zone).to eq ActiveSupport::TimeZone.new(time_zone)
     end
+
+    describe "disabled with attr_json config" do
+      let(:klass) do
+        Class.new do
+          include AttrJson::Model
+
+          attr_json_config(time_zone_aware_attributes: false)
+
+          attr_json :json_datetime, :datetime
+        end
+      end
+
+      it "does not convert on create" do
+        expect(instance.json_datetime.class).to eq(Time)
+        expect(instance.json_datetime.zone).to eq(time_value.zone)
+      end
+    end
   end
-
-
-
 end
