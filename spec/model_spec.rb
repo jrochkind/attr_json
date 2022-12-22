@@ -261,4 +261,55 @@ RSpec.describe AttrJson::Record do
       expect(instance == Object.new).to eq(false)
     end
   end
+
+  describe "timezone-aware attribute conversion" do
+    let(:klass) do
+      Class.new do
+        include AttrJson::Model
+
+        attr_json :json_datetime, :datetime
+      end
+    end
+
+    let(:instance) { klass.new(json_datetime: time_value ) }
+    let(:model_type) { klass.to_type }
+    let(:time_zone) { "US/Pacific" }
+    let(:time_value) { Time.utc(2020, 1, 1, 4, 5, 30) }
+
+    around do |example|
+      original_zone = Time.zone
+      original_awareness = ActiveRecord::Base.time_zone_aware_attributes
+
+      ActiveRecord::Base.time_zone_aware_attributes = true
+      Time.zone = time_zone
+
+      example.run
+
+      ActiveRecord::Base.time_zone_aware_attributes = original_awareness
+      Time.zone = original_zone
+    end
+
+    it "converted properly on create" do
+      # ActiveRecord TimeZoneConversion will convert to a TimeWithZone in local timezone
+      expect(instance.json_datetime.class).to eq(ActiveSupport::TimeWithZone)
+      expect(instance.json_datetime.time_zone).to eq ActiveSupport::TimeZone.new(time_zone)
+    end
+
+    it "converts back to Time in UTC on serialize" do
+      serialized = model_type.serialize(instance)
+
+      expect(serialized["json_datetime"]).to be_instance_of(Time)
+      expect(serialized["json_datetime"].zone).to eq "UTC"
+    end
+
+    it "deserializes from UTC to TimeWithZone" do
+      deserialized = model_type.deserialize( {"json_datetime" => time_value.utc.as_json} )
+
+      expect(deserialized.json_datetime.class).to eq(ActiveSupport::TimeWithZone)
+      expect(deserialized.json_datetime.time_zone).to eq ActiveSupport::TimeZone.new(time_zone)
+    end
+  end
+
+
+
 end

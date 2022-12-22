@@ -40,19 +40,8 @@
         NO_DEFAULT_PROVIDED
       end
 
-      if type.is_a? Symbol
-        # ActiveModel::Type.lookup may make more sense, but ActiveModel::Type::Date
-        # seems to have a bug with multi-param assignment. Mostly they return
-        # the same types, but ActiveRecord::Type::Date works with multi-param assignment.
-        #
-        # We pass `adapter: nil` to avoid triggering a db connection.
-        # See: https://github.com/jrochkind/attr_json/issues/41
-        # This is at the "cost" of not using any adapter-specific types... which
-        # maybe preferable anyway?
-        type = ActiveRecord::Type.lookup(type, adapter: nil)
-      elsif ! type.is_a? ActiveModel::Type::Value
-        raise ArgumentError, "Second argument (#{type}) must be a symbol or instance of an ActiveModel::Type::Value subclass"
-      end
+      type = self.class.lookup_type(type)
+
       @type = (options[:array] == true ? AttrJson::Type::Array.new(type) : type)
     end
 
@@ -104,5 +93,26 @@
     def array_type?
       type.is_a? AttrJson::Type::Array
     end
+
+    # Can look up a symbol to a type, or leave a type alone, or raise if it's neither.
+    # Extracted into a method, so it can be called from AttrJson::Model#attr_json, for
+    # some timezone aware shenanigans.
+    def self.lookup_type(type)
+      if type.is_a? Symbol
+        # ActiveModel::Type.lookup may make more sense, but ActiveModel::Type::Date
+        # seems to have a bug with multi-param assignment. Mostly they return
+        # the same types, but ActiveRecord::Type::Date works with multi-param assignment.
+        #
+        # We pass `adapter: nil` to avoid triggering a db connection.
+        # See: https://github.com/jrochkind/attr_json/issues/41
+        # This is at the "cost" of not using any adapter-specific types... which
+        # maybe preferable anyway?
+        type = ActiveRecord::Type.lookup(type, adapter: nil)
+      elsif !(type.is_a?(ActiveModel::Type::Value) || type.is_a?(ActiveRecord::AttributeMethods::TimeZoneConversion::TimeZoneConverter))
+        raise ArgumentError, "Second argument (#{type}) must be a symbol or instance of an ActiveModel::Type::Value subclass"
+      end
+      type
+    end
+
   end
 end
