@@ -534,15 +534,13 @@ RSpec.describe AttrJson::Record do
         end
       end
 
-      # This is the default value, but we aren't playing quite right with it,
-      # our date/time attributes do NOT at present use ActiveSupport::TimeWithZone,
-      # like ordinary AR attributes. Not sure how big a problem this is, or if
-      # it's getting timezones wrong.
-      # See https://github.com/jrochkind/attr_json/issues/16
+      # This comes for free with our synchronization with ActiveRecord attributes,
+      # since ActiveRecord attributes automatically use
+      # ActiveRecord::AttributeMethods::TimeZoneConversion
+      #
+      # If the tests fail for some reason... we may need implementation of our own
+      # in the future. :(
       describe "with .time_zone_aware_attributes" do
-        before do
-          skip "Not currently supporting :time_zone_aware_attributes in date/time json_attributes"
-        end
         around do |example|
           original = ActiveRecord::Base.time_zone_aware_attributes
           ActiveRecord::Base.time_zone_aware_attributes = true
@@ -550,32 +548,36 @@ RSpec.describe AttrJson::Record do
           ActiveRecord::Base.time_zone_aware_attributes = original
         end
 
-        it "has the same class and zone on create" do
-          # AR doesn't cast or transform in any way here, so we shouldn't either.
+        it "converted properly on create" do
           expect(instance.json_datetime.class).to eq(instance.datetime_type.class)
           expect(instance.json_datetime.zone).to eq(instance.datetime_type.zone)
+
+          # ActiveRecord TimeZoneConversion will convert to a TimeWithZone
+          expect(instance.json_datetime.class).to eq(ActiveSupport::TimeWithZone)
+          expect(instance.json_datetime.zone).to eq("UTC")
         end
 
-        it "has the same class and zone after save" do
+        it "converted properly after save" do
           instance.save!
 
           expect(instance.json_datetime.class).to eq(instance.datetime_type.class)
           expect(instance.json_datetime.zone).to eq(instance.datetime_type.zone)
 
-          # It's actually a Time with zone UTC now, not a DateTime, don't REALLY
-          # need to check for this, but if it changes AR may have changed enough
-          # that we should pay attention -- failing here doesn't neccesarily
-          # mean anything is wrong though, although we prob want OURs to be UTC.
-          expect(instance.json_datetime.class).to eq(Time)
+          # ActiveRecord TimeZoneConversion will convert to a TimeWithZone
+          expect(instance.json_datetime.class).to eq(ActiveSupport::TimeWithZone)
           expect(instance.json_datetime.zone).to eq("UTC")
         end
 
-        it "has the same class and zone on fetch" do
+        it "converted properly on fetch" do
           instance.save!
 
           new_instance = klass.find(instance.id)
           expect(new_instance.json_datetime.class).to eq(instance.datetime_type.class)
           expect(new_instance.json_datetime.zone).to eq(instance.datetime_type.zone)
+
+          # ActiveRecord TimeZoneConversion will convert to a TimeWithZone
+          expect(instance.json_datetime.class).to eq(ActiveSupport::TimeWithZone)
+          expect(instance.json_datetime.zone).to eq("UTC")
         end
 
         it "to_json's before save same as raw ActiveRecord" do
