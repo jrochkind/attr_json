@@ -26,18 +26,49 @@ module AttrJson
       self.attr_json_registry = AttrJson::AttributeDefinition::Registry.new
 
       # Ensure that rails attributes tracker knows about values we just fetched
-      after_find do
-        self.class.attr_json_registry.attribute_names.each do |attr_name|
-          begin
-            value = public_send(attr_name)
-            if value
-              write_attribute(attr_name, value)
-              clear_attribute_change(attr_name)
-            end
-          rescue AttrJson::Type::Model::BadCast, AttrJson::Type::PolymorphicModel::TypeError => e
-            # There was bad data in the DB, we're just going to skip the Rails attribute sync.
-            # Should we log?
+      after_initialize do
+        attr_json_sync_to_rails_attributes
+      end
+
+      # After a safe, rails attribute dirty tracking ends up re-creating
+      # new objects for attribute values, so we need to sync again
+      # so mutation effects both.
+      after_save do
+        attr_json_sync_to_rails_attributes
+      end
+    end
+
+    # Sync all values FROM the json_attributes json column TO rails attributes
+    #
+    # If values have for some reason gotten out of sync this will make them the
+    # identical objects again, with the container hash value being the source.
+    #
+    # In some cases, the values may already be equivalent but different objects --
+    # This is meant to ensure they are the _same object_ in both places, so
+    # mutation of mutable object will effect both places, for instance for dirty
+    # tracking.
+    def attr_json_sync_to_rails_attributes
+      self.class.attr_json_registry.attribute_names.each do |attr_name|
+        begin
+          attribute_def = self.class.attr_json_registry.fetch(attr_name.to_sym)
+          json_value    = public_send(attribute_def.container_attribute)
+          value         = json_value[attribute_def.store_key]
+
+          if value
+            # TODO, can we just make this use the setter?
+            write_attribute(attr_name, value)
+
+            clear_attribute_change(attr_name) if persisted?
+
+            # writing and clearning will result in a new object stored in
+            # rails attributes, we want
+            # to make sure the exact same object is in the json attribute,
+            # so in-place mutation changes to it are reflected in both places.
+            json_value[attribute_def.store_key] = read_attribute(attr_name)
           end
+        rescue AttrJson::Type::Model::BadCast, AttrJson::Type::PolymorphicModel::TypeError => e
+          # There was bad data in the DB, we're just going to skip the Rails attribute sync.
+          # Should we log?
         end
       end
     end
@@ -145,22 +176,28 @@ module AttrJson
         attribute_args = attr_json_definition.has_default? ? { default: attr_json_definition.default_argument } : {}
         self.attribute name.to_sym, attr_json_definition.type, **attribute_args
 
+        # For getter and setter, we consider the container has the "canonical" data location.
+        # But setter also writes to rails attribute, and tries to keep them in sync with the
+        # *same object*, so mutations happen to both places.
+        #
+        # This began roughly modelled on approach of Rail sstore_accessor implementation:
+        # https://github.com/rails/rails/blob/74c3e43fba458b9b863d27f0c45fd2d8dc603cbc/activerecord/lib/active_record/store.rb#L90-L96
+        #
+        # ...But wound up with lots of evolution to try to get dirty tracking working as well
+        # as we could -- without a completely custom separate dirty tracking implementation
+        # like store_accessor tries!
         _attr_jsons_module.module_eval do
-          # For getter and setter, we used to use read_store_attribute/write_store_attribute
-          # copied from Rails store_accessor implementation.
-          # https://github.com/rails/rails/blob/74c3e43fba458b9b863d27f0c45fd2d8dc603cbc/activerecord/lib/active_record/store.rb#L90-L96
-          #
-          # But in fact just getting/setting in the hash provided to us by ActiveRecord json type
-          # container works BETTER for dirty tracking. We had a test that only passed doing it
-          # this simple way.
-
           define_method("#{name}=") do |value|
-            super(value) if defined?(super)
+            super(value) # should write to rails attribute
+
+            # write to container hash, with value read from attribute to try to keep objects
+            # sync'd to exact same object in rails attribute and container hash.
             attribute_def = self.class.attr_json_registry.fetch(name.to_sym)
-            public_send(attribute_def.container_attribute)[attribute_def.store_key] = attribute_def.cast(value)
+            public_send(attribute_def.container_attribute)[attribute_def.store_key] = read_attribute(name)
           end
 
           define_method("#{name}") do
+            # read from container hash -- we consider that the canonical location.
             attribute_def = self.class.attr_json_registry.fetch(name.to_sym)
             public_send(attribute_def.container_attribute)[attribute_def.store_key]
           end

@@ -30,6 +30,10 @@ module AttrJson
         convert_to_array(value).collect { |v| base_type.deserialize(v) }
       end
 
+      def changed_in_place?(raw_old_value, new_value)
+        serialize(new_value) != raw_old_value
+      end
+
       # This is used only by our own keypath-chaining query stuff.
       def value_for_contains_query(key_path_arr, value)
         [
