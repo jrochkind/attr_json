@@ -6,7 +6,7 @@
 
 ActiveRecord attributes stored serialized in a json column, super smooth. For Rails 6.0.x through 7.0.x. Ruby 2.6+.
 
-Typed and cast like Active Record. Supporting [nested models](#nested), [dirty tracking](#dirty), some [querying](#querying) (with postgres [jsonb](https://www.postgresql.org/docs/9.5/static/datatype-json.html) contains), and [working smoothy with form builders](#forms).
+Typed and cast like Active Record. Supporting [nested models](#nested), [dirty tracking](#ar_attributes), some [querying](#querying) (with postgres [jsonb](https://www.postgresql.org/docs/9.5/static/datatype-json.html) contains), and [working smoothy with form builders](#forms).
 
 *Use your database as a typed object store via ActiveRecord, in the same models right next to ordinary ActiveRecord column-backed attributes and associations. Your json-serialized `attr_json` attributes use as much of the existing ActiveRecord architecture as we can.*
 
@@ -388,40 +388,27 @@ If you have nested AttrJson::Models you'd like to use in your forms much like Ra
 
 For more info, see doc page on [Use with Forms and Form Builders](doc_src/forms.md).
 
-<a name="dirty"></a>
-## Dirty tracking
+<a name="ar_attributes"></a>
+## ActiveRecord Attributes and Dirty tracking
 
-Full change-tracking, ActiveRecord::Attributes::Dirty-style, is available in
-Rails 5.1+ on `attr_json`s on your ActiveRecord classes that include
-`AttrJson::Record`, by including `AttrJson::Record::Dirty`.
-Change-tracking methods are available off the `attr_json_changes` method.
+We endeavor to make record-level `attr_json` attributes available as standard ActiveRecord attributes, supporting that full API.
+
+Standard [Rails dirty tracking](https://api.rubyonrails.org/classes/ActiveModel/Dirty.html) should work properly with AttrJson::Record attributes! We have a test suite demonstrating.
+
+We actually keep the "canonical" copy of data inside the "container attribute" hash in the ActiveRecord model. This is because this is what will actually get saved when you save. So we have two copies, that we do our best to keep in sync.
+
+They get out of sync if you are doing unusual things like using the ActiveRecord attribute API directly (like calling `write_attribute` with an attr_json attribute). Even if this happens, mostly you won't notice. But one thing it will effect is dirty tracking.
+
+If you ever need to sync the ActiveRecord attribute values from the AttrJson "canonical" copies, you can call `active_record_model.attr_json_sync_to_rails_attributes`. If you wanted to be 100% sure of dirty tracking, I suppose you could always call this method first. Sorry, this is the best we could do!
+
+Note that ActiveRecord DirtyTracking will give you ruby objects, for instance for nested models, you might get:
 
 ```ruby
-class MyModel < ActiveRecord::Base
-   include AttrJson::Record
-   include AttrJson::Record::Dirty
-
-   attr_json :str, :string
-end
-
-model = MyModel.new
-model.str = "old"
-model.save
-model.str = "new"
-
-# All and only "new" style dirty tracking methods (Raisl 5.1+)
-# are available:
-
-model.attr_json_changes.saved_changes
-model.attr_json_changes.changes_to_save
-model.attr_json_changes.saved_change_to_str?
-model.attr_json_changes.saved_change_to_str
-model.attr_json_changes.will_save_change_to_str?
-# etc
+record_obj.attribute_change_to_be_saved(:nested_model)
+# => [#<object>, #<object>]
 ```
 
-More options are available, including merging changes from 'ordinary'
-ActiveRecord attributes in. See docs on [Dirty Tracking](./doc_src/dirty_tracking.md)
+If you want to see JSON instead, you could call #as_json on the values. The Rails [\*\_before_type_cast](https://api.rubyonrails.org/classes/ActiveRecord/AttributeMethods/BeforeTypeCast.html) and [\*\-in_database](https://api.rubyonrails.org/classes/ActiveRecord/AttributeMethods/Dirty.html#method-i-attribute_in_database) methods may also be useful.
 
 <a name="why"></a>
 ## Do you want this?
