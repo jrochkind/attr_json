@@ -64,14 +64,9 @@ You can use ordinary ActiveRecord validation methods with `attr_json` attributes
 All the `attr_json` attributes are serialized to json as keys in a hash, in a database jsonb/json column. By default, in a column `json_attributes`.
 If you look at `model.json_attributes`, you'll see values already cast to their ruby representations.
 
-But one way to see something like what it's really like in the db is to
-save the record and then use the standard Rails `*_before_type_cast` method.
+To see JSON representations, we can use Rails [\*\_before_type_cast](https://api.rubyonrails.org/classes/ActiveRecord/AttributeMethods/BeforeTypeCast.html) methods,  [\*\-in_database](https://api.rubyonrails.org/classes/ActiveRecord/AttributeMethods/Dirty.html#method-i-attribute_in_database) and [\*\_for_database] methods (Rails 7.0+ only).
 
-```ruby
-model.save!
-model.json_attributes_before_type_cast
-# => string containing: {"my_integer":12,"int_array":[12],"my_datetime":"2016-01-01T17:45:00.000Z"}
-```
+These methods can all be called on ont the container `json_attributes` json hash attribute (generally showing serialized JSONto string), or any individual attribute (generally showing in-memory JSON-able object). [This is a bit confusing and possibly not entirely consistent, needs more investigation.]
 
 ## Specifying db column to use
 
