@@ -4,7 +4,7 @@
 [![Gem Version](https://badge.fury.io/rb/attr_json.svg)](https://badge.fury.io/rb/attr_json)
 
 
-ActiveRecord attributes stored serialized in a json column, super smooth. For Rails 5.0 through 6.1. Ruby 2.4+.
+ActiveRecord attributes stored serialized in a json column, super smooth. For Rails 5.0 through 7.0. Ruby 2.4+.
 
 Typed and cast like Active Record. Supporting [nested models](#nested), [dirty tracking](#dirty), some [querying](#querying) (with postgres [jsonb](https://www.postgresql.org/docs/9.5/static/datatype-json.html) contains), and [working smoothy with form builders](#forms).
 
@@ -478,15 +478,15 @@ to prevent overwriting other updates from processes.
 
 ## State of Code, and To Be Done
 
-This code is solid and stable and is being used in production by at least a handful of people, including the primary maintainer, jrochkind. 
+This code is solid and stable and is being used in production by at least a handful of people, including the primary maintainer, jrochkind.
 
-The project is currently getting very little maintainance -- and is still working reliably through Rails releases. It is tested on edge rails and ruby (and has needed very few if any changes with subsequent releases), and I endeavor to keep it working as Rails keeps releasing. 
+The project is currently getting very little maintainance -- and is still working reliably through Rails releases. It is tested on edge rails and ruby (and has needed very few if any changes with subsequent releases), and I endeavor to keep it working as Rails keeps releasing.
 
-In order to keep the low-maintenace scenario sustainable, I am *very* cautious accepting new features, especially if they increase code complexity at all. Even if you have a working PR, I may be reluctant to accept it. I'm prioritizing sustainability and stability over new features, and so far this is working out well. However, discussion is always welcome! Especially when paired with code (failing tests for the bugfix or feature you want are super helpful on their own!). 
+In order to keep the low-maintenace scenario sustainable, I am *very* cautious accepting new features, especially if they increase code complexity at all. Even if you have a working PR, I may be reluctant to accept it. I'm prioritizing sustainability and stability over new features, and so far this is working out well. However, discussion is always welcome! Especially when paired with code (failing tests for the bugfix or feature you want are super helpful on their own!).
 
 We are committed to [semantic versioning](https://semver.org/) and will endeavor to release no backwards breaking changes without a major version. We are also serious about minimizing backwards incompat releases altogether (ie minimiing major version releases).
 
-Feedback of any kind of _very welcome_, please feel free to use the issue tracker. It is hard to get a sense of how many people are actually using this, which is helpful both for my own sense of reward and for anyone to get a sense of the size of the userbase -- feel free to say hi and let us know how you are using it! 
+Feedback of any kind of _very welcome_, please feel free to use the issue tracker. It is hard to get a sense of how many people are actually using this, which is helpful both for my own sense of reward and for anyone to get a sense of the size of the userbase -- feel free to say hi and let us know how you are using it!
 
 Except for the jsonb_contains stuff using postgres jsonb contains operator, I don't believe any postgres-specific features are used. It ought to work with MySQL, testing and feedback welcome. (Or a PR to test on MySQL?).  My own interest is postgres.
 
