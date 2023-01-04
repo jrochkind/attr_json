@@ -47,6 +47,21 @@ module AttrJson
   #          #...
   #        end
   #
+  # ## Date-type timezone conversion
+  #
+  # By default, AttrJson::Model date/time attributes will be
+  # [ActiveRecord timezone-aware](https://api.rubyonrails.org/classes/ActiveRecord/Timestamp.html)
+  # based on settings of `config.active_record.time_zone_aware_attributes` and
+  # `ActiveRecord::Base.time_zone_aware_types`.
+  #
+  # If you'd like to override this, you can set:
+  #
+  # ```
+  # attr_json_config(time_zone_aware_attributes: true)
+  # attr_json_config(time_zone_aware_attributes: false)
+  # attr_json_config(time_zone_aware_attributes: [:datetime, :time]) # custom list of types
+  # ```
+  #
   # ## ActiveRecord `serialize`
   #
   # If you want to map a single AttrJson::Model to a json/jsonb column, you
@@ -157,6 +172,8 @@ module AttrJson
       def attr_json(name, type, **options)
         options.assert_valid_keys(*(AttributeDefinition::VALID_OPTIONS - [:container_attribute] + [:validate]))
 
+        type = _attr_json_maybe_wrap_timezone_aware(type)
+
         self.attr_json_registry = attr_json_registry.with(
           AttributeDefinition.new(name.to_sym, type, options.except(:validate))
         )
@@ -190,6 +207,42 @@ module AttrJson
           include mod
           mod
         end
+      end
+
+      # wrap in ActiveRecord type for timezone-awareness/conversion, if needed
+      # We at present only need this in AttrJson::Model cause in AttrJson::Record,
+      # our sync with ActiveRecord attributes takes care of it for us.
+      # See https://github.com/rails/rails/blob/v7.0.4/activerecord/lib/active_record/attribute_methods/time_zone_conversion.rb#L78
+      #
+      # For now we use ActiveRecord::Base state to decide.
+      #
+      # We have to turn a symbol type into a real object type if we want to wrap it -- we will
+      # return an actual ActiveModel::Value::Type either way, converting from symbol!
+      #
+      # That *wrapped* type will be the new type, registered with AttributeDefinition
+      # and then with Rails `attribute`, to provide timezone conversion.
+      def _attr_json_maybe_wrap_timezone_aware(type)
+        type = AttributeDefinition.lookup_type(type)
+
+        if self.attr_json_config.time_zone_aware_attributes.nil?
+          # nil config means use ActiveRecord::Base
+          aware       = ActiveRecord::Base.time_zone_aware_attributes
+          aware_types = ActiveRecord::Base.time_zone_aware_types
+        elsif self.attr_json_config.time_zone_aware_attributes.kind_of?(Array)
+          # Array config means we're doing it, and these are the types
+          aware       = true
+          aware_types = self.attr_json_config.time_zone_aware_attributes
+        else
+          # boolean config, types from ActiveRecord::Base
+          aware       = !!self.attr_json_config.time_zone_aware_attributes
+          aware_types = ActiveRecord::Base.time_zone_aware_types
+        end
+
+        if aware && aware_types.include?(type.type)
+          type = ActiveRecord::AttributeMethods::TimeZoneConversion::TimeZoneConverter.new(type)
+        end
+
+        type
       end
     end
 

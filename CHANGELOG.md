@@ -23,6 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Array types now default to an empty array. If you'd like to turn that off, you can use the somewhat odd `default: AttrJson::AttributeDefinition::NO_DEFAULT_PROVIDED` on attribute definiton. Thanks @g13ydson for suggestion. https://github.com/jrochkind/attr_json/pull/161
 
+### Added
+
+* ActiveRecord-style "timezone-aware attribute" conversion now works properly, in both AttrJson::Record and (similarly) AttrJson::Model. https://github.com/jrochkind/attr_json/pull/164
+
 ### Fixed
 
 * the `AttrJson::Type::Array` type used for our array types was not properly tracking in-place mutation changes. Now it is https://github.com/jrochkind/attr_json/pull/163

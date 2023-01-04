@@ -11,6 +11,7 @@ module AttrJson
     MODEL_ALLOWED_KEYS = %i{
       unknown_key
       bad_cast
+      time_zone_aware_attributes
     }
 
     DEFAULTS = {
