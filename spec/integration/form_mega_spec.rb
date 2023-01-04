@@ -37,7 +37,7 @@ RSpec.describe "form with simple_form and cocoon", type: :feature, js: true do
       let(:role) { "author" }
       let(:given) { "Jim" }
       let(:family) { "Smith-Jones" }
-      let(:birth_year) { "2017" }
+      let(:birth_year) { (Time.new.year - 1).to_s }
       let(:birth_month) { "May" }
       let(:birth_day) { "1" }
 

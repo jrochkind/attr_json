@@ -3,7 +3,6 @@
 [![CI Status](https://github.com/jrochkind/attr_json/workflows/CI%20on%20Future%20Rails%20Versions/badge.svg?branch=master)](https://github.com/jrochkind/attr_json/actions?query=workflow%3A%22CI+on+Future+Rails+Versions%22+branch%3Amaster)
 [![Gem Version](https://badge.fury.io/rb/attr_json.svg)](https://badge.fury.io/rb/attr_json)
 
-
 ActiveRecord attributes stored serialized in a json column, super smooth. For Rails 6.0.x through 7.0.x. Ruby 2.6+.
 
 Typed and cast like Active Record. Supporting [nested models](#nested), [dirty tracking](#ar_attributes), some [querying](#querying) (with postgres [jsonb](https://www.postgresql.org/docs/9.5/static/datatype-json.html) contains), and [working smoothy with form builders](#forms).

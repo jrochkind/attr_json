@@ -19,7 +19,7 @@ gem 'combustion', '~> 1.1'
 gem 'rails'
 
 gem "pg"
-gem "rspec-rails", "~> 4.0"
+gem "rspec-rails", "~> 6.0"
 gem "simple_form", ">= 4.0"
 gem 'cocoon', ">= 1.2"
 gem 'jquery-rails'
@@ -37,7 +37,7 @@ gem "sprockets-rails"
 
 
 gem 'capybara', "~> 3.0"
-gem 'webdrivers', '~> 4.0'
+gem 'webdrivers', '~> 5.0'
 gem "selenium-webdriver"
 
 gem "byebug"

@@ -65,7 +65,10 @@ Capybara.register_driver :headless_chrome do |app|
   driver
 end
 
-Capybara.javascript_driver = :headless_chrome
+# eg `SHOW_BROWSER=true ./bin/rspec` will show you an actual chrome browser
+# being operated by capybara.
+$capybara_js_driver = ENV['SHOW_BROWSER'] ? :chrome : :headless_chrome
+Capybara.javascript_driver = $capybara_js_driver
 
 # why add puma to the gemfile, not important for what we're doing
 Capybara.server = :webrick
