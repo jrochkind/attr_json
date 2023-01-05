@@ -128,9 +128,12 @@ RSpec.describe AttrJson::Record do
 
       obj.freeze
 
+      # ruby previous to 2.5 didn't have FrozenError
+      expected_error = defined?(FrozenError) ? FrozenError : RuntimeError
+
       expect {
         obj.str = "foo"
-      }.to raise_error(FrozenError)
+      }.to raise_error(expected_error)
 
       # note it's not actually deep-frozen, you can mutate attributes including
       # arrays. deep freeze could be a different feature.
