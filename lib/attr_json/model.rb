@@ -135,6 +135,17 @@ module AttrJson
         @serialization_coder ||= AttrJson::SerializationCoderFromType.new(to_type)
       end
 
+      # like the ActiveModel::Attributes method
+      def attribute_names
+        attr_json_registry.attribute_names
+      end
+
+      # like the ActiveModel::Attributes method, hash with name keys, and ActiveModel::Type values
+      def attribute_types
+        attribute_names.collect { |name| [name.to_s, attr_json_registry.type_for_attribute(name)]}.to_h
+      end
+
+
       # Type can be an instance of an ActiveModel::Type::Value subclass, or a symbol that will
       # be looked up in `ActiveModel::Type.lookup`
       #
@@ -236,6 +247,11 @@ module AttrJson
     # type.
     def has_attribute?(str)
       self.class.attr_json_registry.has_attribute?(str)
+    end
+
+    # like the ActiveModel::Attributes method
+    def attribute_names
+      self.class.attribute_names
     end
 
     # Override from ActiveModel::Serialization to #serialize

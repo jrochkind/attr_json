@@ -269,8 +269,23 @@ RSpec.describe AttrJson::Record do
       end
     end
 
-    it "available" do
+    it "available in registry" do
       expect(klass.attr_json_registry.attribute_names).to match([:str_one, :int_one])
+    end
+
+    it "available via .attribute_types" do
+      expect(klass.attribute_types).to eq({
+        "str_one" => ActiveModel::Type.lookup(:string),
+        "int_one" => ActiveModel::Type.lookup(:integer),
+      })
+    end
+
+    it "available via .attribute_names" do
+      expect(klass.attribute_names).to match([:str_one, :int_one])
+    end
+
+    it "available via #attribute_names" do
+      expect(klass.new.attribute_names).to match([:str_one, :int_one])
     end
   end
 
