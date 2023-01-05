@@ -197,6 +197,12 @@ module AttrJson
       fill_in_defaults!
     end
 
+    # inspired by https://github.com/rails/rails/blob/8015c2c2cf5c8718449677570f372ceb01318a32/activemodel/lib/active_model/attributes.rb
+    def initialize_dup(other) # :nodoc:
+      @attributes = @attributes.deep_dup
+      super
+    end
+
     def attributes
       @attributes ||= {}
     end
@@ -276,6 +282,15 @@ module AttrJson
     # and smoothly with standard code for nested attributes deletion in form builders.
     def _destroy
       false
+    end
+
+    # like ActiveModel::Attributes at
+    # https://github.com/rails/rails/blob/8015c2c2cf5c8718449677570f372ceb01318a32/activemodel/lib/active_model/attributes.rb#L120
+    #
+    # is not a full deep freeze
+    def freeze
+      attributes.freeze unless frozen?
+      super
     end
 
     private

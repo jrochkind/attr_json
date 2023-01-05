@@ -72,6 +72,71 @@ RSpec.describe AttrJson::Record do
     end
   end
 
+  describe "#dup" do
+    let(:nested_class) do
+      Class.new do
+        include AttrJson::Model
+
+        attr_json :str, :string
+      end
+    end
+    let(:klass) do
+      nested_class_type = nested_class.to_type
+      Class.new do
+        include AttrJson::Model
+
+        attr_json :str_array, :string, array: true
+        attr_json :str, :string
+        attr_json :nested, nested_class_type, default: {}
+      end
+    end
+
+    it "dups all nested data" do
+      obj = klass.new(str: "one", str_array: ["a", "b"], nested: nested_class.new(str: "two"))
+      obj_dup = obj.dup
+
+      expect(obj_dup.str).not_to equal(obj.str)
+      expect(obj_dup.str_array).not_to equal(obj.str_array)
+      expect(obj_dup.str_array.first).not_to equal(obj.str_array.first)
+
+      expect(obj_dup.nested).not_to equal(obj.nested)
+      expect(obj_dup.nested.str).not_to equal(obj.nested.str)
+    end
+  end
+
+  describe "#freeze" do
+    let(:nested_class) do
+      Class.new do
+        include AttrJson::Model
+
+        attr_json :str, :string
+      end
+    end
+    let(:klass) do
+      nested_class_type = nested_class.to_type
+      Class.new do
+        include AttrJson::Model
+
+        attr_json :str_array, :string, array: true
+        attr_json :str, :string
+        attr_json :nested, nested_class_type, default: {}
+      end
+    end
+
+    it "makes it not possible to set attributes" do
+      obj = klass.new(str: "one", str_array: ["a", "b"], nested: nested_class.new(str: "two"))
+
+      obj.freeze
+
+      expect {
+        obj.str = "foo"
+      }.to raise_error(FrozenError)
+
+      # note it's not actually deep-frozen, you can mutate attributes including
+      # arrays. deep freeze could be a different feature.
+    end
+  end
+
   describe "unknown keys" do
     let(:klass) do
       Class.new do
