@@ -24,8 +24,8 @@ module AttrJson
       extend ActiveSupport::Concern
 
       included do
-        unless self < AttrJson::Record
-          raise TypeError, "AttrJson::Record::QueryScopes can only be included in a AttrJson::Record"
+        unless self < AttrJson::Record::Base
+          raise TypeError, "AttrJson::Record::QueryScopes can only be included in a AttrJson::Record::Base"
         end
 
         scope(:jsonb_contains, lambda do |attributes|

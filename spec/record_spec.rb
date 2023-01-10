@@ -3,7 +3,7 @@ require 'spec_helper'
 RSpec.describe AttrJson::Record do
   let(:klass) do
     Class.new(ActiveRecord::Base) do
-      include AttrJson::Record
+      include AttrJson::Record::Base
 
       self.table_name = "products"
       attr_json :str, :string
@@ -19,7 +19,7 @@ RSpec.describe AttrJson::Record do
   end
   let(:klass_with_custom) do
     Class.new(ActiveRecord::Base) do
-      include AttrJson::Record
+      include AttrJson::Record::Base
 
       self.table_name = "products"
       attr_json :custom, :type_raw
@@ -40,7 +40,7 @@ RSpec.describe AttrJson::Record do
     describe "for primitive type #{type}" do
       let(:klass) do
         Class.new(ActiveRecord::Base) do
-          include AttrJson::Record
+          include AttrJson::Record::Base
 
           self.table_name = "products"
           attr_json :value, type
@@ -80,7 +80,7 @@ RSpec.describe AttrJson::Record do
   describe "array types" do
     let(:klass) do
       Class.new(ActiveRecord::Base) do
-        include AttrJson::Record
+        include AttrJson::Record::Base
 
         self.table_name = "products"
         attr_json :int_array, :integer, array: true
@@ -117,7 +117,7 @@ RSpec.describe AttrJson::Record do
     describe "with explicit no default" do
       let(:klass) do
         Class.new(ActiveRecord::Base) do
-          include AttrJson::Record
+          include AttrJson::Record::Base
 
           self.table_name = "products"
           # Very hacky, but one way to override empty array default
@@ -135,7 +135,7 @@ RSpec.describe AttrJson::Record do
   describe "for hash with ActiveRecord::Type::Value type instance" do
     let(:klass) do
       Class.new(ActiveRecord::Base) do
-        include AttrJson::Record
+        include AttrJson::Record::Base
 
         self.table_name = "products"
         attr_json :value, ActiveRecord::Type::Value.new
@@ -208,7 +208,7 @@ RSpec.describe AttrJson::Record do
       # closure nonsense
       _serializing_type = serialize_transform_str_type
       Class.new(ActiveRecord::Base) do
-        include AttrJson::Record
+        include AttrJson::Record::Base
 
         self.table_name = "products"
         attr_json :str, _serializing_type.new
@@ -231,7 +231,7 @@ RSpec.describe AttrJson::Record do
   it "raises on re-using attribute name" do
     expect {
       Class.new(ActiveRecord::Base) do
-        include AttrJson::Record
+        include AttrJson::Record::Base
 
         self.table_name = "products"
         attr_json :value, :string
@@ -244,7 +244,7 @@ RSpec.describe AttrJson::Record do
     expect(ActiveRecord::Base).not_to receive(:connection)
 
     Class.new(ActiveRecord::Base) do
-      include AttrJson::Record
+      include AttrJson::Record::Base
 
       self.table_name = "products"
       attr_json :value, :string
@@ -281,7 +281,7 @@ RSpec.describe AttrJson::Record do
   context "defaults" do
     let(:klass) do
       Class.new(ActiveRecord::Base) do
-        include AttrJson::Record
+        include AttrJson::Record::Base
 
         self.table_name = "products"
         attr_json :str_with_default, :string, default: "DEFAULT_VALUE"
@@ -315,7 +315,7 @@ RSpec.describe AttrJson::Record do
     let(:klass) do
       Class.new(ActiveRecord::Base) do
         self.table_name = "products"
-        include AttrJson::Record
+        include AttrJson::Record::Base
 
         # validations need a model_name, which our anon class doens't have
         def self.model_name
@@ -352,7 +352,7 @@ RSpec.describe AttrJson::Record do
     let(:klass) do
       Class.new(ActiveRecord::Base) do
         self.table_name = "products"
-        include AttrJson::Record
+        include AttrJson::Record::Base
         attr_json :value, :string, default: "DEFAULT_VALUE", store_key: :_store_key
       end
     end
@@ -395,7 +395,7 @@ RSpec.describe AttrJson::Record do
     it "raises on conflicting store key" do
       expect {
         Class.new(ActiveRecord::Base) do
-          include AttrJson::Record
+          include AttrJson::Record::Base
 
           self.table_name = "products"
           attr_json :value, :string
@@ -408,7 +408,7 @@ RSpec.describe AttrJson::Record do
       let(:subklass) do
         Class.new(klass) do
           self.table_name = "products"
-          include AttrJson::Record
+          include AttrJson::Record::Base
           attr_json :new_value, :integer, default: 10101, store_key: :_new_store_key
         end
       end
@@ -440,7 +440,7 @@ RSpec.describe AttrJson::Record do
     let(:datetime_value) { DateTime.now.change(usec: 555555).freeze }
     let(:klass) do
       Class.new(ActiveRecord::Base) do
-        include AttrJson::Record
+        include AttrJson::Record::Base
 
         self.table_name = "products"
         attr_json :json_datetime, :datetime
@@ -611,7 +611,7 @@ RSpec.describe AttrJson::Record do
   context "specified container_attribute" do
     let(:klass) do
       Class.new(ActiveRecord::Base) do
-        include AttrJson::Record
+        include AttrJson::Record::Base
         self.table_name = "products"
 
         attr_json :value, :string, container_attribute: :other_attributes
@@ -648,7 +648,7 @@ RSpec.describe AttrJson::Record do
     describe "change default container attribute" do
       let(:klass) do
         Class.new(ActiveRecord::Base) do
-          include AttrJson::Record
+          include AttrJson::Record::Base
           self.table_name = "products"
 
           self.attr_json_config(default_container_attribute: :other_attributes)
@@ -686,7 +686,7 @@ RSpec.describe AttrJson::Record do
     describe "multiple jsonb container attributes" do
       let(:klass) do
         Class.new(ActiveRecord::Base) do
-          include AttrJson::Record
+          include AttrJson::Record::Base
           self.table_name = "products"
 
           self.attr_json_config(default_container_attribute: :other_attributes)
@@ -764,7 +764,7 @@ RSpec.describe AttrJson::Record do
     describe "with store key" do
       let(:klass) do
         Class.new(ActiveRecord::Base) do
-          include AttrJson::Record
+          include AttrJson::Record::Base
           self.table_name = "products"
 
           attr_json :value, :string, store_key: "_store_key", container_attribute: :other_attributes
@@ -788,7 +788,7 @@ RSpec.describe AttrJson::Record do
       describe "multiple containers with same store key" do
         let(:klass) do
           Class.new(ActiveRecord::Base) do
-            include AttrJson::Record
+            include AttrJson::Record::Base
             self.table_name = "products"
 
             attr_json :value, :string, store_key: "_store_key", container_attribute: :json_attributes
@@ -815,7 +815,7 @@ RSpec.describe AttrJson::Record do
         describe "with defaults" do
           let(:klass) do
             Class.new(ActiveRecord::Base) do
-              include AttrJson::Record
+              include AttrJson::Record::Base
               self.table_name = "products"
 
               attr_json :value, :string, default: "value default", store_key: "_store_key", container_attribute: :json_attributes
@@ -860,7 +860,7 @@ RSpec.describe AttrJson::Record do
     describe "rails_attribute" do
       let(:klass) do
         Class.new(ActiveRecord::Base) do
-          include AttrJson::Record
+          include AttrJson::Record::Base
 
           self.table_name = "products"
           attr_json :str, :string, array: true, default: 'foo'
@@ -914,7 +914,7 @@ RSpec.describe AttrJson::Record do
     #   it "raises on decleration" do
     #     expect {
     #       Class.new(ActiveRecord::Base) do
-    #         include AttrJson::Record
+    #         include AttrJson::Record::Base
     #         self.table_name = "products"
 
     #         attr_json :value, :string, container_attribute: :no_such_attribute

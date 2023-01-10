@@ -5,7 +5,6 @@ RSpec.describe AttrJson::Record::QueryScopes do
   let(:klass) do
     Class.new(ActiveRecord::Base) do
       include AttrJson::Record
-      include AttrJson::Record::QueryScopes
 
       self.table_name = "products"
       attr_json :str, :string

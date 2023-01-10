@@ -22,7 +22,6 @@ RSpec.describe AttrJson::Type::PolymorphicModel do
     our_model1, our_model2 = model1, model2
     TestRecord = Class.new(ActiveRecord::Base) do
       include AttrJson::Record
-      include AttrJson::Record::QueryScopes
 
       self.table_name = "products"
 
