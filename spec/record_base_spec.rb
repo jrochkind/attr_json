@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-RSpec.describe AttrJson::Record do
+RSpec.describe AttrJson::Record::Base do
   let(:klass) do
     Class.new(ActiveRecord::Base) do
       include AttrJson::Record::Base

@@ -1,6 +1,5 @@
 class Document < ActiveRecord::Base
   include AttrJson::Record
-  include AttrJson::NestedAttributes
 
   attr_json :title, :string
 

@@ -48,7 +48,7 @@ RSpec.describe AttrJson::Record::QueryScopes do
       describe "for primitive type #{type}" do
         let(:klass) do
           Class.new(ActiveRecord::Base) do
-            include AttrJson::Record
+            include AttrJson::Record::Base
             include AttrJson::Record::QueryScopes
 
             self.table_name = "products"
@@ -77,7 +77,7 @@ RSpec.describe AttrJson::Record::QueryScopes do
     describe "array of primitives" do
       let(:klass) do
         Class.new(ActiveRecord::Base) do
-          include AttrJson::Record
+          include AttrJson::Record::Base
           include AttrJson::Record::QueryScopes
 
           self.table_name = "products"
@@ -107,7 +107,7 @@ RSpec.describe AttrJson::Record::QueryScopes do
     describe "multi-column query" do
       let(:klass) do
         Class.new(ActiveRecord::Base) do
-          include AttrJson::Record
+          include AttrJson::Record::Base
           include AttrJson::Record::QueryScopes
 
           self.table_name = "products"
@@ -146,7 +146,7 @@ RSpec.describe AttrJson::Record::QueryScopes do
     # let's give em the same store key to make it really challenging?
     let(:klass) do
       Class.new(ActiveRecord::Base) do
-        include AttrJson::Record
+        include AttrJson::Record::Base
         include AttrJson::Record::QueryScopes
 
         self.table_name = "products"
@@ -186,7 +186,7 @@ RSpec.describe AttrJson::Record::QueryScopes do
     let(:klass) do
       model_class_type = model_class.to_type
       Class.new(ActiveRecord::Base) do
-        include AttrJson::Record
+        include AttrJson::Record::Base
         include AttrJson::Record::QueryScopes
 
         self.table_name = "products"
@@ -240,7 +240,7 @@ RSpec.describe AttrJson::Record::QueryScopes do
         some_labels_class_type = some_labels_class.to_type
         Class.new(ActiveRecord::Base) do
           self.table_name = "products"
-          include AttrJson::Record
+          include AttrJson::Record::Base
           include AttrJson::Record::QueryScopes
 
           attr_json :my_labels, some_labels_class_type

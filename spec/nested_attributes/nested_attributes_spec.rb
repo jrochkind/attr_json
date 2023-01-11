@@ -14,7 +14,7 @@ RSpec.describe AttrJson::NestedAttributes do
   let(:klass) do
     model_class_type = model_class.to_type
     Class.new(ActiveRecord::Base) do
-      include AttrJson::Record
+      include AttrJson::Record::Base
       include AttrJson::NestedAttributes
 
       self.table_name = "products"
@@ -281,7 +281,7 @@ RSpec.describe AttrJson::NestedAttributes do
     let(:klass) do
       model_class_type = model_class.to_type
       Class.new(ActiveRecord::Base) do
-        include AttrJson::Record
+        include AttrJson::Record::Base
         include AttrJson::NestedAttributes
 
         self.table_name = "products"
@@ -374,7 +374,7 @@ RSpec.describe AttrJson::NestedAttributes do
     let(:klass) do
       model_class_type = model_class.to_type
       Class.new(ActiveRecord::Base) do
-        include AttrJson::Record
+        include AttrJson::Record::Base
         include AttrJson::NestedAttributes
 
         attr_json_config(default_accepts_nested_attributes: { reject_if: :all_blank })

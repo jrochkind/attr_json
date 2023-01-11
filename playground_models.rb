@@ -28,7 +28,6 @@ end
 class MyModel2 < ActiveRecord::Base
   self.table_name = "products"
    include AttrJson::Record
-   include AttrJson::Record::QueryScopes
 
    # use any ActiveModel::Type types: string, integer, decimal (BigDecimal),
    # float, datetime, boolean.
@@ -75,8 +74,6 @@ end
 
 class Product < StaticProduct
   include AttrJson::Record
-  include AttrJson::Record::QueryScopes
-  include AttrJson::Record::Dirty
 
   attr_json :title, :string
   attr_json :rank, :integer

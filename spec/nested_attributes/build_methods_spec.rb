@@ -15,7 +15,6 @@ RSpec.describe "NestedAttributes build methods" do
     model_class_type = model_class.to_type
     Class.new(ActiveRecord::Base) do
       include AttrJson::Record
-      include AttrJson::NestedAttributes
 
       self.table_name = "products"
 
@@ -83,7 +82,6 @@ RSpec.describe "NestedAttributes build methods" do
       model_class_type = model_class.to_type
       Class.new(ActiveRecord::Base) do
         include AttrJson::Record
-        include AttrJson::NestedAttributes
 
         self.table_name = "products"
 
