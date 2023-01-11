@@ -28,10 +28,7 @@ Don't forget you gotta handle strong params same as you would for any ordinary a
 
 With ordinary rails associations handled in the ordinary Rails way, you use [accepts_nested_attributes_for](http://api.rubyonrails.org/classes/ActiveRecord/NestedAttributes/ClassMethods.html) for associations (to-one or to-many).
 
-You can handle a single or array AttrJson::Model attr_json similarly, but you have to:
-
-* include AttrJson::NestedAttributes in your model, and then
-* use our own similar `attr_json_accepts_nested_attributes_for` instead.  It _always_ has `allow_destroy`, and some of the other `accepts_nested_attributes_for` options also don't apply, see method for full options.
+You can handle a single or array AttrJson::Model attr_json similarly, but you have to use our own similar `attr_json_accepts_nested_attributes_for` instead.  It _always_ has `allow_destroy`, and some of the other `accepts_nested_attributes_for` options also don't apply, see method for full options.
 
 ```ruby
 class Event
@@ -66,7 +63,7 @@ end
 
 It should just work as you are expecting! You have to handle strong params as normal for when dealing with Rails associations, which can be tricky, but it's just the same here.
 
-Note that the `AttrJsons::NestedAttributes` module also adds convenient rails-style `build_` methods for you.  In the case above, you get a `build_one_event` and `build_many_event` (note singularization, cause that's how Rails does) method, which you can use much like Rails' `build_to_one_association` or `to_many_assocication.build` methods. You can turn off creation of the build methods by passing `define_build_method: false` to `attr_json_accepts_nested_attributes_for`.
+Note that the `attr_json_accepts_nested_attributes_for` also adds convenient rails-style `build_` methods for you.  In the case above, you get a `build_one_event` and `build_many_event` (note singularization, cause that's how Rails does) method, which you can use much like Rails' `build_to_one_association` or `to_many_assocication.build` methods. You can turn off creation of the build methods by passing `define_build_method: false` to `attr_json_accepts_nested_attributes_for`.
 
 ### Shortcuts for attr_json_accepts_nested_attributes_for
 
@@ -75,7 +72,6 @@ You can automatically add the 'accepts nested attributes' call when you define y
 ```ruby
 class SomeRecord < ApplicationRecord
   include AttrJson::Record
-  include AttrJson::NestedAttributes
 
   attr_json :one_event, Event.to_type, accepts_nested_attributes: true
   attr_json :many_events, Event.to_type, array: true, accepts_nested_attributes: { reject_if: :all_blank }
@@ -87,7 +83,6 @@ You can also set defaults for the whole class:
 ```ruby
 class SomeRecord < ApplicationRecord
   include AttrJson::Record
-  include AttrJson::NestedAttributes
 
   attr_json_config(default_accepts_nested_attributes_for: { reject_if: :all_blank })
 
@@ -99,6 +94,7 @@ end
 If you're doing a lot of rails-style nested attributes form handling, the above probably makes sense. More convenient than having to do it each time, or repeat every param in another
 long call.
 
+
 ### Nested multi-level/compound embedded models
 
 A model inside a model inside a model?  Some single and some array? No problem, should just work.
@@ -109,7 +105,7 @@ Remember to add `include AttrJson::NestedAttributes` to all your AttrJson::Model
 
 One of the nice parts about [simple_form](https://github.com/plataformatec/simple_form) is how you can just give it `f.input`, and it figures out the right input for you.
 
-AttrJson by default registers  `attr_jsons` as Rails attributes, and provides other appropriate implementations in AttrJson::Model classes, such that simple_form should just work. There are limited CI tests in this project to confirm simple_form stays working.
+AttrJson by default registers  `attr_json` attributes as Rails attributes, and provides other appropriate implementations in AttrJson::Model classes, such that simple_form should just work. There are limited CI tests in this project to confirm simple_form stays working.
 
 
 ### Arrays of simple attributes

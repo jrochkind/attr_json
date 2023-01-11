@@ -121,8 +121,7 @@ ActiveRecord::Type.register(:my_type, MyActiveModelTypeSubclass)
 ## Querying
 
 There is some built-in support for querying using [postgres jsonb containment](https://www.postgresql.org/docs/9.5/static/functions-json.html)
-(`@>`) operator. (or see [here](https://blog.hasura.io/the-unofficial-guide-to-jsonb-operators-in-postgres-part-1-7ad830485ddf) or [here](https://hackernoon.com/how-to-query-jsonb-beginner-sheet-cheat-4da3aa5082a3)). For now you need to additionally `include AttrJson::Record::QueryScopes`
-to get this behavior.
+(`@>`) operator. (or see [here](https://blog.hasura.io/the-unofficial-guide-to-jsonb-operators-in-postgres-part-1-7ad830485ddf) or [here](https://hackernoon.com/how-to-query-jsonb-beginner-sheet-cheat-4da3aa5082a3)).
 
 ```ruby
 model = MyModel.create(my_string: "foo", my_integer: 100)
@@ -183,7 +182,6 @@ end
 
 class MyModel < ActiveRecord::Base
   include AttrJson::Record
-  include AttrJson::Record::QueryScopes
 
   attr_json :lang_and_value, LangAndValue.to_type
 
@@ -255,7 +253,6 @@ class SomeLabels
 end
 class MyModel < ActiveRecord::Base
   include AttrJson::Record
-  include AttrJson::Record::QueryScopes
 
   attr_json :my_labels, SomeLabels.to_type
 end
@@ -378,7 +375,7 @@ end
 
 Use with Rails form builders is supported pretty painlessly. Including with [simple_form](https://github.com/plataformatec/simple_form) and [cocoon](https://github.com/nathanvda/cocoon) (integration-tested in CI).
 
-If you have nested AttrJson::Models you'd like to use in your forms much like Rails associated records: Where you would use Rails `accepts_nested_attributes_for`, instead `include AttrJson::NestedAttributes` and use `attr_json_accepts_nested_attributes_for`. Multiple levels of nesting are supported.
+If you have nested AttrJson::Models you'd like to use in your forms much like Rails associated records: Where you would use Rails `accepts_nested_attributes_for`, instead use `attr_json_accepts_nested_attributes_for`. Multiple levels of nesting are supported.
 
 For more info, see doc page on [Use with Forms and Form Builders](doc_src/forms.md).
 

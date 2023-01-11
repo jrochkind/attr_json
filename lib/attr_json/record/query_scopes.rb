@@ -5,12 +5,11 @@ module AttrJson
     # Adds query-ing scopes into a AttrJson::Record, based
     # on postgres jsonb.
     #
-    # Has to be mixed into something that also is a AttrJson::Record please!
+    # Has to be mixed into something that also is a AttrJson::Record::Base please!
     #
     # @example
     #      class MyRecord < ActiveRecord::Base
     #        include AttrJson::Record
-    #        include AttrJson::Record::QueryScopes
     #
     #        attr_json :a_string, :string
     #      end
