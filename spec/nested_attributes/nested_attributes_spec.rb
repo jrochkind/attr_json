@@ -65,8 +65,8 @@ RSpec.describe AttrJson::NestedAttributes do
       expect(instance).to respond_to setter
     end
 
-    it "assign a hash with string keys on update" do
-      instance.update( { one_model_attributes: {str: "Someone", int: "101"}}.stringify_keys )
+    it "assign a hash with string keys" do
+      instance.assign_attributes( { one_model_attributes: {str: "Someone", int: "101"}}.stringify_keys )
       expect(instance.one_model).to be_kind_of(model_class)
       expect(instance.one_model.str).to eq "Someone"
       expect(instance.one_model.int).to eq 101
@@ -74,7 +74,7 @@ RSpec.describe AttrJson::NestedAttributes do
 
     describe "_destroy" do
       it "should accept args with _destroy='0'" do
-       instance.update( { one_model_attributes: {str: "Someone", int: "", _destroy: "0"}}.stringify_keys )
+       instance.assign_attributes( { one_model_attributes: {str: "Someone", int: "", _destroy: "0"}}.stringify_keys )
        expect(instance.one_model).to be_kind_of(model_class)
        expect(instance.one_model.attributes).to eq({ "str" => "Someone", "int" => nil })
       end
@@ -88,7 +88,7 @@ RSpec.describe AttrJson::NestedAttributes do
         instance.save!
       end
       it "should delete object with _destroy" do
-        instance.update(one_model_attributes: { str: "New", _destroy: "1"} )
+        instance.assign_attributes(one_model_attributes: { str: "New", _destroy: "1"} )
         expect(instance.one_model).to be_nil
       end
 
@@ -96,7 +96,7 @@ RSpec.describe AttrJson::NestedAttributes do
       skip "should re-use existing record" do
         original = instance.one_model
 
-        instance.update(one_model_attributes: { str: "New"} )
+        instance.assign_attributes(one_model_attributes: { str: "New"} )
 
         expect(instance.one_model).to equal(original)
         expect(instance.one_model.str).to eq "New"
@@ -112,13 +112,13 @@ RSpec.describe AttrJson::NestedAttributes do
 
 
       it "should not build if all blank" do
-        instance.update(( { one_model_attributes: {str: "", int: ""}}.stringify_keys ))
+        instance.assign_attributes(( { one_model_attributes: {str: "", int: ""}}.stringify_keys ))
         instance.save!
 
         expect(instance.one_model).to be_nil
       end
       it "should build if not all blank" do
-        instance.update({ one_model_attributes: {str: "str", int: ""}})
+        instance.assign_attributes({ one_model_attributes: {str: "str", int: ""}})
         instance.save!
 
         expect(instance.one_model).to be_kind_of(model_class)
@@ -135,8 +135,8 @@ RSpec.describe AttrJson::NestedAttributes do
       expect(instance).to respond_to setter
     end
 
-    it "assign a hash with string keys on update" do
-      instance.update( { many_models_attributes: [{str: "Someone", int: "101"}, {str: "Someone Else", int: "102"}]}.stringify_keys )
+    it "assign a hash with string keys" do
+      instance.assign_attributes( { many_models_attributes: [{str: "Someone", int: "101"}, {str: "Someone Else", int: "102"}]}.stringify_keys )
 
       expect(instance.many_models).to be_present
       expect(instance.many_models.all? {|a| a.kind_of? model_class})
@@ -152,7 +152,7 @@ RSpec.describe AttrJson::NestedAttributes do
       end
 
       it "respect all_blank" do
-        instance.update(
+        instance.assign_attributes(
           {many_models_attributes: [{str: "", int: ""}, {str: "foo", int: ""}]}.stringify_keys
         )
         instance.save!
@@ -168,7 +168,7 @@ RSpec.describe AttrJson::NestedAttributes do
       it "should not add objects marked with _destroy" do
         # and should add despite _destroy: "0", without a _destroy attribute
         # being added.
-        instance.update(
+        instance.assign_attributes(
           many_models_attributes: [{ str: "nope", _destroy: "1" }, { str: "yep", _destroy: "0" }]
         )
         expect(instance.many_models).to eq [model_class.new(str: "yep")]
@@ -183,22 +183,22 @@ RSpec.describe AttrJson::NestedAttributes do
       expect(instance).to respond_to setter
     end
 
-    it "assign an array of strings on update" do
-      instance.update({ array_of_strings_attributes: ["one", "two", "three"] })
+    it "assigns an array of strings" do
+      instance.assign_attributes({ array_of_strings_attributes: ["one", "two", "three"] })
 
       expect(instance.array_of_strings).to be_present
       expect(instance.array_of_strings).to eq(["one", "two", "three"])
     end
 
-    it "removes nils and empty strings on update" do
-      instance.update({ array_of_strings_attributes: ["", "one", nil, "two", "", "", "three"] })
+    it "removes nils and empty strings" do
+      instance.assign_attributes({ array_of_strings_attributes: ["", "one", nil, "two", "", "", "three"] })
 
       expect(instance.array_of_strings).to be_present
       expect(instance.array_of_strings).to eq(["one", "two", "three"])
     end
 
     it "assign an empty array" do
-      instance.update({ array_of_strings_attributes: [] })
+      instance.assign_attributes({ array_of_strings_attributes: [] })
 
       expect(instance.array_of_strings).to eq([])
     end
