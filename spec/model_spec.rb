@@ -309,6 +309,17 @@ RSpec.describe AttrJson::Record do
       expect(deserialized.json_datetime.time_zone).to eq ActiveSupport::TimeZone.new(time_zone)
     end
 
+    describe "set to value in timezone" do
+      let(:time_value) { Time.now.in_time_zone('Sydney') }
+
+      it "serializes to UTC" do
+        expect(time_value.zone).not_to eq "UTC"
+        expect(instance.json_datetime.zone).not_to eq "UTC"
+
+        expect(instance.serializable_hash["json_datetime"].zone).to eq "UTC"
+      end
+    end
+
     describe "disabled with attr_json config" do
       let(:klass) do
         Class.new do
@@ -323,6 +334,17 @@ RSpec.describe AttrJson::Record do
       it "does not convert on create" do
         expect(instance.json_datetime.class).to eq(Time)
         expect(instance.json_datetime.zone).to eq(time_value.zone)
+      end
+
+      describe "set to value in timezone" do
+        let(:time_value) { Time.now.in_time_zone('Sydney') }
+
+        it "still serializes to UTC" do
+          expect(time_value.zone).not_to eq "UTC"
+          expect(instance.json_datetime.zone).not_to eq "UTC"
+
+          expect(instance.serializable_hash["json_datetime"].zone).to eq "UTC"
+        end
       end
     end
   end

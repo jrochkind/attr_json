@@ -139,6 +139,30 @@ RSpec.describe AttrJson::Record do
     end
   end
 
+  describe "datetime with zone passed in" do
+    let(:model_class) do
+      Class.new do
+        include AttrJson::Model
+
+        attr_json :datetime, :datetime
+      end
+    end
+
+    let(:zoned_datetime) { Time.now.in_time_zone('Sydney') }
+
+    it "is serialized as UTC even when given zoned time" do
+      instance.model = { "datetime" =>  zoned_datetime }
+      instance.save!
+
+      saved_json = JSON.parse(instance.json_attributes_before_type_cast)
+      saved_json_datetime = saved_json["model"]["datetime"]
+
+      expect(saved_json_datetime).to match /\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d.\d{#{ActiveSupport::JSON::Encoding.time_precision}}Z/
+
+      expect(Time.iso8601(saved_json_datetime).utc).to eq zoned_datetime.utc.floor(ActiveSupport::JSON::Encoding.time_precision)
+    end
+  end
+
   describe "with un-casteable input" do
     it "raises" do
       # this SEEMS to be consistent with what other ActiveModel::Types do...
