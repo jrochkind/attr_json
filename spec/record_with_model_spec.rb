@@ -31,8 +31,6 @@ RSpec.describe AttrJson::Record do
   end
   let(:instance) { klass.new }
 
-# TODO datetimes are weird, sometimes rails takes off fractional seconds, sometimes it doesn't.
-
   it "starts out nil" do
     expect(instance.model).to be_nil
   end
@@ -136,6 +134,40 @@ RSpec.describe AttrJson::Record do
       instance.save!
 
       expect(instance.json_attributes_before_type_cast).to eq "{\"model\":null}"
+    end
+  end
+
+  describe "datetime with zone passed in" do
+    let(:model_class) do
+      Class.new do
+        include AttrJson::Model
+
+        attr_json :datetime, :datetime
+      end
+    end
+
+    let(:zoned_datetime) { Time.now.in_time_zone('Sydney').change(nsec: 123456789) }
+
+    let(:expected_precision) { ActiveSupport::JSON::Encoding.time_precision }
+
+    it "casts to appropriate fractional seconds precision" do
+      instance.model = { "datetime" => zoned_datetime }
+
+      expect(instance.model.datetime.nsec).to eq(zoned_datetime.floor(expected_precision).nsec)
+    end
+
+    it "is serialized as UTC even when given zoned time" do
+      instance.model = { "datetime" =>  zoned_datetime }
+      instance.save!
+
+      saved_json = JSON.parse(instance.json_attributes_before_type_cast)
+      saved_json_datetime = saved_json["model"]["datetime"]
+
+      # a UTC iso8601 format, ending in `Z`
+      expect(saved_json_datetime).to match /\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d.\d{#{expected_precision}}Z/
+
+      # and the conversion is correct
+      expect(Time.iso8601(saved_json_datetime)).to eq zoned_datetime.utc.floor(expected_precision)
     end
   end
 

@@ -330,10 +330,6 @@ module AttrJson
         if attribute_def = self.class.attr_json_registry[key.to_sym]
           key = attribute_def.store_key
 
-          if value.kind_of?(Time) || value.kind_of?(DateTime)
-            value = value.utc.change(usec: 0)
-          end
-
           value = attribute_def.serialize(value)
         end
 
