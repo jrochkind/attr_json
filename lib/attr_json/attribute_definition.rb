@@ -107,7 +107,15 @@
         # See: https://github.com/jrochkind/attr_json/issues/41
         # This is at the "cost" of not using any adapter-specific types... which
         # maybe preferable anyway?
-        type = ActiveRecord::Type.lookup(type, adapter: nil)
+        #
+        # AND we add precision for datetime/time types... since we're using Rails json
+        # serializing, we're kind of stuck with this precision in current implementation.
+        lookup_kwargs = { adapter: nil }
+        if type == :datetime || type == :time
+          lookup_kwargs = { precision: ActiveSupport::JSON::Encoding.time_precision }
+        end
+
+        type = ActiveRecord::Type.lookup(type, **lookup_kwargs)
       elsif !(type.is_a?(ActiveModel::Type::Value) || type.is_a?(ActiveRecord::AttributeMethods::TimeZoneConversion::TimeZoneConverter))
         raise ArgumentError, "Second argument (#{type}) must be a symbol or instance of an ActiveModel::Type::Value subclass"
       end

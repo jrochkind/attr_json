@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Array types now default to an empty array. If you'd like to turn that off, you can use the somewhat odd `default: AttrJson::AttributeDefinition::NO_DEFAULT_PROVIDED` on attribute definiton. Thanks @g13ydson for suggestion. https://github.com/jrochkind/attr_json/pull/161
 
+* time or datetime types used to truncate all fractional seconds to 0. Now they properly allow precision of `ActiveSupport::JSON::Encoding.time_precision` (normally three decimal places, ie milliseconds). And by default the Type::Value's are set to proper precision for cast too. https://github.com/jrochkind/attr_json/pull/173
+
 ### Added
 
 * ActiveRecord-style "timezone-aware attribute" conversion now works properly, in both AttrJson::Record and (similarly) AttrJson::Model. https://github.com/jrochkind/attr_json/pull/164
