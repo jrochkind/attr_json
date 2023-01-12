@@ -20,7 +20,7 @@ module AttrJson
   # Meant for use as an attribute of a AttrJson::Record. Can be nested,
   # AttrJson::Models can have attributes that are other AttrJson::Models.
   #
-  # @note Includes ActiveModel::Model whether you like it or not. TODO, should it?
+  # @note Includes ActiveModel::Model whether you like it or not.
   #
   # You can control what happens if you set an unknown key (one that you didn't
   # register with `attr_json`) with the config attribute `attr_json_config(unknown_key:)`.
@@ -121,7 +121,7 @@ module AttrJson
       # The inverse of model#serializable_hash -- re-hydrates a serialized hash to a model.
       #
       # Similar to `.new`, but translates things that need to be translated in deserialization,
-      # like store_keys, and properly calling deserialize on the underlying types.
+      # like store_keys, and properly calling deserialize (rather than cast) on the underlying types.
       #
       # @example Model.new_from_serializable(hash)
       def new_from_serializable(attributes = {})
@@ -142,6 +142,8 @@ module AttrJson
         self.new(attributes)
       end
 
+      # @returns ActiveModel::Type suitable for including this model in
+      # an AttrJson::Record or ::Model attribute
       def to_type
         @type ||= AttrJson::Type::Model.new(self)
       end
@@ -287,31 +289,65 @@ module AttrJson
       self.class.attr_json_registry.has_attribute?(str)
     end
 
-    # Override from ActiveModel::Serialization to #serialize
-    # by type to make sure any values set directly on hash still
+    # Override from ActiveModel::Serialization to:
+    #
+    # * handle store_key settings
+    #
+    # * #serialize by type to make sure any values set directly on hash still
     # get properly type-serialized.
-    def serializable_hash(*options)
-      super.collect do |key, value|
+    #
+    # * custom logic for keeping nil values out of serialization to be more compact
+    #
+    # @param strip_nils [:symbol, Boolean] (default false) Should we keep keys with
+    #   `nil` values out of the serialization entirely? You might want to to keep
+    #   your in-database serialization compact. By default this method does not -- but
+    #   by default AttrJson::Type::Model sends `:safely` when serializing.
+    #     * false => do not strip nils
+    #     * :safely => strip nils only when there is no default value for the attribute,
+    #       so `nil` can still override the default value
+    #     * true => strip nils even if there is a default value -- in AttrJson
+    #       context, this means the default will be reapplied over nil on
+    #       every de-serialization!
+    def serializable_hash(strip_nils:false, **options)
+      unless [true, false, :safely].include?(strip_nils)
+        raise ArgumentError, ":strip_nils must be true, false, or :safely"
+      end
+
+      super(options).collect do |key, value|
         if attribute_def = self.class.attr_json_registry[key.to_sym]
           key = attribute_def.store_key
+
           if value.kind_of?(Time) || value.kind_of?(DateTime)
             value = value.utc.change(usec: 0)
           end
 
           value = attribute_def.serialize(value)
         end
-        # Do we need unknown key handling here? Apparently not?
-        [key, value]
-      end.to_h
+
+        # strip_nils handling
+        if value.nil? && (
+           (strip_nils == :safely && !attribute_def&.has_default?) ||
+            strip_nils == true )
+        then
+          # do not include in serializable_hash
+          nil
+        else
+          [key, value]
+        end
+      end.compact.to_h
     end
 
     # ActiveRecord JSON serialization will insist on calling
     # this, instead of the specified type's #serialize, at least in some cases.
     # So it's important we define it -- the default #as_json added by ActiveSupport
     # will serialize all instance variables, which is not what we want.
-    def as_json(*options)
-      serializable_hash(*options)
+    #
+    # @param strip_nils [:symbol, Boolean] (default false) [true, false, :safely],
+    #   see #serializable_hash
+    def as_json(**kwargs)
+      serializable_hash(**kwargs)
     end
+
 
     # We deep_dup on #to_h, you want attributes unduped, ask for #attributes.
     def to_h

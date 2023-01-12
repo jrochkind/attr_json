@@ -326,4 +326,37 @@ RSpec.describe AttrJson::Record do
       end
     end
   end
+
+  describe "serialization" do
+    let(:klass) do
+      Class.new do
+        include AttrJson::Model
+
+        attr_json :str, :string
+        attr_json :str_with_default, :string, default: "foo"
+      end
+    end
+
+    it "includes all nils by default" do
+     expect(klass.new(str: nil, str_with_default: nil).serializable_hash).to eq(
+        { "str_with_default" => nil, "str" =>  nil }
+      )
+    end
+
+    describe "strip_nils: safely" do
+      it "omits keys for nil values, unless they have defaults configured" do
+        expect(klass.new(str: nil, str_with_default: nil).serializable_hash(strip_nils: :safely)).to eq(
+          { "str_with_default" => nil}
+        )
+      end
+    end
+
+    describe "strip_nils: true" do
+      it "strips all nils" do
+       expect(klass.new(str: nil, str_with_default: nil).serializable_hash(strip_nils: true)).to eq(
+          { }
+        )
+      end
+    end
+  end
 end
