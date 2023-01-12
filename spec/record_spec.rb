@@ -451,27 +451,21 @@ RSpec.describe AttrJson::Record do
     end
 
     context ":datetime type" do
-      # 345123 to 345100
-      def truncate_usec_to_ms(int)
-        int.to_i / 1000 * 1000
-      end
-
       before do
         instance.datetime_type = datetime_value
         instance.json_datetime = datetime_value
       end
 
-      it "has the same microseconds on create" do
-        # AR doesn't touch it in any way here, so we shouldn't either.
-        expect(instance.json_datetime.usec).to eq(instance.datetime_type.usec)
+      let(:expected_time_precision) { ActiveSupport::JSON::Encoding.time_precision }
+
+      it "has expected precision on create" do
+        expect(instance.json_datetime.nsec).to eq(instance.datetime_type.floor(expected_time_precision).nsec)
       end
 
-      it "rounds usec to ms after save" do
+      it "has expected precision after save" do
         instance.save!
 
-        expect(instance.json_datetime.usec % 1000).to eq(0)
-
-        expect(truncate_usec_to_ms(instance.json_datetime.usec)).to eq(truncate_usec_to_ms(instance.datetime_type.usec))
+        expect(instance.json_datetime.nsec).to eq(instance.json_datetime.nsec.floor(expected_time_precision))
       end
 
       describe "a zoned time" do
@@ -587,14 +581,16 @@ RSpec.describe AttrJson::Record do
       end
 
       describe "attributes_before_type_cast" do
-        it "serializes as iso8601 in UTC with ms precision" do
+        let(:expected_time_precision) { ActiveSupport::JSON::Encoding.time_precision }
+
+        it "serializes as iso8601 in UTC with expected time precision" do
           instance.json_datetime = datetime_value
           instance.save!
 
           json_serialized = JSON.parse(instance.json_attributes_before_type_cast)
 
-          expect(json_serialized["json_datetime"]).to match(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d.\d{3}Z/)
-          expect(DateTime.iso8601(json_serialized["json_datetime"])).to eq(datetime_value.utc.change(usec: truncate_usec_to_ms(datetime_value.usec)))
+          expect(json_serialized["json_datetime"]).to match(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d.\d{#{expected_time_precision}}Z/)
+          expect(DateTime.iso8601(json_serialized["json_datetime"])).to eq(datetime_value.utc.floor(expected_time_precision))
         end
       end
 
