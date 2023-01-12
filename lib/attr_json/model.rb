@@ -80,6 +80,15 @@ module AttrJson
   #   serialize :some_json_column, ValueModel.to_serialize_coder
   # end
   #
+  # # Strip nils
+  #
+  # When embedded in an `attr_json` attribute, models are normally serialized with `nil` values
+  # stripped from hash where possible, for a more compact representation.
+  # This can be set differently in the type.
+  #
+  #     attr_json :lang_and_value, LangAndValue.to_type(strip_nils: false)
+  #
+  # See #serializable_hash docs for possible values.
   module Model
     extend ActiveSupport::Concern
 
@@ -144,8 +153,12 @@ module AttrJson
 
       # @returns ActiveModel::Type suitable for including this model in
       # an AttrJson::Record or ::Model attribute
-      def to_type
-        @type ||= AttrJson::Type::Model.new(self)
+      #
+      # @param strip_nils [Boolean,Symbol] [true,false,:safely] as a type,
+      #   should we strip nils when serializing? By default this type strips
+      #   nils in :safely mode. See AttrJson::Model#serializable_hash
+      def to_type(strip_nils: :safely)
+        @type ||= AttrJson::Type::Model.new(self, strip_nils: strip_nils)
       end
 
       def to_serialization_coder

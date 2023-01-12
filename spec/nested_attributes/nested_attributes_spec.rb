@@ -160,7 +160,8 @@ RSpec.describe AttrJson::NestedAttributes do
         expect(instance.many_models).to be_present
         expect(instance.many_models.all? {|a| a.kind_of? model_class})
 
-        expect(instance.many_models).to eq [model_class.new(str: "foo", int: nil)]
+        # int casts to nil, then is stripped
+        expect(instance.many_models).to eq [model_class.new(str: "foo")]
       end
     end
 
