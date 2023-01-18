@@ -404,6 +404,16 @@ RSpec.describe AttrJson::Record do
   end
 
   describe "model defaults" do
+    it "can be overridden to nil, and stick through serialization" do
+      instance.model = { int_with_default: nil }
+      expect(instance.model.int_with_default).to be_nil
+
+      instance.save!
+      instance.reload
+
+      expect(instance.model.int_with_default).to be_nil
+    end
+
     describe "empty hash" do
       let(:klass) do
         # really hard to get the class def closure to capture the rspec
@@ -423,6 +433,7 @@ RSpec.describe AttrJson::Record do
         expect(instance.model.int_with_default).to be_present
       end
     end
+
     describe "constructor lambda" do
       let(:klass) do
         # really hard to get the class def closure to capture the rspec
@@ -462,6 +473,29 @@ RSpec.describe AttrJson::Record do
       instance.save!
       instance.reload
       expect(instance.model).to eq(nil)
+    end
+  end
+
+  describe "nil values in model" do
+    let(:model_class) do
+      Class.new do
+        include AttrJson::Model
+
+        attr_json :str, :string
+        attr_json :str_with_default, :string, default: "default"
+      end
+    end
+
+    it "are stripped safely by default" do
+      instance.model = { str: nil, str_with_default: nil }
+      instance.save!
+
+      # nil with default is left in safely, nil without default is stripped
+      expect(
+        JSON.parse(instance.json_attributes_before_type_cast)
+      ).to eq(
+        {"model"=>{"str_with_default"=>nil}}
+      )
     end
   end
 end

@@ -8,13 +8,22 @@ module AttrJson
     # but normally that's only done in AttrJson::Model.to_type, there isn't
     # an anticipated need to create from any other place.
     #
+    #
     class Model < ::ActiveModel::Type::Value
       class BadCast < ArgumentError ; end
 
-      attr_accessor :model
-      def initialize(model)
+      attr_accessor :model, :strip_nils
+
+      # @param model [AttrJson::Model] the model _class_ object
+      # @param strip_nils [Symbol,Boolean] [true, false, or :safely]
+      #  (default :safely), As a type, should we strip nils when serialiing?
+      #  This value passed to AttrJson::Model#serialized_hash(strip_nils).
+      #  by default it's :safely, we strip nils when it can be done safely
+      #  to preserve default overrides.
+      def initialize(model, strip_nils: :safely)
         #TODO type check, it really better be a AttrJson::Model. maybe?
         @model = model
+        @strip_nils = strip_nils
       end
 
       def type
@@ -51,9 +60,9 @@ module AttrJson
         if v.nil?
           nil
         elsif v.kind_of?(model)
-          v.serializable_hash
+          v.serializable_hash(strip_nils: strip_nils)
         else
-          (cast_v = cast(v)) && cast_v.serializable_hash
+          (cast_v = cast(v)) && cast_v.serializable_hash(strip_nils: strip_nils)
         end
       end
 
