@@ -17,7 +17,7 @@ has not yet been tested with MySQL.
 ## Basic Use
 
 ```ruby
-# migration
+# migration, default column used is `json_attributes, but this can be changed
 class CreatMyModels < ActiveRecord::Migration[5.0]
   def change
     create_table :my_models do |t|
@@ -27,6 +27,14 @@ class CreatMyModels < ActiveRecord::Migration[5.0]
     # If you plan to do any querying with jsonb_contains below..
     add_index :my_models, :json_attributes, using: :gin
   end
+end
+
+# An embedded model, if desired
+class LangAndValue
+  include AttrJson::Model
+
+  attr_json :lang, :string, default: "en"
+  attr_json :value, :string
 end
 
 class MyModel < ActiveRecord::Base
@@ -42,9 +50,32 @@ class MyModel < ActiveRecord::Base
    attr_json :int_array, :integer, array: true
 
    #and/or defaults
-   attr_json :int_with_default, :integer, default: 100
+   attr_json :str_with_default, :string, default: "default value"
+
+   attr_json :embedded_lang_and_val, LangAndValue.to_type
 end
+
+model = MyModel.create!(
+  my_integer: 101,
+  my_datetime: DateTime.new(2001,2,3,4,5,6),
+  embedded_lang_and_val: LangAndValue.new(value: "a sentance in default language english")
+  )
 ```
+
+What will get serialized to your `json_attributes` column will look like:
+
+```json
+{
+  "my_integer":101,
+  "my_datetime":"2001-02-03T04:05:06Z",
+  "str_with_default":"default value",
+  "embedded_lang_and_val": {
+    "lang":"en",
+    "value":"a sentance in default language english"
+  }
+}
+```
+
 
 These attributes have type-casting behavior very much like ordinary ActiveRecord values.
 
@@ -56,6 +87,8 @@ model.int_array = "12"
 model.int_array # => [12]
 model.my_datetime = "2016-01-01 17:45"
 model.my_datetime # => a Time object representing that, just like AR would cast
+model.embedded_lang_and_val = { value: "val"}
+model.embedded_lang_and_val #=> #<LangAndVal:0x000000010c9a7ad8 @attributes={"value"=>"val"...>
 ```
 
 You can use ordinary ActiveRecord validation methods with `attr_json` attributes.
@@ -65,7 +98,7 @@ If you look at `model.json_attributes`, you'll see values already cast to their 
 
 To see JSON representations, we can use Rails [\*\_before_type_cast](https://api.rubyonrails.org/classes/ActiveRecord/AttributeMethods/BeforeTypeCast.html) methods,  [\*\-in_database](https://api.rubyonrails.org/classes/ActiveRecord/AttributeMethods/Dirty.html#method-i-attribute_in_database) and [\*\_for_database] methods (Rails 7.0+ only).
 
-These methods can all be called on ont the container `json_attributes` json hash attribute (generally showing serialized JSONto string), or any individual attribute (generally showing in-memory JSON-able object). [This is a bit confusing and possibly not entirely consistent, needs more investigation.]
+These methods can all be called on the container `json_attributes` json hash attribute (generally showing serialized JSON to string), or any individual attribute (generally showing in-memory JSON-able object). [This is a bit confusing and possibly not entirely consistent, needs more investigation.]
 
 ## Specifying db column to use
 
@@ -457,9 +490,7 @@ to prevent overwriting other updates from processes.
 
 ## State of Code, and To Be Done
 
-This code is solid and stable and is being used in production by at least a handful of people, including the primary maintainer, jrochkind.
-
-The project is currently getting very little maintainance -- and is still working reliably through Rails releases. It is tested on edge rails and ruby (and has needed very few if any changes with subsequent releases), and I endeavor to keep it working as Rails keeps releasing.
+This code is solid and stable and is being used in production. If you don't see a lot of activity, it might be because it's stable, rather than abandoned. Check to see if it's passing/supported on recent Rails? We test on "edge" unreleased rails to try to stay ahead of compatibility, and has worked through multiple major Rails verisons with few if any changes needed.
 
 In order to keep the low-maintenace scenario sustainable, I am *very* cautious accepting new features, especially if they increase code complexity at all. Even if you have a working PR, I may be reluctant to accept it. I'm prioritizing sustainability and stability over new features, and so far this is working out well. However, discussion is always welcome! Especially when paired with code (failing tests for the bugfix or feature you want are super helpful on their own!).
 
@@ -473,13 +504,9 @@ This is still mostly a single-maintainer operation, so has all the sustainabilit
 
 ### Possible future features:
 
-* Make AttrJson::Model lean more heavily on ActiveModel::Attributes API that did not fully exist in first version of attr_json [hope for a future attr_json 2.0 release]
+* Make AttrJson::Model lean more heavily on ActiveModel::Attributes API that did not fully exist in first version of attr_json (perhaps not, see https://github.com/jrochkind/attr_json/issues/18)
 
-* Make AttrJson::Record insist on creating rails cover attributes (no longer optional)  and integrating more fully into rails, including rails dirty tricking, eliminating need for custom dirty tracking implementation. Overall decrease in lines of code. Can use jsonb_accessor as guide for some aspects. [hope for inclusion in future attr_json 2.0 release]
-
-* partial updates for json hashes would be really nice: Using postgres jsonb merge operators to only overwrite what changed. In my initial attempts, AR doesn't make it easy to customize this. [update: this is hard, probably not coming soon]
-
-* seamless compatibility with ransack [update: not necessarily prioritized]
+* partial updates for json hashes would be really nice: Using postgres jsonb merge operators to only overwrite what changed. In my initial attempts, AR doesn't make it easy to customize this. [update: this is hard, probably not coming soon. See https://github.com/jrochkind/attr_json/issues/143]
 
 * Should we give AttrJson::Model a before_serialize hook that you might
   want to use similar to AR before_save?  Should AttrJson::Models
