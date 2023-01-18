@@ -161,6 +161,15 @@ module AttrJson
         @type ||= AttrJson::Type::Model.new(self, strip_nils: strip_nils)
       end
 
+      # An ActiveModel::Type that can be used to serialize this model
+      # across an entire JSON(b) column.
+      #
+      # @example using standard ActiveRecord `serialize` feature.
+      #
+      #     class MyTable < ApplicationRecord
+      #       serialize :some_json_column, MyModel.to_serialization_coder
+      #     end
+      #
       def to_serialization_coder
         @serialization_coder ||= AttrJson::SerializationCoderFromType.new(to_type)
       end
