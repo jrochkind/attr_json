@@ -150,6 +150,17 @@ module AttrJson
         @serialization_coder ||= AttrJson::SerializationCoderFromType.new(to_type)
       end
 
+      # like the ActiveModel::Attributes method
+      def attribute_names
+        attr_json_registry.attribute_names
+      end
+
+      # like the ActiveModel::Attributes method, hash with name keys, and ActiveModel::Type values
+      def attribute_types
+        attribute_names.collect { |name| [name.to_s, attr_json_registry.type_for_attribute(name)]}.to_h
+      end
+
+
       # Type can be an instance of an ActiveModel::Type::Value subclass, or a symbol that will
       # be looked up in `ActiveModel::Type.lookup`
       #
@@ -252,6 +263,12 @@ module AttrJson
       fill_in_defaults!
     end
 
+    # inspired by https://github.com/rails/rails/blob/8015c2c2cf5c8718449677570f372ceb01318a32/activemodel/lib/active_model/attributes.rb
+    def initialize_dup(other) # :nodoc:
+      @attributes = @attributes.deep_dup
+      super
+    end
+
     def attributes
       @attributes ||= {}
     end
@@ -285,6 +302,11 @@ module AttrJson
     # type.
     def has_attribute?(str)
       self.class.attr_json_registry.has_attribute?(str)
+    end
+
+    # like the ActiveModel::Attributes method
+    def attribute_names
+      self.class.attribute_names
     end
 
     # Override from ActiveModel::Serialization to #serialize
@@ -328,6 +350,15 @@ module AttrJson
     # and smoothly with standard code for nested attributes deletion in form builders.
     def _destroy
       false
+    end
+
+    # like ActiveModel::Attributes at
+    # https://github.com/rails/rails/blob/8015c2c2cf5c8718449677570f372ceb01318a32/activemodel/lib/active_model/attributes.rb#L120
+    #
+    # is not a full deep freeze
+    def freeze
+      attributes.freeze unless frozen?
+      super
     end
 
     private

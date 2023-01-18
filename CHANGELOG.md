@@ -4,7 +4,8 @@ Notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/jrochkind/attr_json/compare/v1.4.0...HEAD)
+## [Unreleased](https://github.com/jrochkind/attr_json/compare/v3.0.0...HEAD)
+
 
 
 ## [3.0.0]
@@ -32,6 +33,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 * the `AttrJson::Type::Array` type used for our array types was not properly tracking in-place mutation changes. Now it is https://github.com/jrochkind/attr_json/pull/163
+
+
+
+## [1.5.0](https://github.com/jrochkind/attr_json/compare/v1.4.1...v1.5.0)
+
+### Added
+
+* AttrJson::Model#dup will properly deep-dup attributes https://github.com/jrochkind/attr_json/pull/169
+
+* AttrJson::Model#freeze will freeze attributes -- but not deep-freeze. https://github.com/jrochkind/attr_json/pull/169
+
+* AttrJson::Model has some methods conventional in ActiveModel classes: Klass.attribute_types, Klass.attribute_names, and instance.attribute_names. https://github.com/jrochkind/attr_json/pull/169
+
+
 
 ## [1.4.1](https://github.com/jrochkind/attr_json/compare/v1.4.0...v1.4.1)
 
