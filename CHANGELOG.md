@@ -28,6 +28,8 @@ While it has some backwards incompat changes, this is expected not to be a chall
 
 * time or datetime types used to truncate all fractional seconds to 0. Now they properly allow precision of `ActiveSupport::JSON::Encoding.time_precision` (normally three decimal places, ie milliseconds). And by default the Type::Value's are set to proper precision for cast too. https://github.com/jrochkind/attr_json/pull/173
 
+* AttrJson::Models are serialized without nil values in the hash, for more compact representations. This is only done for attributes without defaults. This behavior can be disabled/altered when specifying the type. https://github.com/jrochkind/attr_json/pull/175
+
 ### Added
 
 * ActiveRecord-style "timezone-aware attribute" conversion now works properly, in both AttrJson::Record and (similarly) AttrJson::Model. https://github.com/jrochkind/attr_json/pull/164
