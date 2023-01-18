@@ -6,13 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/jrochkind/attr_json/compare/v1.4.1...HEAD)
 
+
+## [1.5.0](https://github.com/jrochkind/attr_json/compare/v1.4.1...v1.5.0)
+
 ### Added
 
 * AttrJson::Model#dup will properly deep-dup attributes https://github.com/jrochkind/attr_json/pull/169
 
 * AttrJson::Model#freeze will freeze attributes -- but not deep-freeze. https://github.com/jrochkind/attr_json/pull/169
 
-* AttrJson::Model has some methods conventional in ActiveModel classes: Klass.attribute_types, Klass.attribute_names, and instance.attribute_names.
+* AttrJson::Model has some methods conventional in ActiveModel classes: Klass.attribute_types, Klass.attribute_names, and instance.attribute_names. https://github.com/jrochkind/attr_json/pull/169
 
 ## [1.4.1](https://github.com/jrochkind/attr_json/compare/v1.4.0...v1.4.1)
 
