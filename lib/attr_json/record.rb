@@ -136,6 +136,10 @@ module AttrJson
       #   should post up to self similar to Rails ActiveRecord::Validations::AssociatedValidator on
       #   associated objects.
       #
+      # @option options [Boolean,Hash] :accepts_nested_attributes (false). If true, equivalent
+      #   of  writing `attr_json_accepts_nested_attributes :attribute_name`. If value is a hash,
+      #   then same, but with hash as options to `attr_json_accepts_nested_attributes`
+      #
       def attr_json(name, type, **options)
         options = {
           validate: true,
