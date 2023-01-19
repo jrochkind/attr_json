@@ -4,11 +4,11 @@ Notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/jrochkind/attr_json/compare/v3.0.0...HEAD)
+## [Unreleased](https://github.com/jrochkind/attr_json/compare/v2.0.0...HEAD)
 
 
 
-## [3.0.0.rc1](https://github.com/jrochkind/attr_json/compare/v1.5.0...v3.0.0.rc1)
+## [2.0.0.rc1](https://github.com/jrochkind/attr_json/compare/v1.5.0...v2.0.0.rc1)
 
 While it has some backwards incompat changes, this is expected not to be a challenging upgrade, please let us know by filing an issue if it's giving you troubles, maybe we can make things easier for you. No changes to data stored in your DB should be needed when upgrading, the persisted data should be compatible between 2.x and 3.x.
 
