@@ -65,6 +65,10 @@ module AttrJson
             raise ArgumentError, "No attr_json found for name '#{attr_name}'. Has it been defined yet?"
           end
 
+          unless attr_def.array_type? || attr_def.single_model_type?
+            raise TypeError, "attr_json_accepts_nested_attributes_for is only for array or nested model types; `#{attr_name}` is type #{attr_def.type.type.inspect}"
+          end
+
           # We're sharing AR class attr in an AR, or using our own in a Model.
           nested_attributes_options = self.nested_attributes_options.dup
           nested_attributes_options[attr_name.to_sym] = options
@@ -80,7 +84,7 @@ module AttrJson
           end
 
           # No build method for our wacky array of primitive type.
-          if options[:define_build_method] && !(attr_def.array_type? && attr_def.type.base_type_primitive?)
+          if options[:define_build_method] && !attr_def.array_of_primitive_type?
             _attr_jsons_module.module_eval do
               build_method_name = "build_#{attr_name.to_s.singularize}"
               if method_defined?(build_method_name)

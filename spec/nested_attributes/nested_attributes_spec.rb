@@ -36,6 +36,25 @@ RSpec.describe AttrJson::NestedAttributes do
     end
   end
 
+  describe "on primitive type" do
+    let(:klass) do
+      Class.new(ActiveRecord::Base) do
+        include AttrJson::Record
+        include AttrJson::NestedAttributes
+
+        self.table_name = "products"
+
+        attr_json :primitive, :string
+      end
+    end
+
+    it "raises as incompatible" do
+      expect {
+        klass.attr_json_accepts_nested_attributes_for :primitive
+      }.to raise_error(TypeError, "attr_json_accepts_nested_attributes_for is only for array or nested model types; `primitive` is type :string")
+    end
+  end
+
   it "should allow class to override and call super" do
     overridden_class = Class.new(klass) do
       def one_model_attributes=(attrs)
@@ -382,12 +401,13 @@ RSpec.describe AttrJson::NestedAttributes do
 
         self.table_name = "products"
 
+        attr_json :primitive, :string
         attr_json :one_model, model_class_type, accepts_nested_attributes: false
         attr_json :many_models, model_class_type, array: true
       end
     end
 
-    it "applies default" do
+    it "applies default to model array attr" do
       expect(instance).to respond_to(:many_models_attributes=)
 
       instance.many_models_attributes = [{}]
@@ -397,7 +417,11 @@ RSpec.describe AttrJson::NestedAttributes do
       expect(instance.many_models.first.str).to eq("one")
     end
 
-    it "overrides false" do
+    it "does not apply default to non-applicable primitive" do
+      expect(instance).not_to respond_to(:primitive_attributes=)
+    end
+
+    it "can be overridden with false on specific attr" do
       expect(instance).not_to respond_to(:one_model_attributes=)
     end
   end

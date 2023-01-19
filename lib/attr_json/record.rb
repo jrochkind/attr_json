@@ -136,15 +136,16 @@ module AttrJson
       #   should post up to self similar to Rails ActiveRecord::Validations::AssociatedValidator on
       #   associated objects.
       #
-      # @option options [Boolean,Hash] :accepts_nested_attributes (false). If true, equivalent
+      # @option options [Boolean,Hash] :accepts_nested_attributes. If true, equivalent
       #   of  writing `attr_json_accepts_nested_attributes :attribute_name`. If value is a hash,
-      #   then same, but with hash as options to `attr_json_accepts_nested_attributes`
+      #   then same, but with hash as options to `attr_json_accepts_nested_attributes`.
+      #   Default taken from `attr_json_config.default_accepts_nested_attributes`, for
+      #   array or model types where it is applicable.
       #
       def attr_json(name, type, **options)
         options = {
           validate: true,
           container_attribute: self.attr_json_config.default_container_attribute,
-          accepts_nested_attributes: self.attr_json_config.default_accepts_nested_attributes
         }.merge!(options)
         options.assert_valid_keys(AttributeDefinition::VALID_OPTIONS + [:validate, :accepts_nested_attributes])
         container_attribute = options[:container_attribute]
@@ -216,9 +217,17 @@ module AttrJson
           end
         end
 
-        # Default attr_json_accepts_nested_attributes_for values
-        if options[:accepts_nested_attributes]
-          options = options[:accepts_nested_attributes] == true ? {} : options[:accepts_nested_attributes]
+        accepts_nested_attributes = if options.has_key?(:accepts_nested_attributes)
+          options[:accepts_nested_attributes]
+        elsif attr_json_definition.single_model_type? || attr_json_definition.array_type?
+          # use configured default only if we have a type appropriate for it!
+          self.attr_json_config.default_accepts_nested_attributes
+        else
+          false
+        end
+
+        if accepts_nested_attributes
+          options = accepts_nested_attributes == true ? {} : accepts_nested_attributes
           self.attr_json_accepts_nested_attributes_for name, **options
         end
       end

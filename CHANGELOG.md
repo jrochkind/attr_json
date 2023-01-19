@@ -18,6 +18,8 @@ While it has some backwards incompat changes, this is expected not to be a chall
 
 * The `rails_attribute` param to `attr_json` or `attr_json_config` no longer exists. We now always create rails attributes for AttrJson::Record attributes. https://github.com/jrochkind/attr_json/pull/117 and https://github.com/jrochkind/attr_json/pull/158
 
+*  AttrJson::Type::Array#base_type_primitive? is gone. Doubt anyone used it externally. https://github.com/jrochkind/attr_json/pull/178
+
 ### Changed
 
 * We now create Rails Attribute cover for all attr_json attributes, and we do a better job of keeping the Rails attribute values sync'd with attr_json values.   https://github.com/jrochkind/attr_json/pull/117, https://github.com/jrochkind/attr_json/pull/158, and https://github.com/jrochkind/attr_json/pull/163
@@ -29,6 +31,8 @@ While it has some backwards incompat changes, this is expected not to be a chall
 * time or datetime types used to truncate all fractional seconds to 0. Now they properly allow precision of `ActiveSupport::JSON::Encoding.time_precision` (normally three decimal places, ie milliseconds). And by default the Type::Value's are set to proper precision for cast too. https://github.com/jrochkind/attr_json/pull/173
 
 * AttrJson::Models are serialized without nil values in the hash, for more compact representations. This is only done for attributes without defaults. This behavior can be disabled/altered when specifying the type. https://github.com/jrochkind/attr_json/pull/175
+
+* config default_accepts_nested_attributes will only apply nested attributes to suitable attribute types (array or nested model), the default won't apply to inapplicable types. https://github.com/jrochkind/attr_json/pull/178
 
 ### Added
 
