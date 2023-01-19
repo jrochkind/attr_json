@@ -96,14 +96,18 @@
 
     # Used for figuring out appropriate behavior for nested attribute implementation among
     # other places. true if type is a nested model, either straight or polymorphic
-    def single_model_type?(arg_type=self.type)
+    def single_model_type?
+      self.class.single_model_type?(type)
+    end
+
+    def self.single_model_type?(arg_type)
       arg_type.is_a?(AttrJson::Type::Model) || arg_type.is_a?(AttrJson::Type::PolymorphicModel)
     end
 
     # Used for figuring out appropriate behavior in nested attribute implementation among
     # other places. true if type is an array of things that are not nested models.
     def array_of_primitive_type?
-      array_type? && !single_model_type?(type.base_type)
+      array_type? && !self.class.single_model_type?(type.base_type)
     end
 
     # Can look up a symbol to a type, or leave a type alone, or raise if it's neither.

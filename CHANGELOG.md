@@ -18,8 +18,6 @@ While it has some backwards incompat changes, this is expected not to be a chall
 
 * The `rails_attribute` param to `attr_json` or `attr_json_config` no longer exists. We now always create rails attributes for AttrJson::Record attributes. https://github.com/jrochkind/attr_json/pull/117 and https://github.com/jrochkind/attr_json/pull/158
 
-*  AttrJson::Type::Array#base_type_primitive? is gone. Doubt anyone used it externally. https://github.com/jrochkind/attr_json/pull/178
-
 ### Changed
 
 * We now create Rails Attribute cover for all attr_json attributes, and we do a better job of keeping the Rails attribute values sync'd with attr_json values.   https://github.com/jrochkind/attr_json/pull/117, https://github.com/jrochkind/attr_json/pull/158, and https://github.com/jrochkind/attr_json/pull/163

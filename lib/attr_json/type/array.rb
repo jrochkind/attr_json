@@ -45,6 +45,15 @@ module AttrJson
         ]
       end
 
+      # Soft-deprecated. You probably want to use
+      #
+      #    AttrJson::AttributeDefinition#array_of_primitive_type?
+      #
+      # instead where possible.
+      def base_type_primitive?
+        ! AttrJson::AttributeDefinition.single_model_type?(base_type)
+      end
+
       protected
       def convert_to_array(value)
         if value.kind_of?(Hash)
