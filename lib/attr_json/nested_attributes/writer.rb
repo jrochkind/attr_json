@@ -16,7 +16,7 @@ module AttrJson
 
       def assign_nested_attributes(attributes)
         if attr_def.array_type?
-          if attr_def.type.base_type_primitive?
+          if attr_def.array_of_primitive_type?
             assign_nested_attributes_for_primitive_array(attributes)
           else
             assign_nested_attributes_for_model_array(attributes)

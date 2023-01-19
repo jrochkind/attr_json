@@ -80,7 +80,7 @@ module AttrJson
           end
 
           # No build method for our wacky array of primitive type.
-          if options[:define_build_method] && !(attr_def.array_type? && attr_def.type.base_type_primitive?)
+          if options[:define_build_method] && !attr_def.array_of_primitive_type?
             _attr_jsons_module.module_eval do
               build_method_name = "build_#{attr_name.to_s.singularize}"
               if method_defined?(build_method_name)
