@@ -256,6 +256,11 @@ m.attr_jsons_before_type_cast
 
 You can nest AttrJson::Model objects inside each other, as deeply as you like.
 
+You *can* edit nested models "in place", they will be properly saved.
+
+    m.lang_and_value.lang = "de"
+    m.save! # no problem!
+
 For use with Rails forms, you may want to use `attr_json_accepts_nested_attributes_for` (like Rails `accepts_nested_attributes_for`, see doc page on [Use with Forms and Form Builders](https://github.com/jrochkind/attr_json/blob/master/doc_src/forms.md).
 
 ### Model-type defaults
