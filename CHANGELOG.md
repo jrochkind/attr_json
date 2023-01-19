@@ -38,6 +38,8 @@ While it has some backwards incompat changes, this is expected not to be a chall
 
 * the `AttrJson::Type::Array` type used for our array types was not properly tracking in-place mutation changes. Now it is https://github.com/jrochkind/attr_json/pull/163
 
+* Default nested model validation should allow nils in arrays of models. https://github.com/jrochkind/attr_json/pull/177
+
 
 
 ## [1.5.0](https://github.com/jrochkind/attr_json/compare/v1.4.1...v1.5.0)

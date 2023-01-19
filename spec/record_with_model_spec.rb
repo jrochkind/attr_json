@@ -332,6 +332,17 @@ RSpec.describe AttrJson::Record do
         ])
       end
     end
+
+    describe "nil items" do
+      it "pass through and remain nil" do
+        instance.models = [model_class.new, nil, model_class.new]
+        instance.save!
+        instance.reload
+
+        expect(instance.models.count).to eq 3
+        expect(instance.models.collect(&:class)).to eq [model_class, NilClass, model_class]
+      end
+    end
   end
 
   describe "model with store_keys" do
