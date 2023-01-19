@@ -31,7 +31,7 @@ With ordinary rails associations handled in the ordinary Rails way, you use [acc
 You can handle a single or array AttrJson::Model attr_json similarly, but you have to:
 
 * include AttrJson::NestedAttributes in your model, and then
-* use our own similar `attr_json_accepts_nested_attributes_for` instead.  It _always_ has `allow_destroy`, and some of the other `accepts_nested_attributes_for` options also don't apply, see method for full options.
+* use our own similar `attr_json_accepts_nested_attributes_for` instead.  It _always_ has `allow_destroy`, and some of the other `accepts_nested_attributes_for` options also don't apply, see method for full options -- we expect you will usually want to use this with the `reject_if: :all_blank` option to ignore hashes with no non-nil values.
 
 ```ruby
 class Event
@@ -47,7 +47,7 @@ class MyRecord < ActiveRecord::Base
   attr_json :one_event, Event.to_type
   attr_json :many_events, Event.to_type, array: true
 
-  attr_json_accepts_nested_attributes_for :one_event, :many_events
+  attr_json_accepts_nested_attributes_for :one_event, :many_events, reject_if: :all_blank
 end
 
 # In a form template...
