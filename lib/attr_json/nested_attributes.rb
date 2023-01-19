@@ -65,6 +65,10 @@ module AttrJson
             raise ArgumentError, "No attr_json found for name '#{attr_name}'. Has it been defined yet?"
           end
 
+          unless attr_def.array_type? || attr_def.single_model_type?
+            raise TypeError, "attr_json_accepts_nested_attributes_for is only for array or nested model types; `#{attr_name}` is type #{attr_def.type.type.inspect}"
+          end
+
           # We're sharing AR class attr in an AR, or using our own in a Model.
           nested_attributes_options = self.nested_attributes_options.dup
           nested_attributes_options[attr_name.to_sym] = options

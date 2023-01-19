@@ -36,6 +36,25 @@ RSpec.describe AttrJson::NestedAttributes do
     end
   end
 
+  describe "on primitive type" do
+    let(:klass) do
+      Class.new(ActiveRecord::Base) do
+        include AttrJson::Record
+        include AttrJson::NestedAttributes
+
+        self.table_name = "products"
+
+        attr_json :primitive, :string
+      end
+    end
+
+    it "raises as incompatible" do
+      expect {
+        klass.attr_json_accepts_nested_attributes_for :primitive
+      }.to raise_error(TypeError, "attr_json_accepts_nested_attributes_for is only for array or nested model types; `primitive` is type :string")
+    end
+  end
+
   it "should allow class to override and call super" do
     overridden_class = Class.new(klass) do
       def one_model_attributes=(attrs)
