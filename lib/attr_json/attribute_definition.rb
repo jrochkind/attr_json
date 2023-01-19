@@ -94,6 +94,10 @@
       type.is_a? AttrJson::Type::Array
     end
 
+    def single_model_type?
+      type.is_a?(AttrJson::Type::Model) || type.is_a?(AttrJson::Type::PolymorphicModel)
+    end
+
     # Can look up a symbol to a type, or leave a type alone, or raise if it's neither.
     # Extracted into a method, so it can be called from AttrJson::Model#attr_json, for
     # some timezone aware shenanigans.
