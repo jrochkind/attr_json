@@ -546,7 +546,7 @@ We use [appraisal](https://github.com/thoughtbot/appraisal) to test with multipl
 
 There is a `./bin/console` that will give you a console in the context of attr_json and all it's dependencies, including the combustion rails app, and the models defined there.
 
-## Acknowledements and Prior Art
+## Acknowledements, Prior Art, alternatives
 
 * The excellent work [Sean Griffin](https://twitter.com/sgrif) did on ActiveModel::Type
   really lays the groundwork and makes this possible. Plus many other Rails developers.
@@ -568,3 +568,5 @@ There is a `./bin/console` that will give you a console in the context of attr_j
   haven't looked at it too much.
 
 * [store_model](https://github.com/DmitryTsepelev/store_model) was created after `attr_json`, and has some overlapping functionality.
+
+* [store_attribute](https://github.com/palkan/store_attribute) is also a more recent addition. while it's not specifically about JSON, it could be used with an underlying JSON coder to give you typed json attributes.
