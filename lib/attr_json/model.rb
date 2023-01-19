@@ -352,7 +352,9 @@ module AttrJson
     #     * true => strip nils even if there is a default value -- in AttrJson
     #       context, this means the default will be reapplied over nil on
     #       every de-serialization!
-    def serializable_hash(strip_nils:false, **options)
+    def serializable_hash(options=nil)
+      strip_nils = options&.has_key?(:strip_nils) ? options.delete(:strip_nils) : false
+
       unless [true, false, :safely].include?(strip_nils)
         raise ArgumentError, ":strip_nils must be true, false, or :safely"
       end
@@ -384,8 +386,8 @@ module AttrJson
     #
     # @param strip_nils [:symbol, Boolean] (default false) [true, false, :safely],
     #   see #serializable_hash
-    def as_json(**kwargs)
-      serializable_hash(**kwargs)
+    def as_json(options=nil)
+      serializable_hash(options)
     end
 
 

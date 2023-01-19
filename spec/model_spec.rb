@@ -3,6 +3,20 @@ require 'spec_helper'
 RSpec.describe AttrJson::Record do
   let(:instance) { klass.new }
 
+  describe "#to_json" do
+    let(:klass) do
+      Class.new do
+        include AttrJson::Model
+
+        attr_json :str_one, :string
+      end
+    end
+
+    it "works (regression)" do
+      expect(klass.new(str_one: "foo").to_json).to be_kind_of(String)
+    end
+  end
+
   describe "store_key" do
     let(:klass) do
       Class.new do
