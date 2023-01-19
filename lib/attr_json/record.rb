@@ -132,8 +132,9 @@ module AttrJson
       #   json(b) ActiveRecord attribute/column to serialize as a key in. Defaults to
       #  `attr_json_config.default_container_attribute`, which defaults to `:json_attributes`
       #
-      # @option options [Boolean] :validate (true) Create an ActiveRecord::Validations::AssociatedValidator so
-      #   validation errors on the attributes post up to self.
+      # @option options [Boolean] :validate (true) validation errors on nested models in the attributes
+      #   should post up to self similar to Rails ActiveRecord::Validations::AssociatedValidator on
+      #   associated objects.
       #
       def attr_json(name, type, **options)
         options = {
@@ -166,9 +167,17 @@ module AttrJson
           AttributeDefinition.new(name.to_sym, type, options.except(:validate, :accepts_nested_attributes))
         )
 
-        # By default, automatically validate nested models
+        # By default, automatically validate nested models, allowing nils.
         if type.kind_of?(AttrJson::Type::Model) && options[:validate]
-          self.validates_with ActiveRecord::Validations::AssociatedValidator, attributes: [name.to_sym]
+          # implementation adopted from:
+          #   https://github.com/rails/rails/blob/v7.0.4.1/activerecord/lib/active_record/validations/associated.rb#L6-L10
+          #
+          # but had to customize to allow nils in an array through
+          validates_each name.to_sym do |record, attr, value|
+            if Array(value).reject { |element| element.nil? || element.valid? }.any?
+              record.errors.add(attr, :invalid, value: value)
+            end
+          end
         end
 
         # Register as a Rails attribute
