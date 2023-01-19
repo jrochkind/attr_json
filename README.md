@@ -548,7 +548,7 @@ There is a `./bin/console` that will give you a console in the context of attr_j
 
 ## Acknowledements, Prior Art, alternatives
 
-* The excellent work [Sean Griffin](https://twitter.com/sgrif) did on ActiveModel::Type
+* The excellent work [sgrif](https://twitter.com/sgrif) did on ActiveModel::Type
   really lays the groundwork and makes this possible. Plus many other Rails developers.
   Rails has a reputation for being composed of messy or poorly designed code, but
   it's some really nice design in Rails that allows us to do some pretty powerful
