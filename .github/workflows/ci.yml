@@ -33,7 +33,7 @@ jobs:
             ruby: 2.7
 
           - gemfile: rails_6_0
-            ruby: 3.0
+            ruby: '3.0'
 
           - gemfile: rails_6_1
             ruby: 2.7

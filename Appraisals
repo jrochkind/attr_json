@@ -3,6 +3,7 @@ appraise "rails-6-0" do
 
   gem "rails", ">= 6.0.0", "< 6.1"
   gem "pg", "~> 1.0"
+  gem "rspec-rails", "~> 5.0"
 end
 
 appraise "rails-6-1" do
