@@ -3,6 +3,20 @@ require 'spec_helper'
 RSpec.describe AttrJson::Record do
   let(:instance) { klass.new }
 
+  describe "#to_json" do
+    let(:klass) do
+      Class.new do
+        include AttrJson::Model
+
+        attr_json :str_one, :string
+      end
+    end
+
+    it "works (regression)" do
+      expect(klass.new(str_one: "foo").to_json).to be_kind_of(String)
+    end
+  end
+
   describe "store_key" do
     let(:klass) do
       Class.new do
@@ -34,6 +48,36 @@ RSpec.describe AttrJson::Record do
       expect {
         instance.assign_attributes("__str_one" => "value")
       }.to raise_error(ActiveModel::UnknownAttributeError)
+    end
+  end
+
+  describe "array types" do
+    let(:klass) do
+      Class.new do
+        include AttrJson::Model
+
+        attr_json :str_array, :string, array: true
+      end
+    end
+
+    it "defaults to empty array" do
+      expect(instance.str_array).to eq []
+    end
+
+    describe "with explicit no default" do
+      let(:klass) do
+        Class.new do
+          include AttrJson::Model
+
+          # Very hacky, but a way to override empty array default
+          attr_json :str_array, :string, array: true, default: AttrJson::AttributeDefinition::NO_DEFAULT_PROVIDED
+        end
+      end
+
+      it "has no default" do
+        expect(instance.as_json).not_to have_key("str_array")
+        expect(instance.str_array).to eq nil
+      end
     end
   end
 
@@ -312,6 +356,126 @@ RSpec.describe AttrJson::Record do
 
     it "does not equal some random object" do
       expect(instance == Object.new).to eq(false)
+    end
+  end
+
+  describe "timezone-aware attribute conversion" do
+    let(:klass) do
+      Class.new do
+        include AttrJson::Model
+
+        attr_json :json_datetime, :datetime
+      end
+    end
+
+    let(:instance) { klass.new(json_datetime: time_value ) }
+    let(:model_type) { klass.to_type }
+    let(:time_zone) { "US/Pacific" }
+    let(:time_value) { Time.utc(2020, 1, 1, 4, 5, 30) }
+
+    around do |example|
+      original_zone = Time.zone
+      original_awareness = ActiveRecord::Base.time_zone_aware_attributes
+
+      ActiveRecord::Base.time_zone_aware_attributes = true
+      Time.zone = time_zone
+
+      example.run
+
+      ActiveRecord::Base.time_zone_aware_attributes = original_awareness
+      Time.zone = original_zone
+    end
+
+    it "converted properly on create" do
+      # ActiveRecord TimeZoneConversion will convert to a TimeWithZone in local timezone
+      expect(instance.json_datetime.class).to eq(ActiveSupport::TimeWithZone)
+      expect(instance.json_datetime.time_zone).to eq ActiveSupport::TimeZone.new(time_zone)
+    end
+
+    it "converts back to Time in UTC on serialize" do
+      serialized = model_type.serialize(instance)
+
+      expect(serialized["json_datetime"]).to be_instance_of(Time)
+      expect(serialized["json_datetime"].zone).to eq "UTC"
+    end
+
+    it "deserializes from UTC to TimeWithZone" do
+      deserialized = model_type.deserialize( {"json_datetime" => time_value.utc.as_json} )
+
+      expect(deserialized.json_datetime.class).to eq(ActiveSupport::TimeWithZone)
+      expect(deserialized.json_datetime.time_zone).to eq ActiveSupport::TimeZone.new(time_zone)
+    end
+
+    describe "set to value in timezone" do
+      let(:time_value) { Time.now.in_time_zone('Sydney') }
+
+      it "serializes to UTC" do
+        expect(time_value.zone).not_to eq "UTC"
+        expect(instance.json_datetime.zone).not_to eq "UTC"
+
+        expect(instance.serializable_hash["json_datetime"].zone).to eq "UTC"
+      end
+    end
+
+    describe "disabled with attr_json config" do
+      let(:klass) do
+        Class.new do
+          include AttrJson::Model
+
+          attr_json_config(time_zone_aware_attributes: false)
+
+          attr_json :json_datetime, :datetime
+        end
+      end
+
+      it "does not convert on create" do
+        expect(instance.json_datetime.class).to eq(Time)
+        expect(instance.json_datetime.zone).to eq(time_value.zone)
+      end
+
+      describe "set to value in timezone" do
+        let(:time_value) { Time.now.in_time_zone('Sydney') }
+
+        it "still serializes to UTC" do
+          expect(time_value.zone).not_to eq "UTC"
+          expect(instance.json_datetime.zone).not_to eq "UTC"
+
+          expect(instance.serializable_hash["json_datetime"].zone).to eq "UTC"
+        end
+      end
+    end
+  end
+
+  describe "serialization" do
+    let(:klass) do
+      Class.new do
+        include AttrJson::Model
+
+        attr_json :str, :string
+        attr_json :str_with_default, :string, default: "foo"
+      end
+    end
+
+    it "includes all nils by default" do
+     expect(klass.new(str: nil, str_with_default: nil).serializable_hash).to eq(
+        { "str_with_default" => nil, "str" =>  nil }
+      )
+    end
+
+    describe "strip_nils: safely" do
+      it "omits keys for nil values, unless they have defaults configured" do
+        expect(klass.new(str: nil, str_with_default: nil).serializable_hash(strip_nils: :safely)).to eq(
+          { "str_with_default" => nil}
+        )
+      end
+    end
+
+    describe "strip_nils: true" do
+      it "strips all nils" do
+       expect(klass.new(str: nil, str_with_default: nil).serializable_hash(strip_nils: true)).to eq(
+          { }
+        )
+      end
     end
   end
 end

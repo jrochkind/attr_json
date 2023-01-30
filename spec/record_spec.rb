@@ -77,6 +77,61 @@ RSpec.describe AttrJson::Record do
     end
   end
 
+  describe "array types" do
+    let(:klass) do
+      Class.new(ActiveRecord::Base) do
+        include AttrJson::Record
+
+        self.table_name = "products"
+        attr_json :int_array, :integer, array: true
+      end
+    end
+
+    it "defaults to empty array" do
+      expect(instance.int_array).to eq []
+    end
+
+    it "can save mutation to array" do
+      instance.int_array.concat([1,2])
+      instance.save!
+      instance.reload
+      expect(instance.int_array).to eq [1,2]
+    end
+
+    it "can save new array" do
+      instance.int_array = %w(1 2 3)
+      expect(instance.int_array).to eq([1, 2, 3])
+      instance.save!
+      instance.reload
+      expect(instance.int_array).to eq([1, 2, 3])
+    end
+
+    it "casts to array" do
+      instance.int_array = 1
+      expect(instance.int_array).to eq([1])
+      instance.save!
+      instance.reload
+      expect(instance.int_array).to eq([1])
+    end
+
+    describe "with explicit no default" do
+      let(:klass) do
+        Class.new(ActiveRecord::Base) do
+          include AttrJson::Record
+
+          self.table_name = "products"
+          # Very hacky, but one way to override empty array default
+          attr_json :int_array, :integer, array: true, default: AttrJson::AttributeDefinition::NO_DEFAULT_PROVIDED
+        end
+      end
+
+      it "has no default" do
+        expect(instance.json_attributes).not_to have_key("int_array")
+        expect(instance.int_array).to eq nil
+      end
+    end
+  end
+
   describe "for hash with ActiveRecord::Type::Value type instance" do
     let(:klass) do
       Class.new(ActiveRecord::Base) do
@@ -100,27 +155,13 @@ RSpec.describe AttrJson::Record do
   it "can set nil" do
     instance.str = nil
     expect(instance.str).to be_nil
-    expect(instance.json_attributes).to eq("str" => nil, "int_with_default" => 5)
+    expect(instance.json_attributes).to eq("int_array"=>[], "str" => nil, "int_with_default" => 5)
 
     instance.save!
     instance.reload
 
     expect(instance.str).to be_nil
-    expect(instance.json_attributes).to eq("str" => nil, "int_with_default" => 5)
-  end
-
-  it "supports arrays" do
-    instance.int_array = %w(1 2 3)
-    expect(instance.int_array).to eq([1, 2, 3])
-    instance.save!
-    instance.reload
-    expect(instance.int_array).to eq([1, 2, 3])
-
-    instance.int_array = 1
-    expect(instance.int_array).to eq([1])
-    instance.save!
-    instance.reload
-    expect(instance.int_array).to eq([1])
+    expect(instance.json_attributes).to eq("int_array"=>[], "str" => nil, "int_with_default" => 5)
   end
 
   it "has right ActiveRecord changed? even back and forth" do
@@ -410,27 +451,21 @@ RSpec.describe AttrJson::Record do
     end
 
     context ":datetime type" do
-      # 345123 to 345100
-      def truncate_usec_to_ms(int)
-        int.to_i / 1000 * 1000
-      end
-
       before do
         instance.datetime_type = datetime_value
         instance.json_datetime = datetime_value
       end
 
-      it "has the same microseconds on create" do
-        # AR doesn't touch it in any way here, so we shouldn't either.
-        expect(instance.json_datetime.usec).to eq(instance.datetime_type.usec)
+      let(:expected_time_precision) { ActiveSupport::JSON::Encoding.time_precision }
+
+      it "has expected precision on create" do
+        expect(instance.json_datetime.nsec).to eq(instance.datetime_type.floor(expected_time_precision).nsec)
       end
 
-      it "rounds usec to ms after save" do
+      it "has expected precision after save" do
         instance.save!
 
-        expect(instance.json_datetime.usec % 1000).to eq(0)
-
-        expect(truncate_usec_to_ms(instance.json_datetime.usec)).to eq(truncate_usec_to_ms(instance.datetime_type.usec))
+        expect(instance.json_datetime.nsec).to eq(instance.json_datetime.nsec.floor(expected_time_precision))
       end
 
       describe "a zoned time" do
@@ -493,15 +528,13 @@ RSpec.describe AttrJson::Record do
         end
       end
 
-      # This is the default value, but we aren't playing quite right with it,
-      # our date/time attributes do NOT at present use ActiveSupport::TimeWithZone,
-      # like ordinary AR attributes. Not sure how big a problem this is, or if
-      # it's getting timezones wrong.
-      # See https://github.com/jrochkind/attr_json/issues/16
+      # This comes for free with our synchronization with ActiveRecord attributes,
+      # since ActiveRecord attributes automatically use
+      # ActiveRecord::AttributeMethods::TimeZoneConversion
+      #
+      # If the tests fail for some reason... we may need implementation of our own
+      # in the future. :(
       describe "with .time_zone_aware_attributes" do
-        before do
-          skip "Not currently supporting :time_zone_aware_attributes in date/time json_attributes"
-        end
         around do |example|
           original = ActiveRecord::Base.time_zone_aware_attributes
           ActiveRecord::Base.time_zone_aware_attributes = true
@@ -509,32 +542,36 @@ RSpec.describe AttrJson::Record do
           ActiveRecord::Base.time_zone_aware_attributes = original
         end
 
-        it "has the same class and zone on create" do
-          # AR doesn't cast or transform in any way here, so we shouldn't either.
+        it "converted properly on create" do
           expect(instance.json_datetime.class).to eq(instance.datetime_type.class)
           expect(instance.json_datetime.zone).to eq(instance.datetime_type.zone)
+
+          # ActiveRecord TimeZoneConversion will convert to a TimeWithZone
+          expect(instance.json_datetime.class).to eq(ActiveSupport::TimeWithZone)
+          expect(instance.json_datetime.zone).to eq("UTC")
         end
 
-        it "has the same class and zone after save" do
+        it "converted properly after save" do
           instance.save!
 
           expect(instance.json_datetime.class).to eq(instance.datetime_type.class)
           expect(instance.json_datetime.zone).to eq(instance.datetime_type.zone)
 
-          # It's actually a Time with zone UTC now, not a DateTime, don't REALLY
-          # need to check for this, but if it changes AR may have changed enough
-          # that we should pay attention -- failing here doesn't neccesarily
-          # mean anything is wrong though, although we prob want OURs to be UTC.
-          expect(instance.json_datetime.class).to eq(Time)
+          # ActiveRecord TimeZoneConversion will convert to a TimeWithZone
+          expect(instance.json_datetime.class).to eq(ActiveSupport::TimeWithZone)
           expect(instance.json_datetime.zone).to eq("UTC")
         end
 
-        it "has the same class and zone on fetch" do
+        it "converted properly on fetch" do
           instance.save!
 
           new_instance = klass.find(instance.id)
           expect(new_instance.json_datetime.class).to eq(instance.datetime_type.class)
           expect(new_instance.json_datetime.zone).to eq(instance.datetime_type.zone)
+
+          # ActiveRecord TimeZoneConversion will convert to a TimeWithZone
+          expect(instance.json_datetime.class).to eq(ActiveSupport::TimeWithZone)
+          expect(instance.json_datetime.zone).to eq("UTC")
         end
 
         it "to_json's before save same as raw ActiveRecord" do
@@ -544,14 +581,16 @@ RSpec.describe AttrJson::Record do
       end
 
       describe "attributes_before_type_cast" do
-        it "serializes as iso8601 in UTC with ms precision" do
+        let(:expected_time_precision) { ActiveSupport::JSON::Encoding.time_precision }
+
+        it "serializes as iso8601 in UTC with expected time precision" do
           instance.json_datetime = datetime_value
           instance.save!
 
           json_serialized = JSON.parse(instance.json_attributes_before_type_cast)
 
-          expect(json_serialized["json_datetime"]).to match(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d.\d{3}Z/)
-          expect(DateTime.iso8601(json_serialized["json_datetime"])).to eq(datetime_value.utc.change(usec: truncate_usec_to_ms(datetime_value.usec)))
+          expect(json_serialized["json_datetime"]).to match(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d.\d{#{expected_time_precision}}Z/)
+          expect(DateTime.iso8601(json_serialized["json_datetime"])).to eq(datetime_value.utc.floor(expected_time_precision))
         end
       end
 
@@ -815,59 +854,55 @@ RSpec.describe AttrJson::Record do
     end
 
     describe "rails_attribute" do
-      it "does not register rails attribute by default" do
-        expect(instance.attributes.keys).not_to include("str")
+      let(:klass) do
+        Class.new(ActiveRecord::Base) do
+          include AttrJson::Record
+
+          self.table_name = "products"
+          attr_json :str, :string, array: true, default: 'foo'
+          attr_json :int, :integer
+        end
       end
-      describe "with rails_attribute: true" do
-        let(:klass) do
-          Class.new(ActiveRecord::Base) do
-            include AttrJson::Record
 
-            self.table_name = "products"
-            attr_json :str, :string, array: true, rails_attribute: true, default: 'foo'
-            attr_json :int, :integer, rails_attribute: true
-          end
-        end
-        it "registers attribute and type" do
-          expect(instance.attributes.keys).to include("str")
-          expect(instance.type_for_attribute("str")).to be_kind_of(AttrJson::Type::Array)
-          expect(instance.type_for_attribute("str").base_type).to be_kind_of(ActiveModel::Type::String)
+      it "registers attribute and type" do
+        expect(instance.attributes.keys).to include("str")
+        expect(instance.type_for_attribute("str")).to be_kind_of(AttrJson::Type::Array)
+        expect(instance.type_for_attribute("str").base_type).to be_kind_of(ActiveModel::Type::String)
 
-        end
+      end
 
-        it "has initial values" do
-          expect(instance.attributes["str"]).to eq ['foo']
-          # this seems to be consistent with ordinary rails attribute use, not marked changed with initial default
-          expect(instance.str_changed?).to be(false)
+      it "has initial values" do
+        expect(instance.attributes["str"]).to eq ['foo']
+        # this seems to be consistent with ordinary rails attribute use, not marked changed with initial default
+        expect(instance.str_changed?).to be(false)
 
-          expect(instance.attributes["int"]).to be_nil
-          expect(instance.str_changed?).to be(false)
-        end
+        expect(instance.attributes["int"]).to be_nil
+        expect(instance.str_changed?).to be(false)
+      end
 
-        it "still has our custom methods on top" do
-          skip "gah, how do we test this"
-        end
+      it "still has our custom methods on top" do
+        skip "gah, how do we test this"
+      end
 
-        it 'syncs Rails attributes and default values after find' do
-          instance.update(str: "our str", int: 100)
-          found_record = klass.find(instance.id)
+      it 'syncs Rails attributes and default values after find' do
+        instance.update(str: "our str", int: 100)
+        found_record = klass.find(instance.id)
 
-          expect(found_record.attributes["str"]).to eq ['our str']
-          expect(found_record.str_changed?).to be(false)
+        expect(found_record.attributes["str"]).to eq ['our str']
+        expect(found_record.str_changed?).to be(false)
 
-          expect(found_record.attributes["int"]).to eq 100
-          expect(found_record.int_changed?).to be(false)
-        end
+        expect(found_record.attributes["int"]).to eq 100
+        expect(found_record.int_changed?).to be(false)
+      end
 
-        it "knows when a change has happened" do
-          expect(instance.str_changed?).to be(false)
+      it "knows when a change has happened" do
+        expect(instance.str_changed?).to be(false)
 
-          instance.str = "new value"
-          expect(instance.str_changed?).to eq(true)
+        instance.str = "new value"
+        expect(instance.str_changed?).to eq(true)
 
-          instance.save!
-          expect(instance.str_changed?).to eq(false)
-        end
+        instance.save!
+        expect(instance.str_changed?).to eq(false)
       end
     end
 

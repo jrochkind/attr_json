@@ -24,35 +24,51 @@ module AttrJson
 
       class_attribute :attr_json_registry, instance_accessor: false
       self.attr_json_registry = AttrJson::AttributeDefinition::Registry.new
+
+      # Ensure that rails attributes tracker knows about values we just fetched
+      after_initialize do
+        attr_json_sync_to_rails_attributes
+      end
+
+      # After a safe, rails attribute dirty tracking ends up re-creating
+      # new objects for attribute values, so we need to sync again
+      # so mutation effects both.
+      after_save do
+        attr_json_sync_to_rails_attributes
+      end
     end
 
-    protected
-
-    # adapted from ActiveRecord query_attribute method
-    # https://github.com/rails/rails/blob/v5.2.3/activerecord/lib/active_record/attribute_methods/query.rb#L12
+    # Sync all values FROM the json_attributes json column TO rails attributes
     #
-    # Sadly we could not re-use Rails code here, becuase the built-in method assumes attribute
-    # can be obtained with `self[attr_name]`, which you can not with attr_json (is that bad?), as
-    # well as `self.class.columns_hash[attr_name]` which you definitely can not (which is probably not bad),
-    # and has no way to use the value-translation semantics independently of that. May be a problem if
-    # ActiveRecord changes it's query method semantics in the future, will have to be sync'd here.
+    # If values have for some reason gotten out of sync this will make them the
+    # identical objects again, with the container hash value being the source.
     #
-    # Used to implement query methods on attr_json attributes, like `attr_json :foo, :string`, method `#foo?`
-    def self.attr_json_query_method(record, attribute)
-      value = record.send(attribute)
+    # In some cases, the values may already be equivalent but different objects --
+    # This is meant to ensure they are the _same object_ in both places, so
+    # mutation of mutable object will effect both places, for instance for dirty
+    # tracking.
+    def attr_json_sync_to_rails_attributes
+      self.class.attr_json_registry.attribute_names.each do |attr_name|
+        begin
+          attribute_def = self.class.attr_json_registry.fetch(attr_name.to_sym)
+          json_value    = public_send(attribute_def.container_attribute)
+          value         = json_value[attribute_def.store_key]
 
-      case value
-      when true
-        true
-      when false, nil, ActiveModel::Type::Boolean::FALSE_VALUES
-        false
-      else
-        if value.respond_to?(:to_i) && ( Numeric === value || value.to_s !~ /[^0-9]/ )
-          !value.to_i.zero?
-        elsif value.respond_to?(:zero?)
-          !value.zero?
-        else
-          !value.blank?
+          if value
+            # TODO, can we just make this use the setter?
+            write_attribute(attr_name, value)
+
+            clear_attribute_change(attr_name) if persisted?
+
+            # writing and clearning will result in a new object stored in
+            # rails attributes, we want
+            # to make sure the exact same object is in the json attribute,
+            # so in-place mutation changes to it are reflected in both places.
+            json_value[attribute_def.store_key] = read_attribute(attr_name)
+          end
+        rescue AttrJson::Type::Model::BadCast, AttrJson::Type::PolymorphicModel::TypeError => e
+          # There was bad data in the DB, we're just going to skip the Rails attribute sync.
+          # Should we log?
         end
       end
     end
@@ -93,7 +109,8 @@ module AttrJson
       end
 
 
-
+      # Registers an attr_json attribute, and a Rails attribute covering it.
+      #
       # Type can be a symbol that will be looked up in `ActiveModel::Type.lookup`,
       # or an ActiveModel:::Type::Value).
       #
@@ -102,6 +119,8 @@ module AttrJson
       # @param type [ActiveModel::Type::Value] An instance of an ActiveModel::Type::Value (or subclass)
       #
       # @option options [Boolean] :array (false) Make this attribute an array of given type.
+      #    Array types default to an empty array. If you want to turn that off, you can add
+      #    `default: AttrJson::AttributeDefinition::NO_DEFAULT_PROVIDED`
       #
       # @option options [Object] :default (nil) Default value, if a Proc object it will be #call'd
       #   for default.
@@ -113,22 +132,22 @@ module AttrJson
       #   json(b) ActiveRecord attribute/column to serialize as a key in. Defaults to
       #  `attr_json_config.default_container_attribute`, which defaults to `:json_attributes`
       #
-      # @option options [Boolean] :validate (true) Create an ActiveRecord::Validations::AssociatedValidator so
-      #   validation errors on the attributes post up to self.
+      # @option options [Boolean] :validate (true) validation errors on nested models in the attributes
+      #   should post up to self similar to Rails ActiveRecord::Validations::AssociatedValidator on
+      #   associated objects.
       #
-      # @option options [Boolean] :rails_attribute (false) Create an actual ActiveRecord
-      #    `attribute` for name param. A Rails attribute isn't needed for our functionality,
-      #    but registering thusly will let the type be picked up by simple_form and
-      #    other tools that may look for it via Rails attribute APIs. Default can be changed
-      #    with `attr_json_config(default_rails_attribute: true)`
+      # @option options [Boolean,Hash] :accepts_nested_attributes. If true, equivalent
+      #   of  writing `attr_json_accepts_nested_attributes :attribute_name`. If value is a hash,
+      #   then same, but with hash as options to `attr_json_accepts_nested_attributes`.
+      #   Default taken from `attr_json_config.default_accepts_nested_attributes`, for
+      #   array or model types where it is applicable.
+      #
       def attr_json(name, type, **options)
         options = {
-          rails_attribute: self.attr_json_config.default_rails_attribute,
           validate: true,
           container_attribute: self.attr_json_config.default_container_attribute,
-          accepts_nested_attributes: self.attr_json_config.default_accepts_nested_attributes
         }.merge!(options)
-        options.assert_valid_keys(AttributeDefinition::VALID_OPTIONS + [:validate, :rails_attribute, :accepts_nested_attributes])
+        options.assert_valid_keys(AttributeDefinition::VALID_OPTIONS + [:validate, :accepts_nested_attributes])
         container_attribute = options[:container_attribute]
 
         # TODO arg check container_attribute make sure it exists. Hard cause
@@ -150,63 +169,65 @@ module AttrJson
         end
 
         self.attr_json_registry = attr_json_registry.with(
-          AttributeDefinition.new(name.to_sym, type, options.except(:rails_attribute, :validate, :accepts_nested_attributes))
+          AttributeDefinition.new(name.to_sym, type, options.except(:validate, :accepts_nested_attributes))
         )
 
-        # By default, automatically validate nested models
+        # By default, automatically validate nested models, allowing nils.
         if type.kind_of?(AttrJson::Type::Model) && options[:validate]
-          self.validates_with ActiveRecord::Validations::AssociatedValidator, attributes: [name.to_sym]
-        end
-
-        # We don't actually use this for anything, we provide our own covers. But registering
-        # it with usual system will let simple_form and maybe others find it.
-        if options[:rails_attribute]
-          attr_json_definition = attr_json_registry[name]
-
-          attribute_args = attr_json_definition.has_default? ? { default: attr_json_definition.default_argument } : {}
-          self.attribute name.to_sym, attr_json_definition.type, **attribute_args
-
-          # Ensure that rails attributes tracker knows about value we just fetched
-          # for this particular attribute. Yes, we are registering an after_find for each
-          # attr_json registered with rails_attribute:true, using the `name` from above under closure. .
-          after_find do
-            value = public_send(name)
-            if value && has_attribute?(name.to_sym)
-              write_attribute(name.to_sym, value)
-              self.send(:clear_attribute_changes, [name.to_sym])
+          # implementation adopted from:
+          #   https://github.com/rails/rails/blob/v7.0.4.1/activerecord/lib/active_record/validations/associated.rb#L6-L10
+          #
+          # but had to customize to allow nils in an array through
+          validates_each name.to_sym do |record, attr, value|
+            if Array(value).reject { |element| element.nil? || element.valid? }.any?
+              record.errors.add(attr, :invalid, value: value)
             end
           end
         end
 
-        _attr_jsons_module.module_eval do
-          # For getter and setter, we used to use read_store_attribute/write_store_attribute
-          # copied from Rails store_accessor implementation.
-          # https://github.com/rails/rails/blob/74c3e43fba458b9b863d27f0c45fd2d8dc603cbc/activerecord/lib/active_record/store.rb#L90-L96
-          #
-          # But in fact just getting/setting in the hash provided to us by ActiveRecord json type
-          # container works BETTER for dirty tracking. We had a test that only passed doing it
-          # this simple way.
+        # Register as a Rails attribute
+        attr_json_definition = attr_json_registry[name]
+        attribute_args = attr_json_definition.has_default? ? { default: attr_json_definition.default_argument } : {}
+        self.attribute name.to_sym, attr_json_definition.type, **attribute_args
 
+        # For getter and setter, we consider the container has the "canonical" data location.
+        # But setter also writes to rails attribute, and tries to keep them in sync with the
+        # *same object*, so mutations happen to both places.
+        #
+        # This began roughly modelled on approach of Rail sstore_accessor implementation:
+        # https://github.com/rails/rails/blob/74c3e43fba458b9b863d27f0c45fd2d8dc603cbc/activerecord/lib/active_record/store.rb#L90-L96
+        #
+        # ...But wound up with lots of evolution to try to get dirty tracking working as well
+        # as we could -- without a completely custom separate dirty tracking implementation
+        # like store_accessor tries!
+        _attr_jsons_module.module_eval do
           define_method("#{name}=") do |value|
-            super(value) if defined?(super)
+            super(value) # should write to rails attribute
+
+            # write to container hash, with value read from attribute to try to keep objects
+            # sync'd to exact same object in rails attribute and container hash.
             attribute_def = self.class.attr_json_registry.fetch(name.to_sym)
-            public_send(attribute_def.container_attribute)[attribute_def.store_key] = attribute_def.cast(value)
+            public_send(attribute_def.container_attribute)[attribute_def.store_key] = read_attribute(name)
           end
 
           define_method("#{name}") do
+            # read from container hash -- we consider that the canonical location.
             attribute_def = self.class.attr_json_registry.fetch(name.to_sym)
             public_send(attribute_def.container_attribute)[attribute_def.store_key]
           end
-
-          define_method("#{name}?") do
-            # implementation of `query_store_attribute` is based on Rails `query_attribute` implementation
-            AttrJson::Record.attr_json_query_method(self, name)
-          end
         end
 
-        # Default attr_json_accepts_nested_attributes_for values
-        if options[:accepts_nested_attributes]
-          options = options[:accepts_nested_attributes] == true ? {} : options[:accepts_nested_attributes]
+        accepts_nested_attributes = if options.has_key?(:accepts_nested_attributes)
+          options[:accepts_nested_attributes]
+        elsif attr_json_definition.single_model_type? || attr_json_definition.array_type?
+          # use configured default only if we have a type appropriate for it!
+          self.attr_json_config.default_accepts_nested_attributes
+        else
+          false
+        end
+
+        if accepts_nested_attributes
+          options = accepts_nested_attributes == true ? {} : accepts_nested_attributes
           self.attr_json_accepts_nested_attributes_for name, **options
         end
       end

@@ -3,10 +3,9 @@
 [![CI Status](https://github.com/jrochkind/attr_json/workflows/CI%20on%20Future%20Rails%20Versions/badge.svg?branch=master)](https://github.com/jrochkind/attr_json/actions?query=workflow%3A%22CI+on+Future+Rails+Versions%22+branch%3Amaster)
 [![Gem Version](https://badge.fury.io/rb/attr_json.svg)](https://badge.fury.io/rb/attr_json)
 
+ActiveRecord attributes stored serialized in a json column, super smooth. For Rails 6.0.x through 7.0.x. Ruby 2.7+.
 
-ActiveRecord attributes stored serialized in a json column, super smooth. For Rails 5.0 through 7.0. Ruby 2.4+.
-
-Typed and cast like Active Record. Supporting [nested models](#nested), [dirty tracking](#dirty), some [querying](#querying) (with postgres [jsonb](https://www.postgresql.org/docs/9.5/static/datatype-json.html) contains), and [working smoothy with form builders](#forms).
+Typed and cast like Active Record. Supporting [nested models](#nested), [dirty tracking](#ar_attributes), some [querying](#querying) (with postgres [jsonb](https://www.postgresql.org/docs/9.5/static/datatype-json.html) contains), and [working smoothy with form builders](#forms).
 
 *Use your database as a typed object store via ActiveRecord, in the same models right next to ordinary ActiveRecord column-backed attributes and associations. Your json-serialized `attr_json` attributes use as much of the existing ActiveRecord architecture as we can.*
 
@@ -18,7 +17,7 @@ has not yet been tested with MySQL.
 ## Basic Use
 
 ```ruby
-# migration
+# migration, default column used is `json_attributes, but this can be changed
 class CreatMyModels < ActiveRecord::Migration[5.0]
   def change
     create_table :my_models do |t|
@@ -30,6 +29,14 @@ class CreatMyModels < ActiveRecord::Migration[5.0]
   end
 end
 
+# An embedded model, if desired
+class LangAndValue
+  include AttrJson::Model
+
+  attr_json :lang, :string, default: "en"
+  attr_json :value, :string
+end
+
 class MyModel < ActiveRecord::Base
    include AttrJson::Record
 
@@ -39,13 +46,36 @@ class MyModel < ActiveRecord::Base
    attr_json :my_integer, :integer
    attr_json :my_datetime, :datetime
 
-   # You can have an _array_ of those things too.
+   # You can have an _array_ of those things too. It will ordinarily default to empty array.
    attr_json :int_array, :integer, array: true
 
    #and/or defaults
-   attr_json :int_with_default, :integer, default: 100
+   attr_json :str_with_default, :string, default: "default value"
+
+   attr_json :embedded_lang_and_val, LangAndValue.to_type
 end
+
+model = MyModel.create!(
+  my_integer: 101,
+  my_datetime: DateTime.new(2001,2,3,4,5,6),
+  embedded_lang_and_val: LangAndValue.new(value: "a sentance in default language english")
+  )
 ```
+
+What will get serialized to your `json_attributes` column will look like:
+
+```json
+{
+  "my_integer":101,
+  "my_datetime":"2001-02-03T04:05:06Z",
+  "str_with_default":"default value",
+  "embedded_lang_and_val": {
+    "lang":"en",
+    "value":"a sentance in default language english"
+  }
+}
+```
+
 
 These attributes have type-casting behavior very much like ordinary ActiveRecord values.
 
@@ -57,6 +87,8 @@ model.int_array = "12"
 model.int_array # => [12]
 model.my_datetime = "2016-01-01 17:45"
 model.my_datetime # => a Time object representing that, just like AR would cast
+model.embedded_lang_and_val = { value: "val"}
+model.embedded_lang_and_val #=> #<LangAndVal:0x000000010c9a7ad8 @attributes={"value"=>"val"...>
 ```
 
 You can use ordinary ActiveRecord validation methods with `attr_json` attributes.
@@ -64,14 +96,9 @@ You can use ordinary ActiveRecord validation methods with `attr_json` attributes
 All the `attr_json` attributes are serialized to json as keys in a hash, in a database jsonb/json column. By default, in a column `json_attributes`.
 If you look at `model.json_attributes`, you'll see values already cast to their ruby representations.
 
-But one way to see something like what it's really like in the db is to
-save the record and then use the standard Rails `*_before_type_cast` method.
+To see JSON representations, we can use Rails [\*\_before_type_cast](https://api.rubyonrails.org/classes/ActiveRecord/AttributeMethods/BeforeTypeCast.html) methods,  [\*\-in_database](https://api.rubyonrails.org/classes/ActiveRecord/AttributeMethods/Dirty.html#method-i-attribute_in_database) and [\*\_for_database] methods (Rails 7.0+ only).
 
-```ruby
-model.save!
-model.json_attributes_before_type_cast
-# => string containing: {"my_integer":12,"int_array":[12],"my_datetime":"2016-01-01T17:45:00.000Z"}
-```
+These methods can all be called on the container `json_attributes` json hash attribute (generally showing serialized JSON to string), or any individual attribute (generally showing in-memory JSON-able object). [This is a bit confusing and possibly not entirely consistent, needs more investigation.]
 
 ## Specifying db column to use
 
@@ -228,6 +255,13 @@ m.attr_jsons_before_type_cast
 ```
 
 You can nest AttrJson::Model objects inside each other, as deeply as you like.
+
+You *can* edit nested models "in place", they will be properly saved.
+
+    m.lang_and_value.lang = "de"
+    m.save! # no problem!
+
+For use with Rails forms, you may want to use `attr_json_accepts_nested_attributes_for` (like Rails `accepts_nested_attributes_for`, see doc page on [Use with Forms and Form Builders](https://github.com/jrochkind/attr_json/blob/master/doc_src/forms.md).
 
 ### Model-type defaults
 
@@ -386,44 +420,29 @@ Use with Rails form builders is supported pretty painlessly. Including with [sim
 
 If you have nested AttrJson::Models you'd like to use in your forms much like Rails associated records: Where you would use Rails `accepts_nested_attributes_for`, instead `include AttrJson::NestedAttributes` and use `attr_json_accepts_nested_attributes_for`. Multiple levels of nesting are supported.
 
-To get simple_form to properly detect your attribute types, define your attributes with `rails_attribute: true`.  You can default rails_attribute to true with `attr_json_config(default_rails_attribute: true)`
-
 For more info, see doc page on [Use with Forms and Form Builders](doc_src/forms.md).
 
-<a name="dirty"></a>
-## Dirty tracking
+<a name="ar_attributes"></a>
+## ActiveRecord Attributes and Dirty tracking
 
-Full change-tracking, ActiveRecord::Attributes::Dirty-style, is available in
-Rails 5.1+ on `attr_json`s on your ActiveRecord classes that include
-`AttrJson::Record`, by including `AttrJson::Record::Dirty`.
-Change-tracking methods are available off the `attr_json_changes` method.
+We endeavor to make record-level `attr_json` attributes available as standard ActiveRecord attributes, supporting that full API.
+
+Standard [Rails dirty tracking](https://api.rubyonrails.org/classes/ActiveModel/Dirty.html) should work properly with AttrJson::Record attributes! We have a test suite demonstrating.
+
+We actually keep the "canonical" copy of data inside the "container attribute" hash in the ActiveRecord model. This is because this is what will actually get saved when you save. So we have two copies, that we do our best to keep in sync.
+
+They get out of sync if you are doing unusual things like using the ActiveRecord attribute API directly (like calling `write_attribute` with an attr_json attribute). Even if this happens, mostly you won't notice. But one thing it will effect is dirty tracking.
+
+If you ever need to sync the ActiveRecord attribute values from the AttrJson "canonical" copies, you can call `active_record_model.attr_json_sync_to_rails_attributes`. If you wanted to be 100% sure of dirty tracking, I suppose you could always call this method first. Sorry, this is the best we could do!
+
+Note that ActiveRecord DirtyTracking will give you ruby objects, for instance for nested models, you might get:
 
 ```ruby
-class MyModel < ActiveRecord::Base
-   include AttrJson::Record
-   include AttrJson::Record::Dirty
-
-   attr_json :str, :string
-end
-
-model = MyModel.new
-model.str = "old"
-model.save
-model.str = "new"
-
-# All and only "new" style dirty tracking methods (Raisl 5.1+)
-# are available:
-
-model.attr_json_changes.saved_changes
-model.attr_json_changes.changes_to_save
-model.attr_json_changes.saved_change_to_str?
-model.attr_json_changes.saved_change_to_str
-model.attr_json_changes.will_save_change_to_str?
-# etc
+record_obj.attribute_change_to_be_saved(:nested_model)
+# => [#<object>, #<object>]
 ```
 
-More options are available, including merging changes from 'ordinary'
-ActiveRecord attributes in. See docs on [Dirty Tracking](./doc_src/dirty_tracking.md)
+If you want to see JSON instead, you could call #as_json on the values. The Rails [\*\_before_type_cast](https://api.rubyonrails.org/classes/ActiveRecord/AttributeMethods/BeforeTypeCast.html) and [\*\-in_database](https://api.rubyonrails.org/classes/ActiveRecord/AttributeMethods/Dirty.html#method-i-attribute_in_database) methods may also be useful.
 
 <a name="why"></a>
 ## Do you want this?
@@ -478,9 +497,7 @@ to prevent overwriting other updates from processes.
 
 ## State of Code, and To Be Done
 
-This code is solid and stable and is being used in production by at least a handful of people, including the primary maintainer, jrochkind.
-
-The project is currently getting very little maintainance -- and is still working reliably through Rails releases. It is tested on edge rails and ruby (and has needed very few if any changes with subsequent releases), and I endeavor to keep it working as Rails keeps releasing.
+This code is solid and stable and is being used in production. If you don't see a lot of activity, it might be because it's stable, rather than abandoned. Check to see if it's passing/supported on recent Rails? We test on "edge" unreleased rails to try to stay ahead of compatibility, and has worked through multiple major Rails verisons with few if any changes needed.
 
 In order to keep the low-maintenace scenario sustainable, I am *very* cautious accepting new features, especially if they increase code complexity at all. Even if you have a working PR, I may be reluctant to accept it. I'm prioritizing sustainability and stability over new features, and so far this is working out well. However, discussion is always welcome! Especially when paired with code (failing tests for the bugfix or feature you want are super helpful on their own!).
 
@@ -494,13 +511,9 @@ This is still mostly a single-maintainer operation, so has all the sustainabilit
 
 ### Possible future features:
 
-* Make AttrJson::Model lean more heavily on ActiveModel::Attributes API that did not fully exist in first version of attr_json [hope for a future attr_json 2.0 release]
+* Make AttrJson::Model lean more heavily on ActiveModel::Attributes API that did not fully exist in first version of attr_json (perhaps not, see https://github.com/jrochkind/attr_json/issues/18)
 
-* Make AttrJson::Record insist on creating rails cover attributes (no longer optional)  and integrating more fully into rails, including rails dirty tricking, eliminating need for custom dirty tracking implementation. Overall decrease in lines of code. Can use jsonb_accessor as guide for some aspects. [hope for inclusion in future attr_json 2.0 release]
-
-* partial updates for json hashes would be really nice: Using postgres jsonb merge operators to only overwrite what changed. In my initial attempts, AR doesn't make it easy to customize this. [update: this is hard, probably not coming soon]
-
-* seamless compatibility with ransack [update: not necessarily prioritized]
+* partial updates for json hashes would be really nice: Using postgres jsonb merge operators to only overwrite what changed. In my initial attempts, AR doesn't make it easy to customize this. [update: this is hard, probably not coming soon. See https://github.com/jrochkind/attr_json/issues/143]
 
 * Should we give AttrJson::Model a before_serialize hook that you might
   want to use similar to AR before_save?  Should AttrJson::Models
@@ -533,9 +546,9 @@ We use [appraisal](https://github.com/thoughtbot/appraisal) to test with multipl
 
 There is a `./bin/console` that will give you a console in the context of attr_json and all it's dependencies, including the combustion rails app, and the models defined there.
 
-## Acknowledements and Prior Art
+## Acknowledements, Prior Art, alternatives
 
-* The excellent work [Sean Griffin](https://twitter.com/sgrif) did on ActiveModel::Type
+* The excellent work [sgrif](https://twitter.com/sgrif) did on ActiveModel::Type
   really lays the groundwork and makes this possible. Plus many other Rails developers.
   Rails has a reputation for being composed of messy or poorly designed code, but
   it's some really nice design in Rails that allows us to do some pretty powerful
@@ -555,3 +568,5 @@ There is a `./bin/console` that will give you a console in the context of attr_j
   haven't looked at it too much.
 
 * [store_model](https://github.com/DmitryTsepelev/store_model) was created after `attr_json`, and has some overlapping functionality.
+
+* [store_attribute](https://github.com/palkan/store_attribute) is also a more recent addition. while it's not specifically about JSON, it could be used with an underlying JSON coder to give you typed json attributes.

@@ -5,18 +5,17 @@ module AttrJson
   class Config
     RECORD_ALLOWED_KEYS = %i{
       default_container_attribute
-      default_rails_attribute
       default_accepts_nested_attributes
     }
 
     MODEL_ALLOWED_KEYS = %i{
       unknown_key
       bad_cast
+      time_zone_aware_attributes
     }
 
     DEFAULTS = {
       default_container_attribute: "json_attributes",
-      default_rails_attribute: false,
       unknown_key: :raise
     }
 

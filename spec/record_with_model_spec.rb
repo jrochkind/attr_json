@@ -31,8 +31,6 @@ RSpec.describe AttrJson::Record do
   end
   let(:instance) { klass.new }
 
-# TODO datetimes are weird, sometimes rails takes off fractional seconds, sometimes it doesn't.
-
   it "starts out nil" do
     expect(instance.model).to be_nil
   end
@@ -136,6 +134,40 @@ RSpec.describe AttrJson::Record do
       instance.save!
 
       expect(instance.json_attributes_before_type_cast).to eq "{\"model\":null}"
+    end
+  end
+
+  describe "datetime with zone passed in" do
+    let(:model_class) do
+      Class.new do
+        include AttrJson::Model
+
+        attr_json :datetime, :datetime
+      end
+    end
+
+    let(:zoned_datetime) { Time.now.in_time_zone('Sydney').change(nsec: 123456789) }
+
+    let(:expected_precision) { ActiveSupport::JSON::Encoding.time_precision }
+
+    it "casts to appropriate fractional seconds precision" do
+      instance.model = { "datetime" => zoned_datetime }
+
+      expect(instance.model.datetime.nsec).to eq(zoned_datetime.floor(expected_precision).nsec)
+    end
+
+    it "is serialized as UTC even when given zoned time" do
+      instance.model = { "datetime" =>  zoned_datetime }
+      instance.save!
+
+      saved_json = JSON.parse(instance.json_attributes_before_type_cast)
+      saved_json_datetime = saved_json["model"]["datetime"]
+
+      # a UTC iso8601 format, ending in `Z`
+      expect(saved_json_datetime).to match /\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d.\d{#{expected_precision}}Z/
+
+      # and the conversion is correct
+      expect(Time.iso8601(saved_json_datetime)).to eq zoned_datetime.utc.floor(expected_precision)
     end
   end
 
@@ -255,8 +287,8 @@ RSpec.describe AttrJson::Record do
         serialized = JSON.parse(instance.json_attributes_before_type_cast)
 
         expect(serialized["models"]).to eq([
-          {"str"=>"string value", "int"=>12, "int_with_default"=>5},
-          {"str"=>"string value", "int"=>12, "int_with_default"=>5}
+          {"str"=>"string value", "int"=>12, "int_with_default"=>5, "int_array" => []},
+          {"str"=>"string value", "int"=>12, "int_with_default"=>5, "int_array" => []}
         ])
       end
     end
@@ -274,7 +306,7 @@ RSpec.describe AttrJson::Record do
         serialized = JSON.parse(instance.json_attributes_before_type_cast)
 
         expect(serialized["models"]).to eq([
-          {"str"=>"string value", "int"=>12, "int_with_default"=>5}
+          {"str"=>"string value", "int"=>12, "int_with_default"=>5, "int_array" => [] }
         ])
       end
     end
@@ -298,6 +330,17 @@ RSpec.describe AttrJson::Record do
           {"int"=>12, "str"=>"string value", "int_array"=>[12], "int_with_default"=>5},
           {"int"=>100, "str"=>"new value", "int_array"=>[100], "int_with_default"=>5}
         ])
+      end
+    end
+
+    describe "nil items" do
+      it "pass through and remain nil" do
+        instance.models = [model_class.new, nil, model_class.new]
+        instance.save!
+        instance.reload
+
+        expect(instance.models.count).to eq 3
+        expect(instance.models.collect(&:class)).to eq [model_class, NilClass, model_class]
       end
     end
   end
@@ -372,6 +415,16 @@ RSpec.describe AttrJson::Record do
   end
 
   describe "model defaults" do
+    it "can be overridden to nil, and stick through serialization" do
+      instance.model = { int_with_default: nil }
+      expect(instance.model.int_with_default).to be_nil
+
+      instance.save!
+      instance.reload
+
+      expect(instance.model.int_with_default).to be_nil
+    end
+
     describe "empty hash" do
       let(:klass) do
         # really hard to get the class def closure to capture the rspec
@@ -391,6 +444,7 @@ RSpec.describe AttrJson::Record do
         expect(instance.model.int_with_default).to be_present
       end
     end
+
     describe "constructor lambda" do
       let(:klass) do
         # really hard to get the class def closure to capture the rspec
@@ -430,6 +484,29 @@ RSpec.describe AttrJson::Record do
       instance.save!
       instance.reload
       expect(instance.model).to eq(nil)
+    end
+  end
+
+  describe "nil values in model" do
+    let(:model_class) do
+      Class.new do
+        include AttrJson::Model
+
+        attr_json :str, :string
+        attr_json :str_with_default, :string, default: "default"
+      end
+    end
+
+    it "are stripped safely by default" do
+      instance.model = { str: nil, str_with_default: nil }
+      instance.save!
+
+      # nil with default is left in safely, nil without default is stripped
+      expect(
+        JSON.parse(instance.json_attributes_before_type_cast)
+      ).to eq(
+        {"model"=>{"str_with_default"=>nil}}
+      )
     end
   end
 end

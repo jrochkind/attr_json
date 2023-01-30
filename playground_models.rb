@@ -61,7 +61,7 @@ class MyModel < ActiveRecord::Base
   self.table_name = "products"
 
   include AttrJson::Record
-  include AttrJson::Record::Dirty
+  #include AttrJson::Record::Dirty
 
   attr_json :str, :string
   attr_json :str_array, :string, array: true
@@ -76,7 +76,7 @@ end
 class Product < StaticProduct
   include AttrJson::Record
   include AttrJson::Record::QueryScopes
-  include AttrJson::Record::Dirty
+  #include AttrJson::Record::Dirty
 
   attr_json :title, :string
   attr_json :rank, :integer

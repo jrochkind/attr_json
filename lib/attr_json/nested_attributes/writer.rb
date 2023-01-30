@@ -15,12 +15,10 @@ module AttrJson
       delegate :nested_attributes_options, to: :model
 
       def assign_nested_attributes(attributes)
-        if attr_def.array_type?
-          if attr_def.type.base_type_primitive?
-            assign_nested_attributes_for_primitive_array(attributes)
-          else
-            assign_nested_attributes_for_model_array(attributes)
-          end
+        if attr_def.array_of_primitive_type?
+          assign_nested_attributes_for_primitive_array(attributes)
+        elsif attr_def.array_type?
+          assign_nested_attributes_for_model_array(attributes)
         else
           assign_nested_attributes_for_single_model(attributes)
         end

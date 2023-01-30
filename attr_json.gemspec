@@ -11,8 +11,8 @@ Gem::Specification.new do |spec|
 
   spec.summary       = %q{ActiveRecord attributes stored serialized in a json column, super smooth.}
   spec.description   = %q{ActiveRecord attributes stored serialized in a json column, super smooth.
-For Rails 5.0, 5.1, or 5.2. Typed and cast like Active Record. Supporting nested models,
-dirty tracking, some querying (with postgres jsonb contains), and working smoothy with form builders.
+Typed and cast like Active Record. Supporting nested models, dirty tracking, some querying
+(with postgres jsonb contains), and working smoothy with form builders.
 
 Use your database as a typed object store via ActiveRecord, in the same models right next to
 ordinary ActiveRecord column-backed attributes and associations. Your json-serialized attr_json
@@ -40,12 +40,12 @@ attributes use as much of the existing ActiveRecord architecture as we can.}
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  spec.required_ruby_version = '>= 2.4.0'
+  spec.required_ruby_version = '>= 2.6.0'
 
   # Only to get CI to work on versions of Rails other than we release with,
   # should never release a gem with RAILS_GEM set!
   unless ENV['APPRAISAL_INITIALIZED'] || ENV["TRAVIS"] || ENV['CI']
-    spec.add_runtime_dependency "activerecord", ">= 5.0.0", "< 7.1"
+    spec.add_runtime_dependency "activerecord", ">= 6.0.0", "< 7.1"
   end
 
   spec.add_development_dependency "bundler"

@@ -20,7 +20,7 @@ module AttrJson
   # Meant for use as an attribute of a AttrJson::Record. Can be nested,
   # AttrJson::Models can have attributes that are other AttrJson::Models.
   #
-  # @note Includes ActiveModel::Model whether you like it or not. TODO, should it?
+  # @note Includes ActiveModel::Model whether you like it or not.
   #
   # You can control what happens if you set an unknown key (one that you didn't
   # register with `attr_json`) with the config attribute `attr_json_config(unknown_key:)`.
@@ -47,6 +47,21 @@ module AttrJson
   #          #...
   #        end
   #
+  # ## Date-type timezone conversion
+  #
+  # By default, AttrJson::Model date/time attributes will be
+  # [ActiveRecord timezone-aware](https://api.rubyonrails.org/classes/ActiveRecord/Timestamp.html)
+  # based on settings of `config.active_record.time_zone_aware_attributes` and
+  # `ActiveRecord::Base.time_zone_aware_types`.
+  #
+  # If you'd like to override this, you can set:
+  #
+  # ```
+  # attr_json_config(time_zone_aware_attributes: true)
+  # attr_json_config(time_zone_aware_attributes: false)
+  # attr_json_config(time_zone_aware_attributes: [:datetime, :time]) # custom list of types
+  # ```
+  #
   # ## ActiveRecord `serialize`
   #
   # If you want to map a single AttrJson::Model to a json/jsonb column, you
@@ -65,6 +80,15 @@ module AttrJson
   #   serialize :some_json_column, ValueModel.to_serialize_coder
   # end
   #
+  # # Strip nils
+  #
+  # When embedded in an `attr_json` attribute, models are normally serialized with `nil` values
+  # stripped from hash where possible, for a more compact representation.
+  # This can be set differently in the type.
+  #
+  #     attr_json :lang_and_value, LangAndValue.to_type(strip_nils: false)
+  #
+  # See #serializable_hash docs for possible values.
   module Model
     extend ActiveSupport::Concern
 
@@ -106,7 +130,7 @@ module AttrJson
       # The inverse of model#serializable_hash -- re-hydrates a serialized hash to a model.
       #
       # Similar to `.new`, but translates things that need to be translated in deserialization,
-      # like store_keys, and properly calling deserialize on the underlying types.
+      # like store_keys, and properly calling deserialize (rather than cast) on the underlying types.
       #
       # @example Model.new_from_serializable(hash)
       def new_from_serializable(attributes = {})
@@ -127,10 +151,25 @@ module AttrJson
         self.new(attributes)
       end
 
-      def to_type
-        @type ||= AttrJson::Type::Model.new(self)
+      # @returns ActiveModel::Type suitable for including this model in
+      # an AttrJson::Record or ::Model attribute
+      #
+      # @param strip_nils [Boolean,Symbol] [true,false,:safely] as a type,
+      #   should we strip nils when serializing? By default this type strips
+      #   nils in :safely mode. See AttrJson::Model#serializable_hash
+      def to_type(strip_nils: :safely)
+        @type ||= AttrJson::Type::Model.new(self, strip_nils: strip_nils)
       end
 
+      # An ActiveModel::Type that can be used to serialize this model
+      # across an entire JSON(b) column.
+      #
+      # @example using standard ActiveRecord `serialize` feature.
+      #
+      #     class MyTable < ApplicationRecord
+      #       serialize :some_json_column, MyModel.to_serialization_coder
+      #     end
+      #
       def to_serialization_coder
         @serialization_coder ||= AttrJson::SerializationCoderFromType.new(to_type)
       end
@@ -154,6 +193,8 @@ module AttrJson
       # @param type [ActiveModel::Type::Value] An instance of an ActiveModel::Type::Value (or subclass)
       #
       # @option options [Boolean] :array (false) Make this attribute an array of given type.
+      #    Array types default to an empty array. If you want to turn that off, you can add
+      #    `default: AttrJson::AttributeDefinition::NO_DEFAULT_PROVIDED`
       #
       # @option options [Object] :default (nil) Default value, if a Proc object it will be #call'd
       #   for default.
@@ -165,6 +206,8 @@ module AttrJson
       #   validation errors on the attributes post up to self.
       def attr_json(name, type, **options)
         options.assert_valid_keys(*(AttributeDefinition::VALID_OPTIONS - [:container_attribute] + [:validate]))
+
+        type = _attr_json_maybe_wrap_timezone_aware(type)
 
         self.attr_json_registry = attr_json_registry.with(
           AttributeDefinition.new(name.to_sym, type, options.except(:validate))
@@ -199,6 +242,42 @@ module AttrJson
           include mod
           mod
         end
+      end
+
+      # wrap in ActiveRecord type for timezone-awareness/conversion, if needed
+      # We at present only need this in AttrJson::Model cause in AttrJson::Record,
+      # our sync with ActiveRecord attributes takes care of it for us.
+      # See https://github.com/rails/rails/blob/v7.0.4/activerecord/lib/active_record/attribute_methods/time_zone_conversion.rb#L78
+      #
+      # For now we use ActiveRecord::Base state to decide.
+      #
+      # We have to turn a symbol type into a real object type if we want to wrap it -- we will
+      # return an actual ActiveModel::Value::Type either way, converting from symbol!
+      #
+      # That *wrapped* type will be the new type, registered with AttributeDefinition
+      # and then with Rails `attribute`, to provide timezone conversion.
+      def _attr_json_maybe_wrap_timezone_aware(type)
+        type = AttributeDefinition.lookup_type(type)
+
+        if self.attr_json_config.time_zone_aware_attributes.nil?
+          # nil config means use ActiveRecord::Base
+          aware       = ActiveRecord::Base.time_zone_aware_attributes
+          aware_types = ActiveRecord::Base.time_zone_aware_types
+        elsif self.attr_json_config.time_zone_aware_attributes.kind_of?(Array)
+          # Array config means we're doing it, and these are the types
+          aware       = true
+          aware_types = self.attr_json_config.time_zone_aware_attributes
+        else
+          # boolean config, types from ActiveRecord::Base
+          aware       = !!self.attr_json_config.time_zone_aware_attributes
+          aware_types = ActiveRecord::Base.time_zone_aware_types
+        end
+
+        if aware && aware_types.include?(type.type)
+          type = ActiveRecord::AttributeMethods::TimeZoneConversion::TimeZoneConverter.new(type)
+        end
+
+        type
       end
     end
 
@@ -254,31 +333,63 @@ module AttrJson
       self.class.attribute_names
     end
 
-    # Override from ActiveModel::Serialization to #serialize
-    # by type to make sure any values set directly on hash still
+    # Override from ActiveModel::Serialization to:
+    #
+    # * handle store_key settings
+    #
+    # * #serialize by type to make sure any values set directly on hash still
     # get properly type-serialized.
-    def serializable_hash(*options)
-      super.collect do |key, value|
+    #
+    # * custom logic for keeping nil values out of serialization to be more compact
+    #
+    # @param strip_nils [:symbol, Boolean] (default false) Should we keep keys with
+    #   `nil` values out of the serialization entirely? You might want to to keep
+    #   your in-database serialization compact. By default this method does not -- but
+    #   by default AttrJson::Type::Model sends `:safely` when serializing.
+    #     * false => do not strip nils
+    #     * :safely => strip nils only when there is no default value for the attribute,
+    #       so `nil` can still override the default value
+    #     * true => strip nils even if there is a default value -- in AttrJson
+    #       context, this means the default will be reapplied over nil on
+    #       every de-serialization!
+    def serializable_hash(options=nil)
+      strip_nils = options&.has_key?(:strip_nils) ? options.delete(:strip_nils) : false
+
+      unless [true, false, :safely].include?(strip_nils)
+        raise ArgumentError, ":strip_nils must be true, false, or :safely"
+      end
+
+      super(options).collect do |key, value|
         if attribute_def = self.class.attr_json_registry[key.to_sym]
           key = attribute_def.store_key
-          if value.kind_of?(Time) || value.kind_of?(DateTime)
-            value = value.utc.change(usec: 0)
-          end
 
           value = attribute_def.serialize(value)
         end
-        # Do we need unknown key handling here? Apparently not?
-        [key, value]
-      end.to_h
+
+        # strip_nils handling
+        if value.nil? && (
+           (strip_nils == :safely && !attribute_def&.has_default?) ||
+            strip_nils == true )
+        then
+          # do not include in serializable_hash
+          nil
+        else
+          [key, value]
+        end
+      end.compact.to_h
     end
 
     # ActiveRecord JSON serialization will insist on calling
     # this, instead of the specified type's #serialize, at least in some cases.
     # So it's important we define it -- the default #as_json added by ActiveSupport
     # will serialize all instance variables, which is not what we want.
-    def as_json(*options)
-      serializable_hash(*options)
+    #
+    # @param strip_nils [:symbol, Boolean] (default false) [true, false, :safely],
+    #   see #serializable_hash
+    def as_json(options=nil)
+      serializable_hash(options)
     end
+
 
     # We deep_dup on #to_h, you want attributes unduped, ask for #attributes.
     def to_h
