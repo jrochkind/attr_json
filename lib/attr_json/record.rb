@@ -55,6 +55,10 @@ module AttrJson
 
           container_value    = public_send(container_attribute)
 
+          # isn't expected to be possible to be nil rather than empty hash, but
+          # if it is from some edge case, well, we don't have values to sync, fine
+          next if container_value.nil?
+
           definitions.each do |attribute_def|
             attr_name     = attribute_def.name
             value         = container_value[attribute_def.store_key]
