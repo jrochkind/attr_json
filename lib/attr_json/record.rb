@@ -48,23 +48,26 @@ module AttrJson
     # mutation of mutable object will effect both places, for instance for dirty
     # tracking.
     def attr_json_sync_to_rails_attributes
-      self.class.attr_json_registry.attribute_names.each do |attr_name|
+      self.class.attr_json_registry.definitions.group_by(&:container_attribute).each_pair do |container_attribute, definitions|
         begin
-          attribute_def = self.class.attr_json_registry.fetch(attr_name.to_sym)
-          json_value    = public_send(attribute_def.container_attribute)
-          value         = json_value[attribute_def.store_key]
+          container_value    = public_send(container_attribute)
 
-          if value
-            # TODO, can we just make this use the setter?
-            write_attribute(attr_name, value)
+          definitions.each do |attribute_def|
+            attr_name     = attribute_def.name
+            value         = container_value[attribute_def.store_key]
 
-            clear_attribute_change(attr_name) if persisted?
+            if value
+              # TODO, can we just make this use the setter?
+              write_attribute(attr_name, value)
 
-            # writing and clearning will result in a new object stored in
-            # rails attributes, we want
-            # to make sure the exact same object is in the json attribute,
-            # so in-place mutation changes to it are reflected in both places.
-            json_value[attribute_def.store_key] = read_attribute(attr_name)
+              clear_attribute_change(attr_name) if persisted?
+
+              # writing and clearning will result in a new object stored in
+              # rails attributes, we want
+              # to make sure the exact same object is in the json attribute,
+              # so in-place mutation changes to it are reflected in both places.
+              container_value[attribute_def.store_key] = read_attribute(attr_name)
+            end
           end
         rescue AttrJson::Type::Model::BadCast, AttrJson::Type::PolymorphicModel::TypeError => e
           # There was bad data in the DB, we're just going to skip the Rails attribute sync.
