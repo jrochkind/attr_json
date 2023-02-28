@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Refactor #attr_json_sync_to_rails_attributes for slightly improved performance. https://github.com/jrochkind/attr_json/pull/192
 
-*
+* Safety guard in sync_to_rails_attributes against unknown edge case where container is nil https://github.com/jrochkind/attr_json/pull/194
 
 *
 
