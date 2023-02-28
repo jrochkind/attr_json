@@ -921,5 +921,27 @@ RSpec.describe AttrJson::Record do
 
   end
 
+  describe "with .select without json container" do
+    let(:record) do
+      klass.create(str: "str value", string_type: "direct in column")
+    end
 
+    let(:refetched_record) do
+      klass.select(:id, :string_type).find(record.id)
+    end
+
+    it "can fetch without raising" do
+      expect(refetched_record.string_type).to eq record.string_type
+    end
+
+    it "raises on read or write of attr_json attribute" do
+      expect {
+        refetched_record.str
+      }.to raise_error(ActiveModel::MissingAttributeError, /missing attribute: json_attribute/)
+
+      expect {
+        refetched_record.str = "new set value"
+      }.to raise_error(ActiveModel::MissingAttributeError, /missing attribute: json_attribute/)
+    end
+  end
 end
