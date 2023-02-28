@@ -4,7 +4,25 @@ Notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/jrochkind/attr_json/compare/v2.0.0...HEAD)
+## [Unreleased](https://github.com/jrochkind/attr_json/compare/v2.0.1...HEAD)
+
+### Fixed
+
+*
+
+*
+
+*
+
+### Added
+
+*
+
+*
+
+*
+
+## [2.0.1](https://github.com/jrochkind/attr_json/compare/v2.0.0...v2.0.1)
 
 
 ### Fixed
@@ -16,16 +34,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Refactor #attr_json_sync_to_rails_attributes for slightly improved performance. https://github.com/jrochkind/attr_json/pull/192
 
 * Safety guard in sync_to_rails_attributes against unknown edge case where container is nil https://github.com/jrochkind/attr_json/pull/194
-
-*
-
-### Added
-
-*
-
-*
-
-*
 
 
 ## [2.0.0](https://github.com/jrochkind/attr_json/compare/v1.5.0...v2.0.0)
