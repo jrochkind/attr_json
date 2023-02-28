@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/jrochkind/attr_json/compare/v2.0.0...HEAD)
 
+
+### Fixed
+
+* You can now do a specified ActiveRecord `.select` without your json containers, to fetch an object with other attributes that you can access. https://github.com/jrochkind/attr_json/pull/193
+
 ### Changed
 
 * Refactor #attr_json_sync_to_rails_attributes for slightly improved performance. https://github.com/jrochkind/attr_json/pull/192

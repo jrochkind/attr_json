@@ -50,6 +50,9 @@ module AttrJson
     def attr_json_sync_to_rails_attributes
       self.class.attr_json_registry.definitions.group_by(&:container_attribute).each_pair do |container_attribute, definitions|
         begin
+          # column may have eg been left out of an explicit 'select'
+          next unless has_attribute?(container_attribute)
+
           container_value    = public_send(container_attribute)
 
           definitions.each do |attribute_def|
