@@ -164,7 +164,7 @@ RSpec.describe AttrJson::Record do
       saved_json_datetime = saved_json["model"]["datetime"]
 
       # a UTC iso8601 format, ending in `Z`
-      expect(saved_json_datetime).to match /\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d.\d{#{expected_precision}}Z/
+      expect(saved_json_datetime).to match( /\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d.\d{#{expected_precision}}Z/ )
 
       # and the conversion is correct
       expect(Time.iso8601(saved_json_datetime)).to eq zoned_datetime.utc.floor(expected_precision)
