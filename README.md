@@ -456,7 +456,7 @@ Why might you want this?
 
 * Single-Table Inheritance, with sub-classes that have non-shared
   data fields. You rather not make all those columns, some of which will then also appear
-  to inapplicable sub-classes. (**note** you may have trouble with [ActiveRecord #becomes](https://api.rubyonrails.org/v7.0.4/classes/ActiveRecord/Persistence.html#method-i-becomes) in some versions of Rails. https://github.com/jrochkind/attr_json/issues/189  https://github.com/rails/rails/issues/47538))
+  to inapplicable sub-classes. (**note** you may have trouble with [ActiveRecord #becomes](https://api.rubyonrails.org/v7.0.4/classes/ActiveRecord/Persistence.html#method-i-becomes) in some versions of Rails. See https://github.com/jrochkind/attr_json/issues/189 and https://github.com/rails/rails/issues/47538))
 
 * A "content management system" type project, where you need complex
   structured data of various types, maybe needs to be vary depending
