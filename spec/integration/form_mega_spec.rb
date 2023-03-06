@@ -27,7 +27,7 @@ RSpec.describe "form with simple_form and cocoon", type: :feature, js: true do
         expect(page).to have_current_path(documents_path)
         expect(page).to have_content "Person roles is invalid"
         within(".document_person_roles_people_given_name") do
-          expect(page).to have_content "can't be blank"
+          expect(page).to have_content(/can'|’t be blank/)
         end
       end
     end
