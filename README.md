@@ -362,6 +362,9 @@ end
 
 class MyTable < ApplicationRecord
   serialize :some_json_column, MyModel.to_serialization_coder
+
+  # NOTE: In Rails 7.1+, write:
+  # serialize :some_json_column, coder: MyModel.to_serialization_coder
 end
 
 MyTable.create(some_json_column: MyModel.new(some_string: "string"))

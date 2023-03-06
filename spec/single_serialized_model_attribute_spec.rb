@@ -19,7 +19,11 @@ RSpec.describe "AttrJson::Model with ActiveRecord serialize to one column" do
     Class.new(ActiveRecord::Base) do
       self.table_name = "products"
 
-      serialize :other_attributes, type_as_serializer
+      if Gem.loaded_specs["rails"].version.release >= Gem::Version.new("7.1")
+        serialize :other_attributes, coder: type_as_serializer
+      else
+        serialize :other_attributes, type_as_serializer
+      end
     end
   end
 

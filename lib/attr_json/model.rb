@@ -168,6 +168,9 @@ module AttrJson
       #
       #     class MyTable < ApplicationRecord
       #       serialize :some_json_column, MyModel.to_serialization_coder
+      #
+      #       # In Rails 7.1+:
+      #       # serialize :some_json_column, coder: MyModel.to_serialization_coder
       #     end
       #
       def to_serialization_coder
