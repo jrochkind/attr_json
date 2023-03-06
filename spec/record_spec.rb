@@ -337,7 +337,7 @@ RSpec.describe AttrJson::Record do
     it "has the usual validation errors" do
       instance.str = "nosize"
       expect(instance.save).to be false
-      expect(instance.errors[:str_array]).to eq(["can't be blank"])
+      expect(instance.errors[:str_array]).to eq(["can't be blank"]).or eq(["can’t be blank"])
       expect(instance.errors[:str]).to eq(["nosize is not a valid size"])
     end
     it "saves with valid data" do

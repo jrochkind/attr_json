@@ -106,7 +106,7 @@ RSpec.describe AttrJson::Record do
     it "has the usual validation errors" do
       instance.str = "nosize"
       expect(instance.valid?).to be false
-      expect(instance.errors[:str_array]).to eq(["can't be blank"])
+      expect(instance.errors[:str_array]).to eq(["can't be blank"]).or eq(["can’t be blank"])
       expect(instance.errors[:str]).to eq(["nosize is not a valid size"])
     end
     it "valid with valid data" do
@@ -259,7 +259,7 @@ RSpec.describe AttrJson::Record do
       expect(instance.errors[:nested]).to include("is invalid")
 
       expect(instance.nested.errors.key?(:str))
-      expect(instance.nested.errors[:str]).to include("can't be blank")
+      expect(instance.nested.errors[:str]).to include a_string_matching(/\Acan'|’t be blank\z/)
 
       expect(instance.errors.details[:nested].first[:value]).to be_kind_of(nested_class)
     end
@@ -295,7 +295,7 @@ RSpec.describe AttrJson::Record do
       expect(instance.errors[:nested]).to include("is invalid")
 
       expect(instance.nested.first.errors.key?(:str))
-      expect(instance.nested.first.errors[:str]).to include("can't be blank")
+      expect(instance.nested.first.errors[:str]).to include(/\Acan'|’t be blank\z/)
 
       expect(instance.errors.details[:nested].first[:value].first).to be_kind_of(nested_class)
     end

@@ -229,7 +229,7 @@ RSpec.describe AttrJson::Record do
       expect(instance.errors[:model]).to include("is invalid")
 
       expect(instance.model.errors.key?(:str))
-      expect(instance.model.errors[:str]).to include("can't be blank")
+      expect(instance.model.errors[:str]).to include(/\Acan'|’t be blank\z/)
 
       expect(instance.errors.details[:model].first[:value]).to be_kind_of(model_class)
     end
