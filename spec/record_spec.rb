@@ -935,13 +935,14 @@ RSpec.describe AttrJson::Record do
     end
 
     it "raises on read or write of attr_json attribute" do
+      # Rails 7.1 changes format of message somewhat, we use regexp to match that and previous
       expect {
         refetched_record.str
-      }.to raise_error(ActiveModel::MissingAttributeError, /missing attribute: json_attribute/)
+      }.to raise_error(ActiveModel::MissingAttributeError, /missing attribute:? '?json_attributes'?/)
 
       expect {
         refetched_record.str = "new set value"
-      }.to raise_error(ActiveModel::MissingAttributeError, /missing attribute: json_attribute/)
+      }.to raise_error(ActiveModel::MissingAttributeError, /missing attribute:? '?json_attributes'?/)
     end
   end
 end
