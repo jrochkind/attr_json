@@ -48,6 +48,9 @@ class MyModel < ActiveRecord::Base
 
    # You can have an _array_ of those things too. It will ordinarily default to empty array.
    attr_json :int_array, :integer, array: true
+   
+   # The empty array default can be disabled with the following setting
+   attr_json :str_array, :string, array: true, default: AttrJson::AttributeDefinition::NO_DEFAULT_PROVIDED
 
    #and/or defaults
    attr_json :str_with_default, :string, default: "default value"
