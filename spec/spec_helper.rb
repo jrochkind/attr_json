@@ -165,4 +165,10 @@ RSpec.configure do |config|
   # with edge Rails 7.1.
   # https://github.com/DatabaseCleaner/database_cleaner/issues/693
   config.use_transactional_fixtures = true
+
+
+  # Just referencing the logger is a weird workaround to capybara bug:
+  #     https://github.com/teamcapybara/capybara/issues/2666
+  # Should hopefully not be necessary after capybara subsequent to 3.39.0
+  Selenium::WebDriver.logger
 end
