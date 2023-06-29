@@ -143,6 +143,12 @@ module AttrJson
 
       protected
 
+      # We need to make sure to call the correct operation on
+      # the model type, so that we get the same result as if
+      # we had called the type directly
+      #
+      # @param v [Object, nil] the value to cast or deserialize
+      # @param operation [Symbol] :cast or :deserialize
       def cast_or_deserialize(v, operation)
         if v.nil?
           v
@@ -157,6 +163,8 @@ module AttrJson
         end
       end
 
+      # @param hash [Hash] the value to cast or deserialize
+      # @param operation [Symbol] :cast or :deserialize
       def model_from_hash(hash, operation)
         new_hash = hash.stringify_keys
         model_name = new_hash.delete(type_key.to_s)
@@ -167,7 +175,13 @@ module AttrJson
 
         raise_bad_model_name(model_name, hash) if type.nil?
 
-        type.public_send(operation, new_hash)
+        if operation == :deserialize
+          type.deserialize(new_hash)
+        elsif operation == :cast
+          type.cast(new_hash)
+        else
+          raise ArgumentError, "Unknown operation #{operation}"
+        end
       end
 
       def raise_missing_type_key(value)
