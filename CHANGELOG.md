@@ -22,6 +22,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 *
 
+## [2.1.0](https://github.com/jrochkind/attr_json/compare/v2.0.1...v2.1.0)
+
+### Added
+
+* Support for `store_key` in models used with polymorphic model feature. https://github.com/jrochkind/attr_json/pull/206 . Thanks @rdubya
+
+
 ## [2.0.1](https://github.com/jrochkind/attr_json/compare/v2.0.0...v2.0.1)
 
 
