@@ -195,6 +195,55 @@ RSpec.describe AttrJson::Type::PolymorphicModel do
     end
   end
 
+  describe "deserialize" do
+    let(:type) { AttrJson::Type::PolymorphicModel.new(model1, model2) }
+
+    it "can deserialize a nil value" do
+      expect(type.deserialize(nil)).to be nil
+    end
+
+    it "returns the same object if already a model" do
+      model = model1.new
+      expect(type.deserialize(model)).to be model
+    end
+
+    it "can deserialize a hash" do
+      serialized_model = type.serialize(model1.new(str: "str", int: 12))
+      expect(type.deserialize(serialized_model)).to eq model1.new(str: "str", int: 12)
+    end
+
+    it "raises a TypeError if the type is not a registered model" do
+      serialized_model = type.serialize(model1.new(str: "str", int: 12))
+      serialized_model["type"] = "NotARegisteredModel"
+      expect { type.deserialize(serialized_model) }.to raise_error AttrJson::Type::PolymorphicModel::TypeError
+    end
+
+    it "raises a TypeError if the type is not set" do
+      serialized_model = type.serialize(model1.new(str: "str", int: 12))
+      serialized_model.delete("type")
+      expect { type.deserialize(serialized_model) }.to raise_error AttrJson::Type::PolymorphicModel::TypeError
+    end
+
+    it "raises a TypeError if the value is not a valid model" do
+      expect { type.deserialize(Object.new) }.to raise_error AttrJson::Type::PolymorphicModel::TypeError
+    end
+
+    context "with models using store keys" do
+      let(:model1) do
+        Model1 = Class.new do
+          include AttrJson::Model
+          attr_json :str, :string, store_key: "s"
+          attr_json :int, :integer, store_key: "i"
+        end
+      end
+
+      it "can deserialize a hash" do
+        serialized_model = type.serialize(model1.new(str: "str", int: 12))
+        expect(type.deserialize(serialized_model)).to eq model1.new(str: "str", int: 12)
+      end
+    end
+  end
+
   describe "jsonb_contains" do
     it "can create keypath query" do
       sql = klass.jsonb_contains("one_poly.bool" => true).to_sql

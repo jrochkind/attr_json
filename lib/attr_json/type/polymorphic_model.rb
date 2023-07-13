@@ -100,17 +100,11 @@ module AttrJson
       end
 
       def cast(v)
-        if v.nil?
-          v
-        elsif model_names.include?(v.class.name)
-          v
-        elsif v.respond_to?(:to_hash)
-          cast_from_hash(v.to_hash)
-        elsif v.respond_to?(:to_h)
-          cast_from_hash(v.to_h)
-        else
-          raise_bad_model_name(v.class, v)
-        end
+        cast_or_deserialize(v, :cast)
+      end
+
+      def deserialize(v)
+        cast_or_deserialize(v, :deserialize)
       end
 
       def serialize(v)
@@ -125,10 +119,6 @@ module AttrJson
         raise_bad_model_name(model_name, v) if type.nil?
 
         type.serialize(v).merge(type_key => model_name)
-      end
-
-      def deserialize(v)
-        cast(v)
       end
 
       def type_for_model_name(model_name)
@@ -153,15 +143,29 @@ module AttrJson
 
       protected
 
-      def raise_missing_type_key(value)
-        raise TypeError, "AttrJson::Type::Polymorphic can't cast without '#{type_key}' key: #{value}"
+      # We need to make sure to call the correct operation on
+      # the model type, so that we get the same result as if
+      # we had called the type directly
+      #
+      # @param v [Object, nil] the value to cast or deserialize
+      # @param operation [Symbol] :cast or :deserialize
+      def cast_or_deserialize(v, operation)
+        if v.nil?
+          v
+        elsif model_names.include?(v.class.name)
+          v
+        elsif v.respond_to?(:to_hash)
+          model_from_hash(v.to_hash, operation)
+        elsif v.respond_to?(:to_h)
+          model_from_hash(v.to_h, operation)
+        else
+          raise_bad_model_name(v.class, v)
+        end
       end
 
-      def raise_bad_model_name(name, value)
-        raise TypeError, "This AttrJson::Type::PolymorphicType can only include {#{model_names.join(', ')}}, not '#{name}': #{value.inspect}"
-      end
-
-      def cast_from_hash(hash)
+      # @param hash [Hash] the value to cast or deserialize
+      # @param operation [Symbol] :cast or :deserialize
+      def model_from_hash(hash, operation)
         new_hash = hash.stringify_keys
         model_name = new_hash.delete(type_key.to_s)
 
@@ -171,7 +175,21 @@ module AttrJson
 
         raise_bad_model_name(model_name, hash) if type.nil?
 
-        type.cast(new_hash)
+        if operation == :deserialize
+          type.deserialize(new_hash)
+        elsif operation == :cast
+          type.cast(new_hash)
+        else
+          raise ArgumentError, "Unknown operation #{operation}"
+        end
+      end
+
+      def raise_missing_type_key(value)
+        raise TypeError, "AttrJson::Type::Polymorphic can't cast without '#{type_key}' key: #{value}"
+      end
+
+      def raise_bad_model_name(name, value)
+        raise TypeError, "This AttrJson::Type::PolymorphicType can only include {#{model_names.join(', ')}}, not '#{name}': #{value.inspect}"
       end
     end
   end
