@@ -4,6 +4,11 @@ appraise "rails-6-0" do
   gem "rails", ">= 6.0.0", "< 6.1"
   gem "pg", "~> 1.0"
   gem "rspec-rails", "~> 5.0"
+
+
+  # Ruby 2.7 still needs webdrivers, since it can't use a new enough
+  # version of selenium-webdriver to download drivers itself
+  gem "webdrivers", ">= 5.3.1"
 end
 
 appraise "rails-6-1" do

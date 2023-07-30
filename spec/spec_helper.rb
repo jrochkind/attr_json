@@ -45,7 +45,6 @@ require "capybara/rails"
 # http://quyetbui.info/chrome-headless-capybara-on-travis-ci/
 # https://www.reddit.com/r/ruby/comments/8d6vdb/capybara_rails_chromeheadless_on_travis/
 # https://github.com/flavorjones/chromedriver-helper/issues/83
-require 'webdrivers'
 require "selenium/webdriver"
 
 Capybara.register_driver :chrome do |app|
