@@ -37,7 +37,6 @@ gem "sprockets-rails"
 
 
 gem 'capybara', "~> 3.0"
-gem 'webdrivers', '~> 5.0'
 gem "selenium-webdriver"
 
 gem "byebug"
