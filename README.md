@@ -48,7 +48,7 @@ class MyModel < ActiveRecord::Base
 
    # You can have an _array_ of those things too. It will ordinarily default to empty array.
    attr_json :int_array, :integer, array: true
-   
+
    # The empty array default can be disabled with the following setting
    attr_json :str_array, :string, array: true, default: AttrJson::AttributeDefinition::NO_DEFAULT_PROVIDED
 
@@ -189,10 +189,8 @@ attribute name, it'll actually query on store_key. And properly handles any
 `container_attribute` -- it'll look in the proper jsonb column.
 
 Anything you can do with `jsonb_contains` should be handled
-by a [postgres `USING GIN` index](https://www.postgresql.org/docs/9.5/static/datatype-json.html#JSON-INDEXING)
-(I think! can anyone help confirm/deny?). To be sure, I recommend you
-investigate: Check out `to_sql` on any query to see what jsonb SQL it generates,
-and explore if you have the indexes you need.
+by a [postgres `USING GIN` index](https://www.postgresql.org/docs/9.5/static/datatype-json.html#JSON-INDEXING). Figuring out how to use indexes for jsonb
+queries can be confusing, [here is a good blog post](https://blog.kiprosh.com/postgres-gin-index-in-rails/).
 
 <a name="nested"></a>
 ## Nested models -- Structured/compound data
