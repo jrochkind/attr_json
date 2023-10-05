@@ -49,7 +49,15 @@ jobs:
 
           - gemfile: rails_7_0
             ruby: 3.2
+            
+          - gemfile: rails_7_1
+            ruby: '3.0'
 
+          - gemfile: rails_7_1
+            ruby: 3.1
+
+          - gemfile: rails_7_1
+            ruby: 3.2
 
     name: ${{ matrix.gemfile }}, ruby ${{ matrix.ruby }}
 
