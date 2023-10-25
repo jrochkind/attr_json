@@ -18,7 +18,10 @@ jobs:
   tests:
     services:
       db:
-        image: postgres:9.4
+        # used to be 9.4, should work on 9.4, only moved to 10.0
+        # because of rails 7.1 bug (rails intends to support 9 too!)
+        # https://github.com/jrochkind/attr_json/issues/211
+        image: postgres:10.0
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -49,7 +52,7 @@ jobs:
 
           - gemfile: rails_7_0
             ruby: 3.2
-            
+
           - gemfile: rails_7_1
             ruby: '3.0'
 
