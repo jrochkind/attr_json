@@ -160,22 +160,14 @@ module AttrJson
         options.assert_valid_keys(AttributeDefinition::VALID_OPTIONS + [:validate, :accepts_nested_attributes])
         container_attribute = options[:container_attribute]
 
-        # TODO arg check container_attribute make sure it exists. Hard cause
-        # schema isn't loaded yet when class def is loaded. Maybe not.
 
-        # Want to lazily add an attribute cover to the json container attribute,
-        # only if it hasn't already been done. WARNING we are using internal
-        # Rails API here, but only way to do this lazily, which I thought was
-        # worth it. On the other hand, I think .attribute is idempotent, maybe we don't need it...
-        #
-        # We set default to empty hash, because that 'tricks' AR into knowing any
-        # application of defaults is a change that needs to be saved.
-        unless attributes_to_define_after_schema_loads[container_attribute.to_s] &&
-               attributes_to_define_after_schema_loads[container_attribute.to_s].first.is_a?(AttrJson::Type::ContainerAttribute) &&
-               attributes_to_define_after_schema_loads[container_attribute.to_s].first.model == self
-           # If this is already defined, but was for superclass, we need to define it again for
-           # this class.
+        # Make sure to "lazily" register attribute for *container* class if this is the first time
+        # this container attribute hsa been encountered for this specific class. The registry
+        # helps us keep track. Kinda messy, in future we may want a more explicit API
+        # that does not require us to implicitly track first-time per-container.
+        unless self.attr_json_registry.container_attribute_registered?(model: self, attribute_name: container_attribute.to_sym)
            attribute container_attribute.to_sym, AttrJson::Type::ContainerAttribute.new(self, container_attribute), default: -> { {} }
+           self.attr_json_registry.register_container_attribute(model: self, attribute_name: container_attribute.to_sym)
         end
 
         self.attr_json_registry = attr_json_registry.with(

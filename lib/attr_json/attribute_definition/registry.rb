@@ -26,6 +26,8 @@ module AttrJson
         @name_to_definition = hash.dup
         @store_key_to_definition = {}
         definitions.each { |d| store_key_index!(d) }
+
+        @container_attributes_registered = Hash.new { Set.new }
       end
 
       def fetch(key, *args, &block)
@@ -71,6 +73,32 @@ module AttrJson
             copied.add!(defin)
           end
         end
+      end
+
+
+      # We need to lazily set the container type only the FIRST time
+      #
+      # While also avoiding this triggering ActiveRecord to actually go to DB,
+      # we don't want DB connection forced on boot, that's a problem for many apps,
+      # including that may not have a DB connection in initial development.
+      # (#type_for_attribute forces DB connection)
+      #
+      # AND we need to call container attriubte on SUB-CLASS AGAIN, iff sub-class
+      # has any of it's own new registrations, to make sure we get the right type in
+      # sub-class!
+      #
+      # So we just keep track of whether we've registered ourselves, so we can
+      # first time we need to.
+      #
+      # While current implementation is simple, this has ended up a bit fragile,
+      # a different API that doesn't require us to do this implicitly lazily
+      # might be preferred! But this is what we got for now.
+      def register_container_attribute(attribute_name:, model:)
+        @container_attributes_registered[attribute_name.to_sym] << model
+      end
+
+      def container_attribute_registered?(attribute_name:, model:)
+         @container_attributes_registered[attribute_name.to_sym].include?(model)
       end
 
       protected
