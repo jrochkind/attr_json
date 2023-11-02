@@ -36,6 +36,18 @@ RSpec.describe "ActiveRecord dirty tracking" do
   end
   let(:instance) { klass.new }
 
+  let(:initial_tracked_container_value) do
+    # We set a default of empty hash `{}`.  Up to Rails 7.1, Rails ignores
+    # the default in dirty tracking, and consideers the initial value nil -- but
+    # post Rails 7.1, Rails dirty tracking _starts_ at `{}`. We don't consider it a bug,
+    # the new behavior is probably better, we just go with it in tests either way.
+    if Gem::Version.new(Rails::VERSION::STRING) >= Gem::Version.new("7.2.0.alpha")
+      {}
+    else
+      nil
+    end
+  end
+
   describe "simple" do
     describe "new untouched object" do
       it "has no changes" do
@@ -48,9 +60,19 @@ RSpec.describe "ActiveRecord dirty tracking" do
         expect(instance.attribute_before_last_save(:str)).to be nil
         expect(instance.str_before_last_save).to be nil
 
-        expect(instance.changes_to_save).to eq({ "json_attributes" => [nil, {}] })
-        expect(instance.has_changes_to_save?).to be true
-        expect(instance.changed_attribute_names_to_save).to eq(["json_attributes"])
+
+        if initial_tracked_container_value == {}
+          expect(instance.changes_to_save).to eq({})
+          expect(instance.has_changes_to_save?).to be false
+          expect(instance.changed_attribute_names_to_save).to eq([])
+          expect(instance.attributes_in_database).to eq({})
+        else
+          expect(instance.changes_to_save).to eq({ "json_attributes" => [nil, {}] })
+          expect(instance.has_changes_to_save?).to be true
+          expect(instance.changed_attribute_names_to_save).to eq(["json_attributes"])
+          expect(instance.attributes_in_database).to eq({ "json_attributes" => nil })
+        end
+
 
 
         expect(instance.will_save_change_to_attribute?(:str)).to be false
@@ -64,7 +86,7 @@ RSpec.describe "ActiveRecord dirty tracking" do
 
         expect(instance.saved_changes).to eq({})
         expect(instance.saved_changes?).to be false
-        expect(instance.attributes_in_database).to eq({ "json_attributes" => nil })
+
       end
     end
 
@@ -76,7 +98,7 @@ RSpec.describe "ActiveRecord dirty tracking" do
         expect(instance.saved_change_to_attribute(:str)).to be nil
         expect(instance.attribute_before_last_save(:str)).to be nil
         expect(instance.changes_to_save).to eq(
-          'json_attributes' => [nil, { "str" => "new" }],
+          'json_attributes' => [initial_tracked_container_value, { "str" => "new" }],
           'str' => [nil, "new"]
         )
         expect(instance.has_changes_to_save?).to be true
@@ -87,7 +109,7 @@ RSpec.describe "ActiveRecord dirty tracking" do
         expect(instance.attribute_in_database(:str)).to be nil
         expect(instance.saved_changes).to eq({})
         expect(instance.saved_changes?).to be false
-        expect(instance.attributes_in_database).to eq({'json_attributes' => nil, 'str' => nil})
+        expect(instance.attributes_in_database).to eq({'json_attributes' => initial_tracked_container_value, 'str' => nil})
       end
 
       it "does not have changes for untouched json attribute" do
@@ -126,7 +148,7 @@ RSpec.describe "ActiveRecord dirty tracking" do
         expect(instance.attribute_in_database(:str)).to eq "old"
         expect(instance.saved_changes.except("id")).to eq(
           'str' => [nil, "old"],
-          "json_attributes" => [nil, {"str"=>"old"}]
+          "json_attributes" => [initial_tracked_container_value, {"str"=>"old"}]
         )
         expect(instance.saved_changes?).to be true
         expect(instance.attributes_in_database).to eq(
@@ -302,7 +324,7 @@ RSpec.describe "ActiveRecord dirty tracking" do
 
         expect(instance.saved_changes.except("id")).to eq(
           'embedded' => [nil, orig_model_eq],
-          "json_attributes" => [nil, { "embedded" => orig_model_eq }]
+          "json_attributes" => [initial_tracked_container_value, { "embedded" => orig_model_eq }]
         )
         expect(instance.saved_changes?).to be true
 
