@@ -50,8 +50,8 @@ module AttrJson
 
       # Can return nil if none found.
       def store_key_lookup(container_attribute, store_key)
-        @store_key_to_definition[container_attribute.to_s] &&
-          @store_key_to_definition[container_attribute.to_s][store_key.to_s]
+        @store_key_to_definition[AttrJson.efficient_to_s(container_attribute)] &&
+          @store_key_to_definition[AttrJson.efficient_to_s(container_attribute)][AttrJson.efficient_to_s(store_key)]
       end
 
       def definitions
@@ -64,7 +64,7 @@ module AttrJson
       end
 
       def container_attributes
-        @store_key_to_definition.keys.collect(&:to_s)
+        @store_key_to_definition.keys.collect { |s| AttrJson.efficient_to_s(s) }
       end
 
       # This is how you register additional definitions, as a non-mutating
@@ -114,14 +114,14 @@ module AttrJson
       end
 
       def store_key_index!(definition)
-        container_hash = (@store_key_to_definition[definition.container_attribute.to_s] ||= {})
+        container_hash = (@store_key_to_definition[AttrJson.efficient_to_s(definition.container_attribute)] ||= {})
 
-        if container_hash.has_key?(definition.store_key.to_s)
-          existing = container_hash[definition.store_key.to_s]
+        if container_hash.has_key?(AttrJson.efficient_to_s(definition.store_key))
+          existing = container_hash[AttrJson.efficient_to_s(definition.store_key)]
           raise ArgumentError, "Can't add, store key `#{definition.store_key}` conflicts with existing attribute: #{existing.original_args}"
         end
 
-        container_hash[definition.store_key.to_s] = definition
+        container_hash[AttrJson.efficient_to_s(definition.store_key)] = definition
       end
     end
   end

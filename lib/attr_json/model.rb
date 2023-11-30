@@ -138,8 +138,8 @@ module AttrJson
       def new_from_serializable(attributes = {})
         attributes = attributes.collect do |key, value|
           # store keys in arguments get translated to attribute names on initialize.
-          if attribute_def = self.attr_json_registry.store_key_lookup("", key.to_s)
-            key = attribute_def.name.to_s
+          if attribute_def = self.attr_json_registry.store_key_lookup("".freeze, AttrJson.efficient_to_s(key))
+            key = AttrJson.efficient_to_s(attribute_def.name)
           end
 
           attr_type = self.attr_json_registry.has_attribute?(key) && self.attr_json_registry.type_for_attribute(key)
@@ -186,7 +186,7 @@ module AttrJson
 
       # like the ActiveModel::Attributes method, hash with name keys, and ActiveModel::Type values
       def attribute_types
-        attribute_names.collect { |name| [name.to_s, attr_json_registry.type_for_attribute(name)]}.to_h
+        attribute_names.collect { |name| [AttrJson.efficient_to_s(name), attr_json_registry.type_for_attribute(name)]}.to_h
       end
 
 
@@ -227,11 +227,11 @@ module AttrJson
 
         _attr_jsons_module.module_eval do
           define_method("#{name}=") do |value|
-            _attr_json_write(name.to_s, value)
+            _attr_json_write(AttrJson.efficient_to_s(name), value)
           end
 
           define_method("#{name}") do
-            attributes[name.to_s]
+            attributes[AttrJson.efficient_to_s(name)]
           end
         end
       end
@@ -429,7 +429,7 @@ module AttrJson
 
     def fill_in_defaults!
       self.class.attr_json_registry.definitions.each do |definition|
-        if definition.has_default? && !attributes.has_key?(definition.name.to_s)
+        if definition.has_default? && !attributes.has_key?(AttrJson.efficient_to_s(definition.name))
           self.send("#{definition.name.to_s}=", definition.provide_default!)
         end
       end
@@ -437,10 +437,10 @@ module AttrJson
 
     def _attr_json_write(key, value)
       if attribute_def = self.class.attr_json_registry[key.to_sym]
-        attributes[key.to_s] = attribute_def.cast(value)
+        attributes[AttrJson.efficient_to_s(key)] = attribute_def.cast(value)
       else
         # TODO, strict mode, ignore, raise, allow.
-        attributes[key.to_s] = value
+        attributes[AttrJson.efficient_to_s(key)] = value
       end
     end
 
