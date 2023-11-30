@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module AttrJson
   module NestedAttributes
     # Rails has a weird "multiparameter attribute" thing, that is used for simple_form's

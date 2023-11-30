@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module AttrJson
   module Type
     # You can wrap any ActiveModel::Type in one of these, and it's magically

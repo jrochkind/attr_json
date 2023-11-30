@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module AttrJson
 
   # A little wrapper to provide an object that provides #dump and #load method for use

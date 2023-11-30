@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
  require 'attr_json/type/array'
 
  module AttrJson

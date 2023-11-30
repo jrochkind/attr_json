@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module AttrJson
   module Record
     # Implementation class called by #jsonb_contains scope method. Ordinarily

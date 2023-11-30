@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'attr_json/attribute_definition'
 
 module AttrJson

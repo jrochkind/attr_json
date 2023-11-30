@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'attr_json/attribute_definition'
 require 'attr_json/attribute_definition/registry'
 require 'attr_json/type/container_attribute'

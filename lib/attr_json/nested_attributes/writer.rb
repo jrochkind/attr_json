@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'attr_json/nested_attributes/multiparameter_attribute_writer'
 
 module AttrJson
