@@ -27,7 +27,8 @@ module AttrJson
       def initialize(hash = {})
         @name_to_definition = hash.dup
         @store_key_to_definition = {}
-        definitions.each { |d| store_key_index!(d) }
+
+        @name_to_definition.values.each { |d| store_key_index!(d) }
 
         @container_attributes_registered = Hash.new { Set.new }
       end
@@ -55,7 +56,8 @@ module AttrJson
       end
 
       def definitions
-        @name_to_definition.values
+        # Since we are immutable, we can cache this to avoid allocation in a hot spot
+        @stored_definitions ||= @name_to_definition.values
       end
 
       # Returns all registered attributes as an array of symbols
@@ -111,6 +113,8 @@ module AttrJson
         end
         @name_to_definition[definition.name.to_sym] = definition
         store_key_index!(definition)
+
+        @stored_definitions = nil
       end
 
       def store_key_index!(definition)
