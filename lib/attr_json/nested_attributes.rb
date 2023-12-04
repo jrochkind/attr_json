@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'attr_json/nested_attributes/builder'
 require 'attr_json/nested_attributes/writer'
 

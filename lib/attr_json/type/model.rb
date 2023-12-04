@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module AttrJson
   module Type
     # An ActiveModel::Type representing a particular AttrJson::Model

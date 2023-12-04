@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module AttrJson
   module NestedAttributes
     # Implementation of `build_` methods, called by the `build_` methods

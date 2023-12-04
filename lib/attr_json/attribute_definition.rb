@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
  require 'attr_json/type/array'
 
  module AttrJson
@@ -62,7 +64,7 @@
     end
 
     def store_key
-      (@store_key || name).to_s
+      AttrJson.efficient_to_s(@store_key || name)
     end
 
     def has_default?

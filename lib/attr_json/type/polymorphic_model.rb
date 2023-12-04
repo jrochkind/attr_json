@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module AttrJson
   module Type
     # AttrJson::Type::PolymorphicModel can be used to create attr_json attributes

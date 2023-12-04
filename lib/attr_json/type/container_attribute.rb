@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module AttrJson
   module Type
     # A type that gets applied to the AR container/store jsonb attribute,
