@@ -26,6 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Avoid private ActiveRecord API when lazily registering container attributes. (Compat with Rails post 7.1) https://github.com/jrochkind/attr_json/pull/214
 
+* Freeze more strings to reduce String allocations https://github.com/jrochkind/attr_json/pull/216
+
 ## [2.2.0](https://github.com/jrochkind/attr_json/compare/v2.1.0...v2.2.0)
 
 ### Added
