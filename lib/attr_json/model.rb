@@ -8,6 +8,7 @@ require 'attr_json/attribute_definition/registry'
 
 require 'attr_json/type/model'
 require 'attr_json/model/cocoon_compat'
+require 'attr_json/model/nested_model_validator'
 
 require 'attr_json/serialization_coder_from_type'
 
@@ -207,8 +208,8 @@ module AttrJson
       # @option options [String,Symbol] :store_key (nil) Serialize to JSON using
       #   given store_key, rather than name as would be usual.
       #
-      # @option options [Boolean] :validate (true) Create an ActiveRecord::Validations::AssociatedValidator so
-      #   validation errors on the attributes post up to self.
+      # @option options [Boolean] :validate (true) Mak validation errors on the attributes post up
+      #   to self, using something similar to an ActiveRecord::Validations::AssociatedValidator
       def attr_json(name, type, **options)
         options.assert_valid_keys(*(AttributeDefinition::VALID_OPTIONS - [:container_attribute] + [:validate]))
 
@@ -220,9 +221,8 @@ module AttrJson
 
         # By default, automatically validate nested models
         if type.kind_of?(AttrJson::Type::Model) && options[:validate] != false
-          # Yes. we're passing an ActiveRecord::Validations validator, but
-          # it works fine for ActiveModel. If this changes in the future, tests will catch.
-          self.validates_with ActiveRecord::Validations::AssociatedValidator, attributes: [name.to_sym]
+          # Post validations up with something based on ActiveRecord::Validations::AssociatedValidator
+          self.validates_with ::AttrJson::Model::NestedModelValidator, attributes: [name.to_sym]
         end
 
         _attr_jsons_module.module_eval do
