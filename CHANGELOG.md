@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Keep nested model validation working in Rails post-7.1, by no longer trying to re-use ActiveRecord::Validations::AssociatedValidator, instead supplying our own custom code. https://github.com/jrochkind/attr_json/pull/220
 
-*
+* Validate PolymorphicModel instances. https://github.com/jrochkind/attr_json/pull/225
 
 *
 
