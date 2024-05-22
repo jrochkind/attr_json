@@ -276,7 +276,7 @@ RSpec.describe AttrJson::Record do
         include AttrJson::Model
         def self.model_name ; ActiveModel::Name.new(self, nil, "NestedClass1") ; end
         attr_json :str1, :string
-        validates_presence_of :str
+        validates_presence_of :str1
       end
     end
     let(:nested_class2) do
@@ -284,15 +284,17 @@ RSpec.describe AttrJson::Record do
         include AttrJson::Model
         def self.model_name ; ActiveModel::Name.new(self, nil, "NestedClass2") ; end
         attr_json :str2, :string
-        validates_presence_of :str
+        validates_presence_of :str2
       end
     end
     let(:klass) do
+      class1 = nested_class1
+      class2 = nested_class2
       Class.new do
         include AttrJson::Model
         def self.model_name ; ActiveModel::Name.new(self, nil, "Klass") ; end
 
-        attr_json :nested, AttrJson::Type::PolymorphicModel.new(nested_class1, nested_class2), array: true
+        attr_json :nested, AttrJson::Type::PolymorphicModel.new(class1, class2), array: true
       end
     end
 
