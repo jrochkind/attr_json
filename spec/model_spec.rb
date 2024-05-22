@@ -292,7 +292,7 @@ RSpec.describe AttrJson::Record do
         include AttrJson::Model
         def self.model_name ; ActiveModel::Name.new(self, nil, "Klass") ; end
 
-        attr_json :nested, AttrJson::Type::PolymorphicModel.new(NestedClass1, NestedClass2), array: true
+        attr_json :nested, AttrJson::Type::PolymorphicModel.new(nested_class1, nested_class2), array: true
       end
     end
 
