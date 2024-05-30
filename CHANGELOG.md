@@ -4,13 +4,14 @@ Notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/jrochkind/attr_json/compare/v2.3.0...HEAD)
+
+## [Unreleased](https://github.com/jrochkind/attr_json/compare/v2.3.1...HEAD)
 
 ### Fixed
 
-* Keep nested model validation working in Rails post-7.1, by no longer trying to re-use ActiveRecord::Validations::AssociatedValidator, instead supplying our own custom code. https://github.com/jrochkind/attr_json/pull/220
+*
 
-* Validate PolymorphicModel instances. https://github.com/jrochkind/attr_json/pull/225 Thanks @LyricL-Gitster
+*
 
 *
 
@@ -29,6 +30,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 *
 
 *
+
+## [2.3.1](https://github.com/jrochkind/attr_json/compare/v2.3.0...2.3.1)
+
+### Fixed
+
+* Keep nested model validation working in Rails post-7.1, by no longer trying to re-use ActiveRecord::Validations::AssociatedValidator, instead supplying our own custom code. https://github.com/jrochkind/attr_json/pull/220
+
+* Validate PolymorphicModel instances. https://github.com/jrochkind/attr_json/pull/225 Thanks @LyricL-Gitster
+
 
 ## [2.3.0]((https://github.com/jrochkind/attr_json/compare/v2.2.0...v2.3.0))
 
