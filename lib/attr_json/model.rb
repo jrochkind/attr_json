@@ -220,7 +220,7 @@ module AttrJson
         )
 
         # By default, automatically validate nested models
-        if type.kind_of?(AttrJson::Type::Model) && options[:validate] != false
+        if (type.kind_of?(AttrJson::Type::Model) || type.kind_of?(AttrJson::Type::PolymorphicModel)) && options[:validate] != false
           # Post validations up with something based on ActiveRecord::Validations::AssociatedValidator
           self.validates_with ::AttrJson::Model::NestedModelValidator, attributes: [name.to_sym]
         end

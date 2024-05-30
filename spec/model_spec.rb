@@ -270,6 +270,56 @@ RSpec.describe AttrJson::Record do
     end
   end
 
+  describe "nested polymorphic model with validation" do
+    let(:nested_class1) do
+      Class.new do
+        include AttrJson::Model
+        def self.model_name ; ActiveModel::Name.new(self, nil, "NestedClass1") ; end
+        attr_json :str1, :string
+        validates_presence_of :str1
+      end
+    end
+    let(:nested_class2) do
+      Class.new do
+        include AttrJson::Model
+        def self.model_name ; ActiveModel::Name.new(self, nil, "NestedClass2") ; end
+        attr_json :str2, :string
+        validates_presence_of :str2
+      end
+    end
+    let(:klass) do
+      class1 = nested_class1
+      class2 = nested_class2
+      Class.new do
+        include AttrJson::Model
+        def self.model_name ; ActiveModel::Name.new(self, nil, "Klass") ; end
+
+        attr_json :nested, AttrJson::Type::PolymorphicModel.new(class1, class2), array: true
+      end
+    end
+
+    it "is invalid when nested are" do
+      instance.nested = [nested_class1.new, nested_class2.new]
+
+      expect(instance.valid?).to be false
+      expect(instance.errors.key?(:nested)).to be true
+      expect(instance.errors[:nested]).to include("is invalid")
+
+      expect(instance.nested[0].errors.key?(:str1))
+      expect(instance.nested[0].errors[:str1]).to include a_string_matching(/\Acan'|’t be blank\z/)
+      expect(instance.errors.details[:nested].first[:value][0]).to be_kind_of(nested_class1)
+
+      expect(instance.nested[1].errors.key?(:str2))
+      expect(instance.nested[1].errors[:str2]).to include a_string_matching(/\Acan'|’t be blank\z/)
+      expect(instance.errors.details[:nested].first[:value][1]).to be_kind_of(nested_class2)
+    end
+
+    it "is valid when nested are" do
+      instance.nested = [nested_class1.new(str1: "something"), nested_class2.new(str2: "something")]
+      expect(instance.valid?).to be true
+    end
+  end
+
   describe "nested array of models with validation" do
     let(:nested_class) do
       Class.new do
