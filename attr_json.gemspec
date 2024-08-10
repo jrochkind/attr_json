@@ -47,7 +47,7 @@ attributes use as much of the existing ActiveRecord architecture as we can.}
   # dependency included just as it is here, should never be released
   # from an env tht has any of these variables set.
   unless ENV['APPRAISAL_INITIALIZED'] || ENV["TRAVIS"] || ENV['CI']
-    spec.add_runtime_dependency "activerecord", ">= 6.0.0", "< 7.2"
+    spec.add_runtime_dependency "activerecord", ">= 6.0.0", "< 7.3"
   end
 
   spec.add_development_dependency "bundler"
