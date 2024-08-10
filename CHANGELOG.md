@@ -31,7 +31,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 *
 
-## [2.3.1](https://github.com/jrochkind/attr_json/compare/v2.3.0...2.3.1)
+## [2.3.1](https://github.com/jrochkind/attr_json/compare/v2.3.1...v2.4.0)
+
+### Added
+
+* Allow Rails 7.2 in gemspec (no code changes required to support) https://github.com/jrochkind/attr_json/pull/228
+
+
+## [2.3.1](https://github.com/jrochkind/attr_json/compare/v2.3.0...v2.3.1)
 
 ### Fixed
 
