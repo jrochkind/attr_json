@@ -37,6 +37,14 @@ appraise "rails-7-1" do
   gem "pg", "~> 1.0"
 end
 
+appraise "rails-7-2" do
+  gem 'combustion', "~> 1.0"
+
+  gem "rails", "~> 7.2.0"
+  gem "pg", "~> 1.0"
+end
+
+
 appraise "rails-edge" do
   # need combustion edge to work with rails edge, will no longer
   # be true on next combustion release, probably no later than Rails 7.1
