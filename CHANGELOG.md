@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-*
+* Allow Rails 8.0 in gemspec (no code changes required to support) https://github.com/jrochkind/attr_json/pull/236
 
 *
 

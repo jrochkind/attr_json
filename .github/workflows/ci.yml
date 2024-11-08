@@ -68,6 +68,9 @@ jobs:
           - gemfile: rails_7_2
             ruby: 3.3
 
+          - gemfile: rails_8_0
+            ruby: 3.3
+
     name: ${{ matrix.gemfile }}, ruby ${{ matrix.ruby }}
 
     steps:
