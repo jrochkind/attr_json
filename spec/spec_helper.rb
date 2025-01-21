@@ -20,6 +20,14 @@ require 'bundler'
 # replace manual requires with? :
 # #Bundler.require :default, :development, :test
 
+# bug in Rails pre-7.0 requires us to manually 'require' logger dep, Rails isn't going
+# to release a fix. https://github.com/rails/rails/pull/54264
+#
+# Tried to do this conditionally only if Rails < 7.1, but hard with order of
+# dependency loading. This is fine.
+require 'logger'
+
+
 require 'uri'
 require 'combustion'
 Combustion.initialize! :all do
