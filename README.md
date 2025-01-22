@@ -2,10 +2,7 @@
 
 [![CI](https://github.com/jrochkind/attr_json/actions/workflows/ci.yml/badge.svg)](https://github.com/jrochkind/attr_json/actions/workflows/ci.yml)
 ActiveRecord attributes stored serialized in a json column, super smooth. For Rails 6.0.x through 7.0.x. Ruby 2.7+.
-
 [![CI on Future Rails Versions](https://github.com/jrochkind/attr_json/actions/workflows/future_rails_ci.yml/badge.svg)](https://github.com/jrochkind/attr_json/actions/workflows/future_rails_ci.yml)
-
-
 [![Gem Version](https://badge.fury.io/rb/attr_json.svg)](https://badge.fury.io/rb/attr_json)
 
 ActiveRecord attributes stored serialized in a json column, super smooth. For Rails 6.0.x through 7.0.x. Ruby 2.7+.
