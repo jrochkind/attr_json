@@ -130,9 +130,8 @@
         # serializing, we're kind of stuck with this precision in current implementation.
         lookup_kwargs = { adapter: nil }
         if type == :datetime || type == :time
-          lookup_kwargs = { precision: ActiveSupport::JSON::Encoding.time_precision }
+          lookup_kwargs[:precision] = ActiveSupport::JSON::Encoding.time_precision
         end
-
         type = ActiveRecord::Type.lookup(type, **lookup_kwargs)
       elsif !(type.is_a?(ActiveModel::Type::Value) || type.is_a?(ActiveRecord::AttributeMethods::TimeZoneConversion::TimeZoneConverter))
         raise ArgumentError, "Second argument (#{type}) must be a symbol or instance of an ActiveModel::Type::Value subclass"

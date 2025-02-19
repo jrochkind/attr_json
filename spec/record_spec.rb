@@ -241,14 +241,23 @@ RSpec.describe AttrJson::Record do
   end
 
   it "can define without triggering a db connection" do
-    expect(ActiveRecord::Base).not_to receive(:connection)
+    if ActiveRecord.version < Gem::Version.new('7.2.0')
+      ActiveRecord::Base.clear_all_connections!
+    else
+      ActiveRecord::Base.connection_handler.clear_all_connections!
+    end
+    expect(ActiveRecord::Base.connected?).to eq(false)
 
     Class.new(ActiveRecord::Base) do
       include AttrJson::Record
 
       self.table_name = "products"
       attr_json :value, :string
+      attr_json :datetime_value, :datetime
+      attr_json :time_value, :time
     end
+
+    expect(ActiveRecord::Base.connected?).to eq(false)
   end
 
   it "has registered attributes on registry" do
