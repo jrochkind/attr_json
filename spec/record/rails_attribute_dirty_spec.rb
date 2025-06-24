@@ -29,6 +29,7 @@ RSpec.describe "ActiveRecord dirty tracking" do
       self.table_name = "products"
       attr_json :str, :string
       attr_json :int, :integer
+      attr_json :bool, :boolean
       # just to make our changes more sane, set no default
       attr_json :str_array, :string, array: true, default: AttrJson::AttributeDefinition::NO_DEFAULT_PROVIDED
       attr_json :embedded, model_class_type
@@ -178,6 +179,20 @@ RSpec.describe "ActiveRecord dirty tracking" do
         obj.str = "value"
         expect(obj.will_save_change_to_int?).to be false
         expect(obj.will_save_change_to_str?).to be true
+      end
+    end
+
+    describe "boolean attribute dirty tracking" do
+      it "does not report a change when assigning false to false" do
+        instance.bool = false
+        instance.save!
+        instance.reload
+        expect(instance.bool).to be false
+        expect(instance.changes.empty?).to be true
+
+        instance.assign_attributes({ str: "new", bool: false })
+        expect(instance.bool_changed?).to be false
+        expect(instance.str_changed?).to be true
       end
     end
   end
