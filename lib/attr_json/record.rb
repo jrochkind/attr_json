@@ -65,7 +65,7 @@ module AttrJson
             attr_name     = attribute_def.name
             value         = container_value[attribute_def.store_key]
 
-            if value
+            unless value.nil?
               # TODO, can we just make this use the setter?
               write_attribute(attr_name, value)
 
