@@ -29,6 +29,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 *
 
+## [2.5.1](https://github.com/jrochkind/attr_json/compare/v2.5.0...v2.5.1)
+
+## Fixed
+
+* Fixed bug where date/datetime types required db to exist on app boot. https://github.com/jrochkind/attr_json/pull/242 Thanks @jNicker
+
+
 ## [2.5.0](https://github.com/jrochkind/attr_json/compare/v2.4.0...v2.5.0)
 
 ## Added
