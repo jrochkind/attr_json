@@ -51,6 +51,13 @@ appraise "rails-8-0" do
   gem "pg", "~> 1.0"
 end
 
+appraise "rails-8-1" do
+  gem 'combustion', "~> 1.0"
+
+  gem "rails", "~> 8.1.0"
+  gem "pg", "~> 1.0"
+end
+
 
 appraise "rails-edge" do
   # need combustion edge to work with rails edge, will no longer
