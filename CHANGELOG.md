@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [Unreleased](https://github.com/jrochkind/attr_json/compare/v2.4.0...HEAD)
+## [Unreleased](https://github.com/jrochkind/attr_json/compare/v2.6.0...HEAD)
 
 ### Fixed
 
@@ -28,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 *
 
 *
+
+## [2.6.0](https://github.com/jrochkind/attr_json/compare/v2.5.1...v2.6.0)
+
+* Allow Rails 8.1, no logic changes.
 
 ## [2.5.1](https://github.com/jrochkind/attr_json/compare/v2.5.0...v2.5.1)
 
