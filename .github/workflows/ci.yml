@@ -59,6 +59,9 @@ jobs:
           - gemfile: rails_8_1
             ruby: 3.4
 
+          - gemfile: rails_8_1
+            ruby: 4.0
+
     name: ${{ matrix.gemfile }}, ruby ${{ matrix.ruby }}
 
     steps:
