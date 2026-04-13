@@ -22,6 +22,8 @@ on:
   # UTC Sundays 0900. note, no notifications will be sent for failed scheduled builds. :(
   schedule:
     - cron: '0 9 * * SUN'
+  pull_request:
+    branches: [ '**' ]
 
 env:
   POSTGRES_USER: postgres
