@@ -45,7 +45,7 @@ jobs:
         include:
 
           - gemfile: rails_edge
-            ruby: '3.3'
+            ruby: '4.0'
 
     name: ${{ matrix.gemfile }}, ruby ${{ matrix.ruby }}
 
