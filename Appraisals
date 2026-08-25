@@ -68,6 +68,9 @@ appraise "rails-edge" do
   gem "rails", git: "https://github.com/rails/rails.git", branch: "main"
   gem "pg", "~> 1.0"
 
+  # Edge rails sometimes needs fixes from latest unreleased rspec-rails
+  gem "rspec-rails", github: "rspec/rspec-rails", branch: "main"
+
   # Edge rails, future Rails 7.1 currently allows rack 3 -- but rails itself
   # and some of our other dependencies may not actually work with rack 3 yet,
   # let's test under rack 2. (Nothing in this gem deals with levels as low as rack)
