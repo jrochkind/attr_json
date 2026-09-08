@@ -14,6 +14,7 @@ gem "sprockets-rails"
 gem "capybara", "~> 3.0"
 gem "selenium-webdriver"
 gem "byebug"
+gem "json", "< 3"
 gem "rack", "~> 2.0"
 
 gemspec path: "../"
