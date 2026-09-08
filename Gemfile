@@ -42,3 +42,8 @@ gem "selenium-webdriver"
 gem "byebug"
 
 
+# pin json to less than 3 in Gemfile until Rails has some releases that work
+# with json 3, at which point we will have to use Appraisal file to pin only
+# in versions that need it.
+# https://github.com/rails/rails/pull/58601
+gem "json", "< 3"
