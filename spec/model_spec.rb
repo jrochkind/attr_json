@@ -420,7 +420,7 @@ RSpec.describe AttrJson::Record do
 
     let(:instance) { klass.new(json_datetime: time_value ) }
     let(:model_type) { klass.to_type }
-    let(:time_zone) { "US/Pacific" }
+    let(:time_zone) { "America/Los_Angeles" }
     let(:time_value) { Time.utc(2020, 1, 1, 4, 5, 30) }
 
     around do |example|
