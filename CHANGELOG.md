@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-*
+* A record loaded from the database no longer syncs every attr_json attribute to its Rails attribute on load. Each one is synced when first needed: when its value is read or written, or when it is read through the Rails attribute API. Loading a record with many attr_json attributes is much cheaper, with no intended change in behavior. https://github.com/jrochkind/attr_json/issues/256
 
 *
 
