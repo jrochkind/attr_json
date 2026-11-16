@@ -50,39 +50,47 @@ module AttrJson
     # mutation of mutable object will effect both places, for instance for dirty
     # tracking.
     def attr_json_sync_to_rails_attributes
-      self.class.attr_json_registry.definitions.group_by(&:container_attribute).each_pair do |container_attribute, definitions|
-        begin
-          # column may have eg been left out of an explicit 'select'
-          next unless has_attribute?(container_attribute)
+      attr_json_sync_definitions(self.class.attr_json_registry.definitions)
+    end
 
-          container_value    = public_send(container_attribute)
+    private
 
-          # isn't expected to be possible to be nil rather than empty hash, but
-          # if it is from some edge case, well, we don't have values to sync, fine
-          next if container_value.nil?
+    def attr_json_sync_definitions(definitions)
+      definitions.group_by(&:container_attribute).each_pair do |container_attribute, container_definitions|
+        attr_json_sync_from_container(container_attribute, container_definitions)
+      end
+    end
 
-          definitions.each do |attribute_def|
-            attr_name     = attribute_def.name
-            value         = container_value[attribute_def.store_key]
+    def attr_json_sync_from_container(container_attribute, definitions)
+      # column may have eg been left out of an explicit 'select'
+      return unless has_attribute?(container_attribute)
 
-            unless value.nil?
-              # TODO, can we just make this use the setter?
-              write_attribute(attr_name, value)
+      container_value    = public_send(container_attribute)
 
-              clear_attribute_change(attr_name) if persisted?
+      # isn't expected to be possible to be nil rather than empty hash, but
+      # if it is from some edge case, well, we don't have values to sync, fine
+      return if container_value.nil?
 
-              # writing and clearning will result in a new object stored in
-              # rails attributes, we want
-              # to make sure the exact same object is in the json attribute,
-              # so in-place mutation changes to it are reflected in both places.
-              container_value[attribute_def.store_key] = read_attribute(attr_name)
-            end
-          end
-        rescue AttrJson::Type::Model::BadCast, AttrJson::Type::PolymorphicModel::TypeError => e
-          # There was bad data in the DB, we're just going to skip the Rails attribute sync.
-          # Should we log?
+      definitions.each do |attribute_def|
+        attr_name     = attribute_def.name
+        value         = container_value[attribute_def.store_key]
+
+        unless value.nil?
+          # TODO, can we just make this use the setter?
+          write_attribute(attr_name, value)
+
+          clear_attribute_change(attr_name) if persisted?
+
+          # writing and clearning will result in a new object stored in
+          # rails attributes, we want
+          # to make sure the exact same object is in the json attribute,
+          # so in-place mutation changes to it are reflected in both places.
+          container_value[attribute_def.store_key] = read_attribute(attr_name)
         end
       end
+    rescue AttrJson::Type::Model::BadCast, AttrJson::Type::PolymorphicModel::TypeError => e
+      # There was bad data in the DB, we're just going to skip the Rails attribute sync.
+      # Should we log?
     end
 
     class_methods do
