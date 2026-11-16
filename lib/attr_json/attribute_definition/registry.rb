@@ -65,6 +65,10 @@ module AttrJson
         @name_to_definition.keys
       end
 
+      def container_attribute?(key)
+        @store_key_to_definition.has_key?(AttrJson.efficient_to_s(key))
+      end
+
       def container_attributes
         @store_key_to_definition.keys.collect { |s| AttrJson.efficient_to_s(s) }
       end
